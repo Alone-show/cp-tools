@@ -1,0 +1,11 @@
+# @local/cp-tools — 一个 bundle，三个可独立开关的 CP 子插件。
+#
+# 每行都是一个独立的 Cordis 插件，plugin_manager 可按 id 单独 disable；
+# 三行共用本包的安装/升级单元，但命令、工具、skill 仍按子插件各自注册。
+- insert:
+    - id: cp-docs
+      name: '@local/cp-tools/docs'
+    - id: firmware-finder
+      name: '@local/cp-tools/firmware'
+    - id: e9631service
+      name: '@local/cp-tools/cpservice'

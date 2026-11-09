@@ -1,0 +1,781 @@
+{
+ "no": "1.12",
+ "model": "APOLLO 12A 二代 特别版",
+ "family": "APOLLO 二代",
+ "intro": "高端坚固型车载平板，首创强劲双卡双通道4G通讯，双卡同守护，12 英寸高亮显示屏幕，支持内置TF卡功能，支持便捷手麦通讯，指挥全地形，畅聊无负担，广泛应用于农业机械自动化，工程机械自动化，人机交互，智慧矿山等。",
+ "size_mm": "199.7*297.6*34.8",
+ "weight_kg": 1.49,
+ "params_flat": {
+  "cpu": "4核64位Cortex-A55, 2.0GHz",
+  "gpu": "ARM G52 2EE",
+  "ram": "2G RAM LPDDR4 支持最高8G",
+  "rom": "16G ROM EMMC 支持最高256G",
+  "os": "Android 11.0\nLinux 5.10, Qt 5.15.7",
+  "screen_inch": "12",
+  "resolution": "1280*800px",
+  "brightness": "750 cd/m2",
+  "touch": "电容触摸显示屏,支持5指触控",
+  "cellular": "4G / 5G",
+  "wifi": "WiFi 802.11 b/g/n/ac, 2.4G/5G",
+  "bluetooth": "Bluetooth 4.2",
+  "gnss": "(可选配米级 /厘米级定位板卡)",
+  "can": "CAN*2",
+  "rs232": "RS232*2",
+  "rs485": "RS485*1",
+  "dc_output": "DC_OUPUT 12V输出*2",
+  "io_input": "IO_INPUT输入*2",
+  "usb": "USB2.0*1",
+  "ethernet": "百兆以太网*1, 可选配千兆以太网",
+  "camera_in": "720p*2/1080p*2 AHD摄像头输入",
+  "speaker": "内置扬声器*1",
+  "power_input": "电源9-36V DC输入",
+  "acc_detect": "开机点火ACC状态检测",
+  "protection": "IP67",
+  "vibration": "MIL-STD-810",
+  "cert": "道路车辆标准:ISO16750",
+  "salt_spray": "整机盐雾48小时",
+  "temp_operating": "-30°C-+70°C",
+  "humidity": "0% - 90%RH",
+  "temp_storage": "-40°C- +85°C",
+  "connector": "26PIN连接器*1\nM12 X-code航插*1\nSMA接头*1\nTNC接头*1\nUSB Type-A接口*1",
+  "buttons": "电源开关键*1, 自定义功能按键*1"
+ },
+ "tables": [
+  {
+   "sha256": "8fd8b649f1d2096182fafcb348a12a41f0e123b529a3c3b3eca01d06d29ffa0e",
+   "file": "images/store/8fd8b649f1d2096182fafcb348a12a41f0e123b529a3c3b3eca01d06d29ffa0e.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/APOLLO2%2012A%E7%89%B9%E5%88%AB%E7%89%88/APOLLO2%2012A%E7%89%B9%E5%88%AB%E7%89%88%E5%8F%82%E6%95%B0%E8%A1%A8.png",
+   "section": "3.1 产品参数",
+   "caption": "图3.1 配置信息",
+   "kind": "param",
+   "is_table": true,
+   "header": [
+    "分类",
+    "内容"
+   ],
+   "rows": [
+    [
+     "系统",
+     "CPU 4核64位Cortex-A55, 2.0GHz\nGPU ARM G52 2EE\n2G RAM LPDDR4 支持最高8G\n16G ROM EMMC 支持最高256G\nAndroid 11.0\nLinux 5.10, Qt 5.15.7"
+    ],
+    [
+     "通讯",
+     "·4G / 5G\n·WiFi 802.11 b/g/n/ac, 2.4G/5G\n·Bluetooth 4.2\n·GNSS (可选配米级 /厘米级定位板卡)\n·CAN*2\n·RS232*2\n·RS485*1\n·DC_OUPUT 12V输出*2\n·IO_INPUT输入*2\n· USB2.0*1\n·百兆以太网*1, 可选配千兆以太网\n·支持CP ISOBUS VT"
+    ],
+    [
+     "环境参数",
+     "防护等级:IP67\n震动:MIL-STD-810\n道路车辆标准:ISO16750\n工作温度:-30°C-+70°C,湿度:0% - 90%RH\n存储温度:-40°C- +85°C\n盐雾:整机盐雾48小时"
+    ],
+    [
+     "客制功能",
+     "支持1路灯靶,16个LED"
+    ],
+    [
+     "显示",
+     "12”电容触摸显示屏,支持5指触控\n亮度750 cd/m2\n分辨率:1280*800px\n强光下防眩晕显示屏"
+    ],
+    [
+     "电源管理",
+     "电源9-36V DC输入\n开机点火ACC状态检测\n供电电源电压检测\n防反接保护"
+    ],
+    [
+     "影音和传感",
+     "720p*2/1080p*2 AHD摄像头输入\n内置扬声器*1\nG-Sensor*1"
+    ],
+    [
+     "连接器",
+     "26PIN连接器*1\nM12 X-code航插*1\nSMA接头*1\nTNC接头*1\nUSB Type-A接口*1"
+    ],
+    [
+     "规格",
+     "尺寸(W*H*D) :199.7*297.6*34.8mm\n重量: 1.49kg"
+    ],
+    [
+     "功能按键",
+     "电源开关键*1, 自定义功能按键*1"
+    ]
+   ],
+   "confidence": "high",
+   "notes": "原图为「分类|内容|分类|内容」4 列并排，已按左栏自上而下→右栏自上而下折叠为 2 列（左栏：系统/通讯/环境参数/客制功能，右栏：显示/电源管理/影音和传感/连接器/规格/功能按键）。「显示」首行原文使用弯引号「12”电容触摸显示屏」，已原样保留。与 1.11 图片尺寸相同但内容不同：本图摄像头为 720p*2/1080p*2、无「麦克风*1」、客制功能无「（可选配）」、规格为 199.7*297.6*34.8mm / 1.49kg，已按本图独立转写。"
+  },
+  {
+   "sha256": "6507dbe953e6623374f0768692db90a2efa500c0ad64f4151393c6552b5db9d4",
+   "file": "images/store/6507dbe953e6623374f0768692db90a2efa500c0ad64f4151393c6552b5db9d4.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/APOLLO%207A/APOLLO2%207A%E6%8E%A5%E5%8F%A3%E5%AE%9A%E4%B9%89.png",
+   "section": "3.2 接口定义",
+   "caption": "图3.2.2 26P 接口定义表",
+   "kind": "interface",
+   "is_table": true,
+   "header": [
+    "安费诺-26P",
+    "PIN定义",
+    "安费诺-26P",
+    "PIN定义"
+   ],
+   "rows": [
+    [
+     "1",
+     "B+",
+     "14",
+     "RS232_A_TX"
+    ],
+    [
+     "2",
+     "B-",
+     "15",
+     "INPUT2(DIH-高有效)/ADC_IN2/CAMERA_2"
+    ],
+    [
+     "3",
+     "ACC",
+     "16",
+     "CAMERA_1"
+    ],
+    [
+     "4",
+     "CAN1_H",
+     "17",
+     "RS232_B_RX/MIC_P(手麦咪头)"
+    ],
+    [
+     "5",
+     "CAN1_L",
+     "18",
+     "PHY_MDI_1-/NC"
+    ],
+    [
+     "6",
+     "OUTPUT1",
+     "19",
+     "PHY_MDI_0-/NC"
+    ],
+    [
+     "7",
+     "OUTPUT2/SPKN(手麦喇叭)",
+     "20",
+     "RS232_A_RX"
+    ],
+    [
+     "8",
+     "GND",
+     "21",
+     "INPUT1(DIH-高有效)/INPUT1(DIL-低有效)PTT(手麦按键)"
+    ],
+    [
+     "9",
+     "RS485-A",
+     "22",
+     "CAMERA_0"
+    ],
+    [
+     "10",
+     "RS485-B",
+     "23",
+     "CAMERA_12V"
+    ],
+    [
+     "11",
+     "CAN2_H",
+     "24",
+     "RS232_B_TX/MIC_N(手麦咪头)"
+    ],
+    [
+     "12",
+     "CAN2_L",
+     "25",
+     "PHY_MDI_1+/NC"
+    ],
+    [
+     "13",
+     "NC/ADC_IN1/1PPS/SPKP(手麦喇叭)//CAMERA_3",
+     "26",
+     "PHY_MDI_0+/NC"
+    ]
+   ],
+   "confidence": "high",
+   "notes": "同图转写（原归属 1.7 APOLLO 7A 二代；原表：图3.2.2 26P接口定义表）；表标题为「APOLLO2 7A/12A/12A特别版 26P接口定义」。表格下方备注原文逐条抄录：1. PIN18,19,25,26为兼容设计的百兆以太网接口，默认百兆以太网，如需要千兆以太网可从M12航插引出。2. 支持选配手麦功能，需要牺牲OUTPUT2,RS232,INPUT1功能。3. 支持4路摄像头，需要牺牲INPUT2, ADC和手麦功能。4. INTPU1有两种属性，DIH-高有效，和DIL-低有效，默认DIH-高有效。（原文即写作 INTPU1）"
+  },
+  {
+   "sha256": "bbf876fb0dfcb7ac307f5c2acc9e5d50bdb18ef1bbf56e3d90dfd5bd5a9faa31",
+   "file": "images/store/bbf876fb0dfcb7ac307f5c2acc9e5d50bdb18ef1bbf56e3d90dfd5bd5a9faa31.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/APOLLO2%2012/APOLLO2%20M12%E4%BB%A5%E5%A4%AA%E7%BD%91%E6%8E%A5%E5%8F%A3%E5%AE%9A%E4%B9%89.png",
+   "section": "3.2 接口定义",
+   "caption": "图3.2.3 M12以太网接口定义表",
+   "kind": "interface",
+   "is_table": true,
+   "header": [
+    "PIN 脚",
+    "定义"
+   ],
+   "rows": [
+    [
+     "1",
+     "PHY_MDI_0+"
+    ],
+    [
+     "2",
+     "PHY_MDI_0-"
+    ],
+    [
+     "3",
+     "PHY_MDI_1+"
+    ],
+    [
+     "4",
+     "PHY_MDI_1-"
+    ],
+    [
+     "5",
+     "PHY_MDI_3+"
+    ],
+    [
+     "6",
+     "PHY_MDI_3-"
+    ],
+    [
+     "7",
+     "PHY_MDI_2-"
+    ],
+    [
+     "8",
+     "PHY_MDI_2+"
+    ]
+   ],
+   "confidence": "high",
+   "notes": "同图转写（原归属 1.6 APOLLO 7 二代；原表：图3.2.3 M12以太网接口定义表）"
+  },
+  {
+   "sha256": "c4a0a94aefc9334b0a7b7a2d5cf521854941927b3d697daecc4205926ab79ef8",
+   "file": "images/store/c4a0a94aefc9334b0a7b7a2d5cf521854941927b3d697daecc4205926ab79ef8.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/spring_10/spring2/%E6%8E%A5%E7%BA%BF%E8%A1%A8.png",
+   "section": "4.1.2",
+   "caption": "图4.1.2 接线表",
+   "kind": "harness",
+   "is_table": true,
+   "header": [
+    "TE-26P",
+    "PIN定义",
+    "线径",
+    "线贴纸",
+    "线颜色",
+    "M1_2P(AUDIO_OUT)",
+    "M2_4P(CAMERA_0)",
+    "M3_4P(CAMERA_1)",
+    "网口（RJ45）",
+    "M4_4P(IO INPUT)",
+    "M5_3P(POWER)",
+    "DB9A （公头）",
+    "DB9B （公头）",
+    "DB9C(公头)",
+    "M6_4P (DC OUTPUT)"
+   ],
+   "rows": [
+    [
+     "1",
+     "B+",
+     "18#",
+     "B+",
+     "黑白色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "2",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "2",
+     "B−",
+     "18#",
+     "B−",
+     "黑灰色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "3",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "3",
+     "ACC",
+     "18#",
+     "ACC",
+     "黑紫色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "1",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "4",
+     "CAN1_H",
+     "24#",
+     "CAN1_H",
+     "黑蓝色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "9/6 对绞线",
+     ""
+    ],
+    [
+     "5",
+     "CAN1_L",
+     "24#",
+     "CAN1_L",
+     "黑绿色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "6",
+     "OUTPUT1",
+     "18#",
+     "OUTPUT1",
+     "黑色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "2"
+    ],
+    [
+     "7",
+     "OUTPUT2",
+     "18#",
+     "OUTPUT2",
+     "黄色",
+     "1",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "3"
+    ],
+    [
+     "8",
+     "GND",
+     "18#",
+     "GND",
+     "白色",
+     "2",
+     "2",
+     "2",
+     "",
+     "1-2",
+     "",
+     "5",
+     "5",
+     "5",
+     "1"
+    ],
+    [
+     "9",
+     "RS485_A",
+     "24#",
+     "RS485_A",
+     "灰色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "3/2 对绞线",
+     ""
+    ],
+    [
+     "10",
+     "RS485_B",
+     "24#",
+     "RS485_B",
+     "紫色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "11",
+     "CAN2-H",
+     "24#",
+     "CAN2-H",
+     "蓝色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "7/1 对绞线",
+     ""
+    ],
+    [
+     "12",
+     "CAN2-L",
+     "24#",
+     "CAN2-L",
+     "绿色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "13",
+     "OUTPUT3",
+     "18#",
+     "OUTPUT3",
+     "红色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "4"
+    ],
+    [
+     "14",
+     "RS232_TX1",
+     "24#",
+     "RS232_TX1",
+     "棕色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "3（2/3对绞）",
+     "",
+     "",
+     ""
+    ],
+    [
+     "15",
+     "INPUT2",
+     "24#",
+     "INPUT2",
+     "粉红色",
+     "",
+     "",
+     "",
+     "",
+     "4",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "16",
+     "CAMERA_1",
+     "24#",
+     "CAMERA_1",
+     "黑黄色",
+     "",
+     "",
+     "4",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "17",
+     "RS232_RX2",
+     "24#",
+     "RS232_RX2",
+     "黑粉红色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "2（2/3对绞）",
+     "",
+     ""
+    ],
+    [
+     "18",
+     "RJ45 TX-",
+     "24#",
+     "RJ45 TX-",
+     "浅白色",
+     "",
+     "",
+     "",
+     "2(1和2对绞)",
+     "",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "19",
+     "RJ45_RX-",
+     "24#",
+     "RJ45_RX-",
+     "浅白色",
+     "",
+     "",
+     "",
+     "6（3和6对绞）",
+     "",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "20",
+     "RS232_RX1",
+     "24#",
+     "RS232_RX1",
+     "黑棕色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "2（2/3对绞）",
+     "",
+     "",
+     ""
+    ],
+    [
+     "21",
+     "INPUT1",
+     "24#",
+     "INPUT1",
+     "黑色",
+     "",
+     "",
+     "",
+     "",
+     "3",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "22",
+     "CAMERA_0",
+     "24#",
+     "CAMERA_0",
+     "浅白色",
+     "",
+     "4",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "23",
+     "CAMERA_PWR",
+     "24#",
+     "CAMERA_PWR",
+     "浅白色",
+     "",
+     "1",
+     "1",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "24",
+     "RS232_TX2",
+     "24#",
+     "RS232_TX2",
+     "浅白色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "3（2/3对绞）",
+     "",
+     ""
+    ],
+    [
+     "25",
+     "RJ45_TX+",
+     "24#",
+     "RJ45_TX+",
+     "黑色",
+     "",
+     "",
+     "",
+     "1(1和2对绞)",
+     "",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "26",
+     "RJ45_RX+",
+     "24#",
+     "RJ45_RX+",
+     "浅白色",
+     "",
+     "",
+     "",
+     "3（3和6对绞）",
+     "",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ]
+   ],
+   "confidence": "high",
+   "notes": "同图转写（原归属 1.7 APOLLO 7A 二代；原表：图4.1.2 接线表）；表中「x/y 对绞线」为纵向合并单元格：DB9C 列「9/6 对绞线」跨 PIN4-5、「3/2 对绞线」跨 PIN9-10、「7/1 对绞线」跨 PIN11-12；转写时记在合并区首行，续行留空。"
+  }
+ ],
+ "skipped": [
+  {
+   "sha256": "d2618ddebc8cc7644493626925bfff0c366c6119c28c5698966b4245da97be91",
+   "file": "images/store/d2618ddebc8cc7644493626925bfff0c366c6119c28c5698966b4245da97be91.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/APOLLO%2012X/APOLLO%2012X%20Front%20view.png",
+   "reason": "外观图｜图2.1.1 正面图：非表格，见原图"
+  },
+  {
+   "sha256": "5c09dd6b0ff1c572200b1a4bb4c090f01e6b96099550beb83e86024d3dced0c1",
+   "file": "images/store/5c09dd6b0ff1c572200b1a4bb4c090f01e6b96099550beb83e86024d3dced0c1.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/APOLLO2%2012A%E7%89%B9%E5%88%AB%E7%89%88/APOLLO2%2012A%E7%89%B9%E5%88%AB%E7%89%88%E8%83%8C%E8%A7%86%E5%9B%BE.png",
+   "reason": "外观图｜图2.1.2 背面图：非表格，见原图"
+  },
+  {
+   "sha256": "fc6b9b9b33365d3b9ca23c75a14c0c3626befa767b8b8269b608639d1fc6ec64",
+   "file": "images/store/fc6b9b9b33365d3b9ca23c75a14c0c3626befa767b8b8269b608639d1fc6ec64.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/spring_10/spring2/%E7%BA%BF%E6%9D%9F.png",
+   "reason": "接口实物图｜图4.1.1 线束定义：非表格/无图内文字，见原图"
+  }
+ ],
+ "warnings": [
+  "参数表「规格」与任务字段一致：尺寸 199.7*297.6*34.8mm、重量 1.49kg，无差异。",
+  "补齐共用表 3 张（同图转写，原归属见各表注）",
+  "补录图内文字 4 张（自动识读，? 处需核对原图）"
+ ],
+ "figures": [
+  {
+   "sha256": "4705e8e156fb931ecdb93d72e59672873c10934234f4cc17670a8148a11cdcde",
+   "file": "images/store/4705e8e156fb931ecdb93d72e59672873c10934234f4cc17670a8148a11cdcde.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/APOLLO2%2012/12%E5%AF%B8%E6%8E%A5%E5%8F%A3%E5%9B%BE.png",
+   "section": "3.2 接口定义",
+   "caption": "图3.2.1 接口图",
+   "kind": "diagram",
+   "title": "",
+   "text": "接口/针脚：插座 左侧 1、8、14、20；右侧 7、13、19、26；13 针旁标 A\n接口/针脚：M12 Ethernet connector：1、2、3、4、5、6、7、8",
+   "confidence": "high"
+  },
+  {
+   "sha256": "fc3beca745d4c7c20f26ce55ed115f4f654afc9e4a4206e13fbaf27dc101d821",
+   "file": "images/store/fc3beca745d4c7c20f26ce55ed115f4f654afc9e4a4206e13fbaf27dc101d821.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/APOLLO2%2012/APOLLO2%20M12%E4%BB%A5%E5%A4%AA%E7%BD%91%E7%BA%BF%E6%9D%9F.png",
+   "section": "4.1.3",
+   "caption": "图4.1.3 M12以太网线束",
+   "kind": "drawing",
+   "title": "CUSTOMER DRAWING（M12 X-CODE MALE TO RJ45 CABLE ASSEMBLY）",
+   "text": "产品尺寸：LENGTH M(Meters)；53MM；44.5MM；M12*1；TOLERANCE 0-2.99 M = +100.0/-25.0mm；3-8.99 M = +150.0/-25.0mm；9-14.99 M = +300.0/-25.0mm；15-OVER M = +450.0/-25.0mm\n接口/针脚：P1 CONNECTOR: M12 X-CODE MALE（FACE VIEW 1 2 3 4 5 6 7 8）；P2 RJ45 MALE 8Pin（FACE VIEW 1 2 3 4 5 6 7 8）；WIRING DIAGRAM P1 1 2 3 4 5 6 7 8 —— P2 1 2 3 4 5 6 7 8，SHIELD，shell，TWIST PAIR\n线序：white-orange、orange、white-green、green、white-brown、brown、white-blue、blue\n备注：TPU BLACK OVERMOLD；CABLE,CAT6A 24AWG*4P,GREEN TPU JACKET\nTechnical data: Ethernet cable assembly;M12 X-CODED 8-position to RJ45; CAT6A,S/FTP 4x2xAWG26,TPU;360° shielded, Plug Straight. Materials: Male Contact: Brass,Ni/Au plated；Shielding shell: Brass, Cu/Ni plated；Male plastic housing: PA66,black；Coupling nut: Brass, Cu/Ni plated；Cable: TPU blue；PLUG:RJ45\nSpecifications: Rated current at 40℃: 0.5A；Rated voltage: 50V AC / 60V DC；Withstand voltages: 300V；Contact resistance: < 5 mΩ；Insulation resistance: Length 0~20M >100MΩ;Length 20~40M >20MΩ；Signal type: Ethernet CAT6A, 10 Gbps；Standards: M12 connector for IEC 61076-2-109；Protection:IP67(M12)；Operation temperature: -40 ℃~80 ℃；Storage conditions: Temperature 25±3℃; Humidity 35%~70%；RoHS conformity: Yes\nP/N NOTE: P82112-Mxxx；Mx INDICATES THE HARNESS LENGTH L；FOR EXAMPLE: M005,EXPRESS: L=0.5 M；M010,EXPRESS: L=1 M；M100,EXPRESS: L=10 M\n图号/版本：DWG NO. P82112-Mxxx；SIZE A4；SCALE NONE；REV 01；SHEET 1 OF 1；REVISIONS 01 NEW DRAWING 25May24 Jode Tommy\nAmphinol；Sine Systems；44724 Marley Drive；Clinton Township, MI 48036",
+   "confidence": "high"
+  },
+  {
+   "sha256": "996a14fbb781950993d0e5525adf86ed2225218125b47b19d4e9d48c2025cd08",
+   "file": "images/store/996a14fbb781950993d0e5525adf86ed2225218125b47b19d4e9d48c2025cd08.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/APOLLO2%2012A%E7%89%B9%E5%88%AB%E7%89%88/APOLLO2%2012A%20%E7%89%B9%E5%88%AB%E7%89%88%E5%AE%89%E8%A3%85%E6%8C%87%E5%AF%BC.png",
+   "section": "5 安装方式",
+   "caption": "图2.1.1 正面图",
+   "kind": "drawing",
+   "title": "APOLLO2 12A特别版 RAM安装指导",
+   "text": "产品尺寸\n产品尺寸：297.60 × 198.70，对角线 307.93；厚度 34.35、31.30、3.00\n安装孔：4*M5，孔间距 38.00、30.00\nRAM 支架安装说明\n① 逆时针旋转支架把手，取出其中一个支架底座。\n② 箭头所示的为固定孔位，请选择其中一种安装方案。（或）\n③ 箭头所示的位置为产品背面与RAM支架固定位置。\n④ 将RAM支架底座序号与产品背部序号一一对应，使用螺丝紧固后，再放回RAM支架原位置，顺时针旋转支架把手，完成安装。\n备注：1. 本版所示图形与实物可能有差异，请以实物为参考。2. 本版说明书仅限所述产品与RAM-101U系列支架组装，请根据实际需求安装。\n扭力：2N.m　M5x10*4PCS\nRAM 支架　RAM 支架底座　A\n深圳从平技术有限公司",
+   "confidence": "high"
+  }
+ ],
+ "doc_url": "https://www.cpuniverse.cn/online-documents-cn/Introduction/Apollo2-12A%E7%89%B9%E5%88%AB%E7%89%88/content.html"
+}

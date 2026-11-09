@@ -1,0 +1,142 @@
+{
+ "pages": [
+  {
+   "slug": "2.6.8-APOLLO-10-2nd-Gen",
+   "title": "2.6 编程参考信息 · APOLLO 10 二代",
+   "url": "https://www.cpuniverse.cn/online-documents-cn/DeveloperGuide/ProgrammingTable/Apollo10Gen2/content.html",
+   "tables": [
+    {
+     "heading": "2 编程信息",
+     "header": [
+      "名称",
+      "设备节点",
+      "备注"
+     ],
+     "rows": [
+      [
+       "高精度",
+       "/dev/ttyS0",
+       ""
+      ],
+      [
+       "高精度",
+       "/dev/ttyS7",
+       ""
+      ],
+      [
+       "RS232B",
+       "/dev/ttyS3",
+       "对应 CP 功能线束上 DB9-B"
+      ],
+      [
+       "RS232A",
+       "/dev/ttyS4",
+       "对应 CP 功能线束上 DB9-A"
+      ],
+      [
+       "RS485",
+       "/dev/ttyS5",
+       "对应 CP 功能线束上 DB9-C"
+      ],
+      [
+       "Bluetooth",
+       "/dev/ttyS8",
+       "蓝牙与主控通信"
+      ],
+      [
+       "MCU",
+       "/dev/ttyS9",
+       "rk3568 与 MCU 通讯"
+      ],
+      [
+       "CAMERA_0",
+       "/dev/video0",
+       ""
+      ],
+      [
+       "CAMERA_1",
+       "/dev/video1",
+       ""
+      ],
+      [
+       "CAMERA_2",
+       "/dev/video2",
+       ""
+      ],
+      [
+       "CAMERA_3",
+       "/dev/video3",
+       ""
+      ],
+      [
+       "CAMERA_12V",
+       "/sys/class/gpio/gpio103/value",
+       "控制线束上CAMERA_12V电源"
+      ],
+      [
+       "OUTPUT1",
+       "/sys/class/gpio/gpio135/value",
+       ""
+      ],
+      [
+       "OUTPUT2",
+       "/sys/class/gpio/gpio15/value",
+       ""
+      ],
+      [
+       "OUTPUT3",
+       "",
+       "调用 CPComm的setOutputStatus(int io, bool status)接口控制，OUTPUT3对应io参数值为0"
+      ],
+      [
+       "INPUT1",
+       "",
+       "通过注册CPComm的setOnInputStatusChanged函数接收状态，INPUT1对应的io参数值为0"
+      ],
+      [
+       "INPUT2",
+       "",
+       "通过注册CPComm的setOnInputStatusChanged函数接收状态，INPUT1对应的io参数值为1"
+      ],
+      [
+       "CAN1",
+       "",
+       "使用CPComm的mcucan进行通讯"
+      ],
+      [
+       "CAN2",
+       "",
+       "使用CPComm的mcucan进行通讯"
+      ]
+     ]
+    },
+    {
+     "heading": "3 高精度对应的 COM 串口",
+     "header": [
+      "设备节点",
+      "UM980",
+      "MXT906B",
+      "P20E",
+      "P20F"
+     ],
+     "rows": [
+      [
+       "ttyS0",
+       "COM2",
+       "COM2",
+       "COM2",
+       "COM2"
+      ],
+      [
+       "ttyS7",
+       "COM1",
+       "COM1",
+       "COM1",
+       "COM1"
+      ]
+     ]
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,172 @@
+{
+ "pages": [
+  {
+   "slug": "2.6.22-TANK-2",
+   "title": "2.6 编程参考信息 · TANK 2",
+   "url": "https://www.cpuniverse.cn/online-documents-cn/DeveloperGuide/ProgrammingTable/Tank2/content.html",
+   "tables": [
+    {
+     "heading": "2 编程信息",
+     "header": [
+      "名称",
+      "设备节点",
+      "备注"
+     ],
+     "rows": [
+      [
+       "高精度模块，或低精度定位模块",
+       "/dev/ttyS0",
+       ""
+      ],
+      [
+       "RS232",
+       "/dev/ttyS3",
+       "对应 CP 功能线束上 DB9-B"
+      ],
+      [
+       "RS232",
+       "/dev/ttyS4",
+       "对应 CP 功能线束上 DB9-A"
+      ],
+      [
+       "IMU",
+       "/dev/ttyS5",
+       "IMU 通信串口"
+      ],
+      [
+       "高精度模块，或低精度定位模块",
+       "/dev/ttyS7",
+       ""
+      ],
+      [
+       "RS485",
+       "/dev/ttyS9",
+       "对应 CP 功能线束上 DB9-B，与 RS232 复用，选贴"
+      ],
+      [
+       "ADC_A",
+       "/sys/bus/iio/devices/iio:device0/in_voltage4_raw",
+       "对应 CP 功能线束上ADC_A; / cat设备节点即可以读出值"
+      ],
+      [
+       "ADC_B",
+       "/sys/bus/iio/devices/iio:device0/in_voltage5_raw",
+       "对应 CP 功能线束上ADC_B; / cat设备节点即可以读出值"
+      ],
+      [
+       "CAN LED",
+       "/sys/class/gpio/gpio6/value",
+       ""
+      ],
+      [
+       "WORKING LED",
+       "/sys/class/gpio/gpio42/value",
+       ""
+      ],
+      [
+       "WIFI LED",
+       "/sys/class/gpio/gpio129/value",
+       ""
+      ],
+      [
+       "GNSS LED",
+       "/sys/class/gpio/gpio15/value",
+       ""
+      ],
+      [
+       "OUTPUT1",
+       "/sys/class/gpio/gpio135/value",
+       ""
+      ],
+      [
+       "OUTPUT2",
+       "/sys/class/gpio/gpio136/value",
+       ""
+      ],
+      [
+       "CTR_OTG0ID",
+       "/sys/class/gpio/gpio5/value",
+       ""
+      ],
+      [
+       "LCD_PWM_EN",
+       "/sys/class/gpio/gpio19/value",
+       ""
+      ],
+      [
+       "UM482_PWREN",
+       "/sys/class/gpio/gpio137/value",
+       ""
+      ],
+      [
+       "CAN1_ON_EN",
+       "/sys/class/gpio/gpio154/value",
+       "CAN1终端电阻使能控制"
+      ],
+      [
+       "CAN2_ON_EN",
+       "/sys/class/gpio/gpio128/value",
+       "CAN2终端电阻使能控制"
+      ],
+      [
+       "CAN3_ON_EN",
+       "/sys/class/gpio/gpio99/value",
+       "CAN3终端电阻使能控制"
+      ],
+      [
+       "CAN4_ON_EN",
+       "/sys/class/gpio/gpio0/value",
+       "CAN4终端电阻使能控制"
+      ],
+      [
+       "VCC_12V_AHD",
+       "/sys/class/gpio/gpio103/value",
+       "AHD摄像头电源控制"
+      ],
+      [
+       "STATE1_OUTPUT_IO1",
+       "/sys/class/gpio/gpio20/value",
+       "诊断OUTPUT1状态，读取该信号值等于0时表示OUTPUT1输出了高电平，否则为低电平"
+      ],
+      [
+       "STATE2_OUTPUT_IO2",
+       "/sys/class/gpio/gpio21/value",
+       "诊断OUTPUT2状态，读取该信号值等于0时表示OUTPUT2输出了高电平，否则为低电平"
+      ],
+      [
+       "STATE3_VCC_12V_AHD",
+       "/sys/class/gpio/gpio22/value",
+       "诊断VCC_12V_AHD状态，读取该信号值等于0时表示VCC_12V_AHD输出了高电平，否则为低电平"
+      ]
+     ]
+    },
+    {
+     "heading": "3 高精度对应的 COM 串口",
+     "header": [
+      "设备节点",
+      "UM982",
+      "UM980",
+      "MXT906B",
+      "P20E"
+     ],
+     "rows": [
+      [
+       "/dev/ttyS0",
+       "COM2",
+       "COM2",
+       "COM2",
+       "COM2"
+      ],
+      [
+       "/dev/ttyS7",
+       "COM1",
+       "COM1",
+       "COM1",
+       "COM1"
+      ]
+     ]
+    }
+   ]
+  }
+ ]
+}

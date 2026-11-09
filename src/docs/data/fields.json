@@ -1,0 +1,405 @@
+{
+ "fields": [
+  {
+   "key": "screen_inch",
+   "label": "屏幕尺寸",
+   "unit": "英寸",
+   "synonyms": [
+    "屏幕尺寸",
+    "屏幕大小",
+    "屏幕",
+    "显示尺寸",
+    "几寸屏",
+    "多大屏",
+    "寸屏",
+    "多大屏幕"
+   ],
+   "related": [
+    "resolution",
+    "brightness",
+    "touch"
+   ]
+  },
+  {
+   "key": "resolution",
+   "label": "分辨率",
+   "synonyms": [
+    "分辨率",
+    "清晰度",
+    "像素"
+   ]
+  },
+  {
+   "key": "brightness",
+   "label": "亮度",
+   "synonyms": [
+    "亮度",
+    "尼特",
+    "cd/m2",
+    "cd/m²"
+   ]
+  },
+  {
+   "key": "touch",
+   "label": "触摸",
+   "synonyms": [
+    "触摸",
+    "触控",
+    "电容屏"
+   ]
+  },
+  {
+   "key": "cpu",
+   "label": "CPU",
+   "synonyms": [
+    "cpu",
+    "处理器",
+    "主控",
+    "主频",
+    "几核"
+   ]
+  },
+  {
+   "key": "gpu",
+   "label": "GPU",
+   "synonyms": [
+    "gpu",
+    "图形处理"
+   ]
+  },
+  {
+   "key": "npu",
+   "label": "NPU",
+   "synonyms": [
+    "npu",
+    "算力",
+    "tops",
+    "ai算力"
+   ]
+  },
+  {
+   "key": "ram",
+   "label": "内存",
+   "synonyms": [
+    "内存",
+    "ram",
+    "运行内存"
+   ]
+  },
+  {
+   "key": "rom",
+   "label": "存储",
+   "synonyms": [
+    "存储",
+    "rom",
+    "硬盘",
+    "闪存",
+    "emmc",
+    "tf卡"
+   ]
+  },
+  {
+   "key": "os",
+   "label": "操作系统",
+   "synonyms": [
+    "操作系统",
+    "系统版本",
+    "安卓版本",
+    "linux版本",
+    "os",
+    "系统"
+   ]
+  },
+  {
+   "key": "cellular",
+   "label": "蜂窝网络",
+   "synonyms": [
+    "4g",
+    "5g",
+    "蜂窝",
+    "sim",
+    "移动网络",
+    "网络制式"
+   ]
+  },
+  {
+   "key": "wifi",
+   "label": "WiFi",
+   "synonyms": [
+    "wifi",
+    "wi-fi",
+    "无线网络"
+   ]
+  },
+  {
+   "key": "bluetooth",
+   "label": "蓝牙",
+   "synonyms": [
+    "蓝牙",
+    "bluetooth",
+    "bt"
+   ]
+  },
+  {
+   "key": "gnss",
+   "label": "GNSS/定位",
+   "synonyms": [
+    "gnss",
+    "定位",
+    "gps",
+    "北斗",
+    "rtk",
+    "惯导"
+   ]
+  },
+  {
+   "key": "can",
+   "label": "CAN",
+   "synonyms": [
+    "can",
+    "can总线",
+    "几路can",
+    "socketcan"
+   ]
+  },
+  {
+   "key": "rs232",
+   "label": "RS232",
+   "synonyms": [
+    "rs232",
+    "rs-232",
+    "232",
+    "串口"
+   ]
+  },
+  {
+   "key": "rs485",
+   "label": "RS485",
+   "synonyms": [
+    "rs485",
+    "rs-485",
+    "485"
+   ]
+  },
+  {
+   "key": "dc_output",
+   "label": "对外供电",
+   "synonyms": [
+    "对外供电",
+    "dc输出",
+    "dc_output",
+    "12v输出",
+    "供电输出"
+   ]
+  },
+  {
+   "key": "io_input",
+   "label": "IO输入",
+   "synonyms": [
+    "io输入",
+    "io_input",
+    "开关量输入",
+    "input"
+   ]
+  },
+  {
+   "key": "adc_input",
+   "label": "ADC",
+   "synonyms": [
+    "adc",
+    "模拟量"
+   ]
+  },
+  {
+   "key": "usb",
+   "label": "USB",
+   "synonyms": [
+    "usb",
+    "type-c",
+    "typec"
+   ]
+  },
+  {
+   "key": "ethernet",
+   "label": "以太网",
+   "synonyms": [
+    "以太网",
+    "网口",
+    "网卡",
+    "千兆网",
+    "百兆网"
+   ]
+  },
+  {
+   "key": "camera_in",
+   "label": "摄像头输入",
+   "synonyms": [
+    "摄像头",
+    "相机",
+    "ahd",
+    "cvbs",
+    "视频输入",
+    "几路摄像头"
+   ]
+  },
+  {
+   "key": "speaker",
+   "label": "扬声器",
+   "synonyms": [
+    "扬声器",
+    "喇叭",
+    "音频输出"
+   ]
+  },
+  {
+   "key": "mic",
+   "label": "麦克风",
+   "synonyms": [
+    "麦克风",
+    "mic",
+    "录音"
+   ]
+  },
+  {
+   "key": "handset",
+   "label": "手麦",
+   "synonyms": [
+    "手麦",
+    "对讲",
+    "电台"
+   ]
+  },
+  {
+   "key": "power_input",
+   "label": "电源输入",
+   "synonyms": [
+    "电源",
+    "供电",
+    "输入电压",
+    "电压范围",
+    "工作电压"
+   ]
+  },
+  {
+   "key": "acc_detect",
+   "label": "ACC 检测",
+   "synonyms": [
+    "acc",
+    "打火",
+    "点火"
+   ]
+  },
+  {
+   "key": "protection",
+   "label": "防护等级",
+   "synonyms": [
+    "防护等级",
+    "防水",
+    "ip等级",
+    "ip67",
+    "ip65"
+   ]
+  },
+  {
+   "key": "vibration",
+   "label": "震动标准",
+   "synonyms": [
+    "震动",
+    "振动",
+    "mil-std"
+   ]
+  },
+  {
+   "key": "temp_operating",
+   "label": "工作温度",
+   "synonyms": [
+    "工作温度",
+    "使用温度",
+    "耐温"
+   ]
+  },
+  {
+   "key": "temp_storage",
+   "label": "存储温度",
+   "synonyms": [
+    "存储温度",
+    "仓储温度"
+   ]
+  },
+  {
+   "key": "humidity",
+   "label": "湿度",
+   "synonyms": [
+    "湿度"
+   ]
+  },
+  {
+   "key": "salt_spray",
+   "label": "盐雾",
+   "synonyms": [
+    "盐雾",
+    "防盐雾"
+   ]
+  },
+  {
+   "key": "cert",
+   "label": "认证",
+   "synonyms": [
+    "认证",
+    "证书",
+    "ce",
+    "fcc"
+   ]
+  },
+  {
+   "key": "connector",
+   "label": "连接器",
+   "synonyms": [
+    "连接器",
+    "接头",
+    "航插",
+    "插座"
+   ]
+  },
+  {
+   "key": "buttons",
+   "label": "按键/指示灯",
+   "synonyms": [
+    "按键",
+    "按钮",
+    "指示灯",
+    "led"
+   ]
+  },
+  {
+   "key": "material",
+   "label": "材质",
+   "synonyms": [
+    "材质",
+    "外壳"
+   ]
+  },
+  {
+   "key": "size_mm",
+   "label": "整机尺寸",
+   "unit": "mm",
+   "synonyms": [
+    "整机尺寸",
+    "外观尺寸",
+    "长宽高",
+    "三围",
+    "尺寸"
+   ]
+  },
+  {
+   "key": "weight_kg",
+   "label": "重量",
+   "unit": "kg",
+   "synonyms": [
+    "重量",
+    "多重",
+    "kg"
+   ]
+  }
+ ]
+}

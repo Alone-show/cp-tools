@@ -1,0 +1,197 @@
+{
+ "pages": [
+  {
+   "slug": "2.6.11-APOLLO-12-PRO-PLUS-X",
+   "title": "2.6 编程参考信息 · APOLLO 12 PRO / 12 PLUS / 12 X",
+   "url": "https://www.cpuniverse.cn/online-documents-cn/DeveloperGuide/ProgrammingTable/Apollo12pro-plus/content.html",
+   "tables": [
+    {
+     "heading": "2 编程信息",
+     "header": [
+      "名称",
+      "设备节点",
+      "备注"
+     ],
+     "rows": [
+      [
+       "高精度",
+       "/dev/ttyS0",
+       ""
+      ],
+      [
+       "高精度",
+       "/dev/ttyS7",
+       ""
+      ],
+      [
+       "RS232B",
+       "/dev/ttyS3",
+       "对应 CP 功能线束上 DB9-B"
+      ],
+      [
+       "RS232A",
+       "/dev/ttyS4",
+       "对应 CP 功能线束上 DB9-A"
+      ],
+      [
+       "Bluetooth",
+       "/dev/ttyS8",
+       "蓝牙与主控通信"
+      ],
+      [
+       "MCU",
+       "/dev/ttyS9",
+       "rk3568 与 MCU 通讯"
+      ],
+      [
+       "OUTPUT1",
+       "/sys/class/gpio/gpio135/value",
+       ""
+      ],
+      [
+       "OUTPUT2",
+       "/sys/class/gpio/gpio15/value",
+       ""
+      ],
+      [
+       "OUTPUT3",
+       "",
+       "调用 CPComm的setOutputStatus(int io, bool status)接口控制，OUTPUT3对应io参数值为0"
+      ],
+      [
+       "OUTPUT4",
+       "",
+       "调用 CPComm的setOutputStatus(int io, bool status)接口控制，OUTPUT4对应io参数值为1"
+      ],
+      [
+       "INPUT1",
+       "",
+       "通过注册CPComm的setOnInputStatusChanged函数接收状态，INPUT1对应的io参数值为0"
+      ],
+      [
+       "INPUT2",
+       "",
+       "通过注册CPComm的setOnInputStatusChanged函数接收状态，INPUT2对应的io参数值为1"
+      ],
+      [
+       "INPUT3",
+       "",
+       "通过注册CPComm的setOnInputStatusChanged函数接收状态，INPUT3对应的io参数值为2"
+      ],
+      [
+       "ADC_IN1",
+       "/sys/bus/iio/devices/iio:device0/in_voltage4_raw",
+       ""
+      ],
+      [
+       "ADC_IN2",
+       "/sys/bus/iio/devices/iio:device0/in_voltage5_raw",
+       ""
+      ],
+      [
+       "ADC_IN3",
+       "/sys/bus/iio/devices/iio:device0/in_voltage2_raw",
+       ""
+      ],
+      [
+       "ADC_IN4",
+       "/sys/bus/iio/devices/iio:device0/in_voltage3_raw",
+       ""
+      ],
+      [
+       "CAMERA_0",
+       "/dev/video0",
+       ""
+      ],
+      [
+       "CAMERA_1",
+       "/dev/video1",
+       ""
+      ],
+      [
+       "CAMERA_2",
+       "/dev/video2",
+       ""
+      ],
+      [
+       "CAMERA_3",
+       "/dev/video3",
+       ""
+      ],
+      [
+       "CAMERA_5",
+       "/dev/video5",
+       ""
+      ],
+      [
+       "CAMERA_6",
+       "/dev/video6",
+       ""
+      ],
+      [
+       "CAMERA_7",
+       "/dev/video7",
+       ""
+      ],
+      [
+       "CAMERA_8",
+       "/dev/video8",
+       ""
+      ],
+      [
+       "CAMERA_12V",
+       "/sys/class/gpio/gpio103/value",
+       "控制功能线束上CAMERA_12V电源"
+      ],
+      [
+       "CAN1",
+       "can1",
+       "对应 CP 功能线束上CAN1，软件使用网络节点can1"
+      ],
+      [
+       "CAN2",
+       "can2",
+       "对应 CP 功能线束上CAN2，软件使用网络节点can2"
+      ],
+      [
+       "CAN3",
+       "can3",
+       "对应 CP 功能线束上CAN3，软件使用网络节点can3"
+      ],
+      [
+       "CAN4",
+       "can0",
+       "对应 CP 功能线束上CAN4，软件使用网络节点can0"
+      ]
+     ]
+    },
+    {
+     "heading": "3 高精度对应的 COM 串口",
+     "header": [
+      "设备节点",
+      "UM980",
+      "MXT906B",
+      "P20E",
+      "P20F"
+     ],
+     "rows": [
+      [
+       "/dev/ttyS0",
+       "COM2",
+       "COM2",
+       "COM2",
+       "COM2"
+      ],
+      [
+       "/dev/ttyS7",
+       "COM1",
+       "COM1",
+       "COM1",
+       "COM1"
+      ]
+     ]
+    }
+   ]
+  }
+ ]
+}

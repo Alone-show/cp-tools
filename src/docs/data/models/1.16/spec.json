@@ -1,0 +1,1466 @@
+{
+ "no": "1.16",
+ "model": "APOLLO 12 X",
+ "family": "APOLLO 二代",
+ "intro": "从平新一代12寸高端车载智能平板.支持单屏，双屏灵活配置。全面屏超窄边框，可扩展双屏异显异触。采用从平新一代高算力硬件平台，CPU+GPU+NPU满足入门式AI算法和2D/3D图形图像计算应用支持 Android/Linux 两个操作系统，简洁流畅，易于开发双12.1寸高端大屏，1280*800高清显示，为您带来双倍酷爽体验支持4路SocketCAN、4G/ 5G高灵敏度无线通讯传输等多种通讯",
+ "size_mm": "199.7*297.6*34.8",
+ "weight_kg": 1.49,
+ "params_flat": {
+  "cpu": "CPU 4核64位Cortex-A55, 2.0GHz",
+  "gpu": "GPU ARM G52 2EE",
+  "ram": "2G RAM LPDDR4 支持最高8G",
+  "rom": "16G ROM EMMC 支持最高256G",
+  "os": "Android 11.0\nLinux 5.10",
+  "screen_inch": "12.1",
+  "resolution": "1280*800px",
+  "brightness": "700cd/m2",
+  "touch": "支持双屏异显异触\n12.1”电容触摸显示屏,支持5指触控\n强光下防眩晕显示屏",
+  "cellular": "支持LTE 4G / 5G通信模组 (PCIE插卡)",
+  "wifi": "支持WiFi 802.11b/g/n/ac, 2.4G/5G",
+  "bluetooth": "支持Bluetooth 4.2",
+  "gnss": "支持GNSS (GPS/BDS/GLONASS)\n可选配米级定位 (EG25自带)",
+  "can": "支持Socket CAN*4/MCU CAN*2+Socket CAN*2",
+  "rs232": "支持RS232*1+RS485*1/RS232*2\n支持Debug RS232(仅调试用)",
+  "rs485": "支持RS232*1+RS485*1",
+  "io_input": "支持INPUT*3",
+  "io_output": "支持OUTPUT*3",
+  "adc_input": "支持ADC电压检测*2 (0~12V)\n支持ADC电流检测*2 (4~20mA)",
+  "usb": "支持USB 2.0*1",
+  "ethernet": "支持1000BASE-T1 车载以太网*1",
+  "camera_in": "支持摄像头*4,支持720P和1080P",
+  "speaker": "内置扬声器*1/外置扬声器*2/外置双声道音源输出",
+  "power_input": "电源 5-36V 直流输入",
+  "acc_detect": "开机打火 ACC 状态检测",
+  "protection": "IP67",
+  "vibration": "震动:MIL-STD-810",
+  "temp_operating": "-30℃-+70℃",
+  "temp_storage": "-40℃- +85℃",
+  "humidity": "0% - 90%RH",
+  "salt_spray": "整机盐雾48小时",
+  "connector": "26PIN连接器*2\nM12 X-code航插*1\nSMA接头*1\nTNC接头*2\nUSB Type-A接口*1",
+  "buttons": "电源开关键*1,自定义功能按键*1"
+ },
+ "tables": [
+  {
+   "sha256": "167358ff2949a6b14155779280d56d984820d1d4d9712ab044b54395a0fa6013",
+   "file": "images/store/167358ff2949a6b14155779280d56d984820d1d4d9712ab044b54395a0fa6013.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/%E5%8F%82%E6%95%B0%E8%A1%A8/APOLLO2%2012X%E5%8F%82%E6%95%B0%E8%A1%A8.png",
+   "section": "3.1 产品参数",
+   "caption": "图3.1 配置信息",
+   "kind": "param",
+   "is_table": true,
+   "header": [
+    "分类",
+    "内容"
+   ],
+   "rows": [
+    [
+     "系统",
+     "CPU 4核64位Cortex-A55, 2.0GHz\nGPU ARM G52 2EE\n2G RAM LPDDR4 支持最高8G\n16G ROM EMMC 支持最高256G\nAndroid 11.0\nLinux 5.10"
+    ],
+    [
+     "通讯和接口",
+     "支持LTE 4G / 5G通信模组 (PCIE插卡)\n支持WiFi 802.11b/g/n/ac, 2.4G/5G\n支持Bluetooth 4.2\n支持GNSS (GPS/BDS/GLONASS)\n可选配米级定位 (EG25自带)\n支持G-sensor\n支持RS232*1+RS485*1/RS232*2\n支持Debug RS232(仅调试用)\n支持USB 2.0*1\n支持1000BASE-T1 车载以太网*1\n支持Socket CAN*4/MCU CAN*2+Socket CAN*2\n支持INPUT*3\n支持OUTPUT*3\n支持ADC电压检测*2 (0~12V)\n支持ADC电流检测*2 (4~20mA)\n支持CP ISOBUS VT"
+    ],
+    [
+     "连接器",
+     "26PIN连接器*2\nM12 X-code航插*1\nSMA接头*1\nTNC接头*2\nUSB Type-A接口*1"
+    ],
+    [
+     "显示",
+     "支持双屏异显异触\n12.1”电容触摸显示屏,支持5指触控\n分辨率:1280*800px, 亮度700cd/m2\n强光下防眩晕显示屏"
+    ],
+    [
+     "电源管理",
+     "电源 5-36V 直流输入\n开机打火 ACC 状态检测\n供电电源电压检测\n过流过压欠压,防反接保护"
+    ],
+    [
+     "传感",
+     "内置扬声器*1/外置扬声器*2/外置双声道音源输出\n支持摄像头*4,支持720P和1080P\n支持CP AVM 360°环视影像"
+    ],
+    [
+     "环境参数",
+     "防护等级:IP67\n震动:MIL-STD-810\n道路车辆标准:ISO16750\n工作温度:-30℃-+70℃,湿度:0% - 90%RH\n存储温度:-40℃- +85℃,\n盐雾:整机盐雾48小时"
+    ],
+    [
+     "材质规格",
+     "尺寸(W*H*D) : 199.7*297.6*34.8mm\n重量:1.49kg"
+    ],
+    [
+     "功能按键",
+     "电源开关键*1,自定义功能按键*1"
+    ]
+   ],
+   "confidence": "high",
+   "notes": "原表为「分类|内容|分类|内容」4列并排（画布 1987x1698），已按左栏自上而下→右栏自上而下折叠为2列。与 1.15（APOLLO 12 PLUS）参数表同尺寸但内容不同：本表「显示」无「支持光感 (选配)」、「传感」无「麦克风*1」、无「客制功能」行、材质规格尺寸/重量不同。表末还有一行空行（分类为空，内容仅一个「.」），未计入 rows。"
+  },
+  {
+   "sha256": "1ca8ba6b9a95a18ca15e0d93c7bb432be926fc10dbd21eb9e633fca78512d785",
+   "file": "images/store/1ca8ba6b9a95a18ca15e0d93c7bb432be926fc10dbd21eb9e633fca78512d785.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/APOLLO%2012X/APOLLO2_12X%E6%8E%A5%E7%BA%BF%E5%AE%9A%E4%B9%89.png",
+   "section": "3.2 接口定义",
+   "caption": "图3.2.2 26P接口定义表（PORT 1）",
+   "kind": "interface",
+   "is_table": true,
+   "header": [
+    "安费诺-26P",
+    "PIN定义"
+   ],
+   "rows": [
+    [
+     "1",
+     "B+"
+    ],
+    [
+     "2",
+     "B-"
+    ],
+    [
+     "3",
+     "ACC"
+    ],
+    [
+     "4",
+     "CAN1_H"
+    ],
+    [
+     "5",
+     "CAN1_L"
+    ],
+    [
+     "6",
+     "OUTPUT1"
+    ],
+    [
+     "7",
+     "OUTPUT2"
+    ],
+    [
+     "8",
+     "GND"
+    ],
+    [
+     "9",
+     "NC/RS485-A"
+    ],
+    [
+     "10",
+     "NC/RS485-B"
+    ],
+    [
+     "11",
+     "CAN2_H"
+    ],
+    [
+     "12",
+     "CAN2_L"
+    ],
+    [
+     "13",
+     "OUTPUT3"
+    ],
+    [
+     "14",
+     "RS232_A_TX"
+    ],
+    [
+     "15",
+     "INPUT2"
+    ],
+    [
+     "16",
+     "CAMERA_1(NVP6158C)"
+    ],
+    [
+     "17",
+     "RS232_B_RX/NC"
+    ],
+    [
+     "18",
+     "NC"
+    ],
+    [
+     "19",
+     "TRN (车载以太网)"
+    ],
+    [
+     "20",
+     "RS232_A_RX"
+    ],
+    [
+     "21",
+     "INPUT1"
+    ],
+    [
+     "22",
+     "CAMERA_0(NVP6158C)"
+    ],
+    [
+     "23",
+     "CAMERA_12V"
+    ],
+    [
+     "24",
+     "RS232_B_TX/NC"
+    ],
+    [
+     "25",
+     "NC"
+    ],
+    [
+     "26",
+     "TRP (车载以太网)"
+    ]
+   ],
+   "confidence": "high",
+   "notes": "同一张图内含 PORT 1 与 PORT 2 两张 26P 接口定义表，各拆为一条 tables 记录。标题：APOLLO 12 X 26P接口定义-PORT 1。原表为4列并排（安费诺-26P|PIN定义 ×2），已折叠为2列。"
+  },
+  {
+   "sha256": "1ca8ba6b9a95a18ca15e0d93c7bb432be926fc10dbd21eb9e633fca78512d785",
+   "file": "images/store/1ca8ba6b9a95a18ca15e0d93c7bb432be926fc10dbd21eb9e633fca78512d785.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/APOLLO%2012X/APOLLO2_12X%E6%8E%A5%E7%BA%BF%E5%AE%9A%E4%B9%89.png",
+   "section": "3.2 接口定义",
+   "caption": "图3.2.2 26P接口定义表（PORT 2）",
+   "kind": "interface",
+   "is_table": true,
+   "header": [
+    "安费诺-26P",
+    "PIN定义"
+   ],
+   "rows": [
+    [
+     "1",
+     "INPUT3"
+    ],
+    [
+     "2",
+     "NC"
+    ],
+    [
+     "3",
+     "NC"
+    ],
+    [
+     "4",
+     "CAN3_H"
+    ],
+    [
+     "5",
+     "CAN3_L"
+    ],
+    [
+     "6",
+     "RS232_DEBUG_RX"
+    ],
+    [
+     "7",
+     "RS232_DEBUG_TX"
+    ],
+    [
+     "8",
+     "GND"
+    ],
+    [
+     "9",
+     "ADC_IN3"
+    ],
+    [
+     "10",
+     "ADC_IN4"
+    ],
+    [
+     "11",
+     "CAN4_H"
+    ],
+    [
+     "12",
+     "CAN4_L"
+    ],
+    [
+     "13",
+     "PPS"
+    ],
+    [
+     "14",
+     "NC/SPK_OUTPL/LINE_OUT_L"
+    ],
+    [
+     "15",
+     "ADC_IN2"
+    ],
+    [
+     "16",
+     "NC"
+    ],
+    [
+     "17",
+     "NC/SPK_OUTNR/LINE_OUT_R_GND"
+    ],
+    [
+     "18",
+     "CAMERA_3(NVP6158C)"
+    ],
+    [
+     "19",
+     "NC"
+    ],
+    [
+     "20",
+     "NC/SPK_OUTNL/LINE_OUT_L_GND"
+    ],
+    [
+     "21",
+     "ADC_IN1"
+    ],
+    [
+     "22",
+     "NC"
+    ],
+    [
+     "23",
+     "CAMERA_PWR_OUT"
+    ],
+    [
+     "24",
+     "NC/SPK_OUTPR/LINE_OUT_R"
+    ],
+    [
+     "25",
+     "CAMERA_2(NVP6158C)"
+    ],
+    [
+     "26",
+     "NC"
+    ]
+   ],
+   "confidence": "high",
+   "notes": "标题：APOLLO 12 X 26P接口定义-PORT 2。PIN 1-26 连续。本表 ADC_IN 各项未标注「(电压检测)/(电流检测)」，与 1.15 同名表不同，按图原样记录。"
+  },
+  {
+   "sha256": "c84375604befde08e08eee9084995558440372714b0327c161a2a8ddd532b6a6",
+   "file": "images/store/c84375604befde08e08eee9084995558440372714b0327c161a2a8ddd532b6a6.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/APOLLO2_12PLUS/APOLLO2_12X%20M12%E8%88%AA%E7%A9%BA%E5%BA%A7%E6%8E%A5%E7%BA%BF%E5%AE%9A%E4%B9%89.png",
+   "section": "3.2 接口定义",
+   "caption": "图3.2.3 M12接口定义表",
+   "kind": "interface",
+   "is_table": true,
+   "header": [
+    "PIN",
+    "Definition",
+    "Instructions"
+   ],
+   "rows": [
+    [
+     "1",
+     "GND",
+     "GND"
+    ],
+    [
+     "2",
+     "Plug and pull detection",
+     "Connect to GND"
+    ],
+    [
+     "3",
+     "FPD_OUT+",
+     "FPD-LINK"
+    ],
+    [
+     "4",
+     "FPD_OUT-",
+     "FPD-LINK"
+    ],
+    [
+     "5",
+     "VIN (10V)",
+     "Power supply(9~12V) / If an external power supply is used, suspend the power supply on the main panel"
+    ],
+    [
+     "6",
+     "VIN (10V)",
+     ""
+    ],
+    [
+     "7",
+     "VIN (10V)",
+     ""
+    ],
+    [
+     "8",
+     "VIN (10V)",
+     ""
+    ]
+   ],
+   "confidence": "high",
+   "notes": "同图转写（原归属 1.15 APOLLO 12 PLUS；原表：图3.2.3 M12副屏接口定义表）；Instructions 列 PIN 5-8 在原图中为合并单元格，整段文字记于 PIN 5 行，PIN 6-8 留空，未合并行。PIN 1-8 连续。"
+  },
+  {
+   "sha256": "a6967f5fd3a1ba35206bbd7fd748eb7af4dec1d8e9cac3dd7885337c487bbb15",
+   "file": "images/store/a6967f5fd3a1ba35206bbd7fd748eb7af4dec1d8e9cac3dd7885337c487bbb15.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/APOLLO2_12PLUS/APOLLO2_12PLUS%E4%B8%BB%E7%BA%BF%E6%9D%9F%E6%8E%A5%E7%BA%BF%E8%A1%A8.png",
+   "section": "4.1.1",
+   "caption": "图4.1.2 PORT1接线表",
+   "kind": "harness",
+   "is_table": true,
+   "header": [
+    "TE-26P",
+    "PIN定义",
+    "线径",
+    "线贴纸",
+    "线颜色",
+    "M1_2P(AUDIO_OUT)",
+    "M2_4P(CAMERA_0)",
+    "M3_4P(CAMERA_1)",
+    "网口 (RJ45)",
+    "M4_4P(IO INPUT)",
+    "M5_3P(POWER)",
+    "DB9A（公头）",
+    "DB9B（公头）",
+    "DB9C(公头)",
+    "M6_4P(DC OUTPUT)"
+   ],
+   "rows": [
+    [
+     "1",
+     "B+",
+     "18#",
+     "B+",
+     "黑白色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "2",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "2",
+     "B-",
+     "18#",
+     "B-",
+     "黑灰色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "3",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "3",
+     "ACC",
+     "18#",
+     "ACC",
+     "黑紫色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "1",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "4",
+     "CAN1_H",
+     "24#",
+     "CAN1_H",
+     "黑蓝色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "9（对绞线）",
+     ""
+    ],
+    [
+     "5",
+     "CAN1_L",
+     "24#",
+     "CAN1_L",
+     "黑绿色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "6（对绞线）",
+     ""
+    ],
+    [
+     "6",
+     "OUTPUT1",
+     "18#",
+     "OUTPUT1",
+     "黑色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "2"
+    ],
+    [
+     "7",
+     "OUTPUT2",
+     "18#",
+     "OUTPUT2",
+     "黄色",
+     "1",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "3"
+    ],
+    [
+     "8",
+     "GND",
+     "18#",
+     "GND",
+     "白色",
+     "2",
+     "2",
+     "2",
+     "",
+     "1-2",
+     "",
+     "5",
+     "5",
+     "5",
+     "1"
+    ],
+    [
+     "9",
+     "RS485_A/NC",
+     "24#",
+     "RS485_A",
+     "灰色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "3（对绞线）",
+     ""
+    ],
+    [
+     "10",
+     "RS485_B/NC",
+     "24#",
+     "RS485_B",
+     "紫色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "2（对绞线）",
+     ""
+    ],
+    [
+     "11",
+     "CAN2-H",
+     "24#",
+     "CAN2-H",
+     "蓝色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "7（对绞线）",
+     ""
+    ],
+    [
+     "12",
+     "CAN2-L",
+     "24#",
+     "CAN2-L",
+     "绿色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "1（对绞线）",
+     ""
+    ],
+    [
+     "13",
+     "OUTPUT3",
+     "18#",
+     "OUTPUT3",
+     "红色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "4"
+    ],
+    [
+     "14",
+     "RS232_A_TX",
+     "24#",
+     "RS232_TX1",
+     "棕色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "3（2/3对绞）",
+     "",
+     "",
+     ""
+    ],
+    [
+     "15",
+     "INPUT2",
+     "24#",
+     "INPUT2",
+     "粉红色",
+     "",
+     "",
+     "",
+     "",
+     "4",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "16",
+     "CAMERA_1",
+     "24#",
+     "CAMERA_1",
+     "黑黄色",
+     "",
+     "",
+     "4",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "17",
+     "NC/RS232_B_RX",
+     "24#",
+     "RS232_RX2",
+     "黑粉红色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "2（2/3对绞）",
+     "",
+     ""
+    ],
+    [
+     "18",
+     "NC",
+     "24#",
+     "PHY_MDI_1-",
+     "浅白色",
+     "",
+     "",
+     "",
+     "2（1和2对绞）",
+     "",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "19",
+     "TRN",
+     "24#",
+     "PHY_MDI_0-",
+     "浅白色",
+     "",
+     "",
+     "",
+     "6（3和6对绞）",
+     "",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "20",
+     "RS232_A_RX",
+     "24#",
+     "RS232_RX1",
+     "黑棕色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "2（2/3对绞）",
+     "",
+     "",
+     ""
+    ],
+    [
+     "21",
+     "INPUT1",
+     "24#",
+     "INPUT1",
+     "黑色",
+     "",
+     "",
+     "",
+     "",
+     "3",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "22",
+     "CAMERA_0",
+     "24#",
+     "CAMERA_0",
+     "浅白色",
+     "",
+     "4",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "23",
+     "CAMERA_PWR",
+     "24#",
+     "CAMERA_PWR",
+     "浅白色",
+     "",
+     "1",
+     "1",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "24",
+     "NC/RS232_BTX",
+     "24#",
+     "RS232_TX2",
+     "浅白色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "3（2/3对绞）",
+     "",
+     ""
+    ],
+    [
+     "25",
+     "NC",
+     "24#",
+     "PHY_MDI_1+",
+     "黑色",
+     "",
+     "",
+     "",
+     "1（1和2对绞）",
+     "",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "26",
+     "TRP",
+     "24#",
+     "PHY_MDI_0+",
+     "浅白色",
+     "",
+     "",
+     "",
+     "3（3和6对绞）",
+     "",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ]
+   ],
+   "confidence": "high",
+   "notes": "同图转写（原归属 1.15 APOLLO 12 PLUS；原表：图4.1.2 PORT1接线表）；表标题「接线表」。DB9C 第4-5、9-10、11-12 行为合并单元格（对绞线），已按行拆分并在单元格内标注「对绞线」。PIN 1-26 连续。"
+  },
+  {
+   "sha256": "b7aa68eec437590e56d53e94cb603f1431e6692687f172fd48bf29961d06d1df",
+   "file": "images/store/b7aa68eec437590e56d53e94cb603f1431e6692687f172fd48bf29961d06d1df.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/APOLLO2_12PLUS/APOLLO2_12PLUS%E5%89%AF%E7%BA%BF%E6%9D%9F%E6%8E%A5%E7%BA%BF%E8%A1%A8.png",
+   "section": "4.1.1",
+   "caption": "图4.1.4 PORT2接线表",
+   "kind": "harness",
+   "is_table": true,
+   "header": [
+    "TE-26P",
+    "PIN定义",
+    "线径",
+    "线贴纸",
+    "线颜色",
+    "M1_4P(CAMERA_2)",
+    "M2_4P(CAMERA_3)",
+    "M3_4P(CAMERA_5)",
+    "M4_4P(CAMERA_6)",
+    "M5_4P(CAMERA_7)",
+    "M6_4P(CAMERA_8)",
+    "M7_4P(ADC_电压)",
+    "M8_4P(ADC_电流)",
+    "DB9_D(公头)",
+    "M9_4P(DI DO)",
+    "SPK_L / Line_out_L",
+    "SPK_R / Line_out_R"
+   ],
+   "rows": [
+    [
+     "1",
+     "INPUT3",
+     "18#",
+     "同PIN定义",
+     "黑白色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "3",
+     "",
+     ""
+    ],
+    [
+     "2",
+     "NC",
+     "18#",
+     "同PIN定义",
+     "黑灰色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "2",
+     "",
+     ""
+    ],
+    [
+     "3",
+     "NC",
+     "18#",
+     "同PIN定义",
+     "黑紫色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "4",
+     "",
+     ""
+    ],
+    [
+     "4",
+     "CAN3_H",
+     "24#",
+     "同PIN定义",
+     "黑蓝色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "9（对绞线）",
+     "",
+     "",
+     ""
+    ],
+    [
+     "5",
+     "CAN3_L",
+     "24#",
+     "同PIN定义",
+     "黑绿色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "6（对绞线）",
+     "",
+     "",
+     ""
+    ],
+    [
+     "6",
+     "RS232_DEBUG_RX",
+     "18#",
+     "同PIN定义",
+     "黑色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "2（对绞线）",
+     "",
+     "",
+     ""
+    ],
+    [
+     "7",
+     "RS232_DEBUG_TX",
+     "18#",
+     "同PIN定义",
+     "黄色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "3（对绞线）",
+     "",
+     "",
+     ""
+    ],
+    [
+     "8",
+     "GND",
+     "18#",
+     "同PIN定义",
+     "白色",
+     "2",
+     "2",
+     "2",
+     "2",
+     "2",
+     "2",
+     "1 2",
+     "1",
+     "5",
+     "1",
+     "",
+     ""
+    ],
+    [
+     "9",
+     "ADC_IN3",
+     "24#",
+     "同PIN定义",
+     "灰色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "3",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "10",
+     "ADC_IN4",
+     "24#",
+     "同PIN定义",
+     "紫色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "4",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "11",
+     "CAN4_H",
+     "24#",
+     "同PIN定义",
+     "蓝色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "7（对绞线）",
+     "",
+     "",
+     ""
+    ],
+    [
+     "12",
+     "CAN4_L",
+     "24#",
+     "同PIN定义",
+     "绿色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "1（对绞线）",
+     "",
+     "",
+     ""
+    ],
+    [
+     "13",
+     "IPPS",
+     "18#",
+     "同PIN定义",
+     "红色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "2",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "14",
+     "NC/SPK_OUTPL/LINE_OUT_L",
+     "24#",
+     "同PIN定义",
+     "红色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "1",
+     ""
+    ],
+    [
+     "15",
+     "ADC_IN2",
+     "24#",
+     "同PIN定义",
+     "粉红色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "4",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "16",
+     "NC",
+     "24#",
+     "同PIN定义",
+     "黑黄色",
+     "",
+     "",
+     "",
+     "",
+     "4",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "17",
+     "NC/SPK_OUTNR/LINE_OUT_R_GND",
+     "24#",
+     "同PIN定义",
+     "黑色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "2"
+    ],
+    [
+     "18",
+     "CAMERA_3 (NVP6158C)",
+     "24#",
+     "同PIN定义",
+     "浅白色",
+     "",
+     "4",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "19",
+     "NC",
+     "24#",
+     "同PIN定义",
+     "浅白色",
+     "",
+     "",
+     "",
+     "4",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "20",
+     "NC/SPK_OUTNL/LINE_OUT_L_GND",
+     "24#",
+     "同PIN定义",
+     "黑色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "2",
+     ""
+    ],
+    [
+     "21",
+     "ADC_IN1",
+     "24#",
+     "同PIN定义",
+     "黑色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "3",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "22",
+     "NC",
+     "24#",
+     "同PIN定义",
+     "浅白色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "4",
+     "",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "23",
+     "CAMERA__PWR_OUT",
+     "24#",
+     "同PIN定义",
+     "浅白色",
+     "1",
+     "1",
+     "1",
+     "1",
+     "1",
+     "1",
+     "",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "24",
+     "SPK_OUTPR/LINE_OUT_R",
+     "24#",
+     "同PIN定义",
+     "红色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "1"
+    ],
+    [
+     "25",
+     "CAMERA_2 (NVP6158C)",
+     "24#",
+     "同PIN定义",
+     "黑色",
+     "4",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "26",
+     "NC",
+     "24#",
+     "同PIN定义",
+     "浅白色",
+     "",
+     "",
+     "4",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ]
+   ],
+   "confidence": "high",
+   "notes": "同图转写（原归属 1.15 APOLLO 12 PLUS；原表：图4.1.4 PORT2接线表）；表标题「接线表」。DB9_D 第4-5、6-7、11-12 行为合并单元格（对绞线），已按行拆分并在单元格内标注「对绞线」。PIN 1-26 连续。PIN 2/3/16/19/22/26 的 PIN定义为 NC，但仍保留其与 M5/M6/M4/M3 的对应针号，按图原样记录。"
+  }
+ ],
+ "skipped": [
+  {
+   "sha256": "d2618ddebc8cc7644493626925bfff0c366c6119c28c5698966b4245da97be91",
+   "file": "images/store/d2618ddebc8cc7644493626925bfff0c366c6119c28c5698966b4245da97be91.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/APOLLO%2012X/APOLLO%2012X%20Front%20view.png",
+   "reason": "外观图｜图2.1.1 正面图：非表格，见原图"
+  },
+  {
+   "sha256": "dd64367b8683950661cb3380afa02d4dfc395d1e197616639b16e356e167457d",
+   "file": "images/store/dd64367b8683950661cb3380afa02d4dfc395d1e197616639b16e356e167457d.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/APOLLO%2012X/APOLLO%2012X%20Back%20view.png",
+   "reason": "外观图｜图2.1.2 背面图：非表格，见原图"
+  },
+  {
+   "sha256": "81d8af45c24a951aa24aa745619da50aec6b15a7de56e660764f64ef3933fc23",
+   "file": "images/store/81d8af45c24a951aa24aa745619da50aec6b15a7de56e660764f64ef3933fc23.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/APOLLO2_12PLUS/APOLLO2_12PLUS%E4%B8%BB%E7%BA%BF%E6%9D%9F%E5%A4%96%E8%A7%82%E5%9B%BE.png",
+   "reason": "线束外观图｜图4.1.1 PORT1线束定义：非表格/无图内文字，见原图"
+  },
+  {
+   "sha256": "418d7fac47579b60cc9f9530998a4dd0831129dbbfe43039091d5c2f2916733f",
+   "file": "images/store/418d7fac47579b60cc9f9530998a4dd0831129dbbfe43039091d5c2f2916733f.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/APOLLO2%2012/12PRO%20PORT2.png",
+   "reason": "线束外观图｜图4.1.3 PORT2线束定义：非表格/无图内文字，见原图"
+  }
+ ],
+ "warnings": [
+  "尺寸：参数表「尺寸(W*H*D) : 199.7*297.6*34.8mm」，任务/页面文字为 297.6x199.7x34.8mm（同样三个数值，W/H 顺序不同）；size_mm 已按图取 199.7*297.6*34.8。",
+  "重量：参数表 1.49kg 与任务文字 1.49 kg 一致。",
+  "同一张 sha256=1ca8ba6b… 的接口定义图内含 PORT 1、PORT 2 两张 26P 表，已分别转写为两条 tables 记录（sha256 集合仍与 candidates 一致）。",
+  "参数表画布 1987x1698 超宽，已分块放大读取后折叠为2列；表末空行（分类空、内容仅「.」）未计入 rows。",
+  "补齐共用表 3 张（同图转写，原归属见各表注）",
+  "补录图内文字 5 张（自动识读，? 处需核对原图）"
+ ],
+ "figures": [
+  {
+   "sha256": "ecf17af949108200463aa2b3327c4aa4a0ba68d6fa743a923397c8b4c84446ce",
+   "file": "images/store/ecf17af949108200463aa2b3327c4aa4a0ba68d6fa743a923397c8b4c84446ce.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/APOLLO2_12PLUS/%E6%8E%A5%E5%8F%A3%E5%9B%BE.png",
+   "section": "3.2 接口定义",
+   "caption": "图3.2.1 接口图",
+   "kind": "drawing",
+   "title": "",
+   "text": "接口/针脚：\nPORT2：1 7 / 8 13 / 14 19 / 20 26（26 孔，第 3 排右侧印 A）\nPORT1：1 7 / 8 13 / 14 19 / 20 26（26 孔，第 3 排右侧印 A）\nSub screen connector M12：1 2 3 4 5 6 7 8",
+   "confidence": "high"
+  },
+  {
+   "sha256": "92b6ccd90e0153d48138a4a6e7d80f878c7622145c97c04913e7e01db44ae333",
+   "file": "images/store/92b6ccd90e0153d48138a4a6e7d80f878c7622145c97c04913e7e01db44ae333.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/APOLLO%2012X/%E5%89%AF%E5%B1%8F%E7%BA%BF%E6%9D%9F.png",
+   "section": "4.1.5",
+   "caption": "图4.1.5 M12 副屏线束",
+   "kind": "drawing",
+   "title": "M12 X-CODE MALE TO MALE CABLE ASSEMBLY（图框内 CUSTOMER DRAWING）",
+   "text": "产品尺寸：53MM；Ø14.6MM；LENGTH M(Meters)\n接口/针脚：P1 1 white-orange、2 orange、3 white-green、4 green、5 white-brown、6 brown、7 white-blue、8 blue、shell；P2 1 white-orange、2 orange、3 white-green、4 green、5 white-brown、6 brown、7 white-blue、8 blue、shell；CONNECTOR：M12 X-CODE MALE；WIRING DIAGRAM：SHIELD、TWIST PAIR、FACE VIEW\n备注原文：CABLE,CAT6A 24AWG*4P,GREEN TPU JACKET；PVC OVERMOLD,BLK\nTechnical data：Ethernet cable assembly:M12 X-CODED 8-position; CAT6A,S/FTP 4x2xAWG24,TPU;360° shielded, Plug Straight.\nMaterials：Male Contact: Copper alloy,Gold plated. Shielding shell: Copper alloy,Ni plated. Male plastic housing: Thermoplastic,black. Coupling nut: Copper alloy,Ni plated. Cable: CAT6A 24AWG*4P,Green TPU jacket.\nSpecifications：Rated current at 40°C: 0.5A. Rated voltage: 50V AC / 60V DC. Withstand voltages: 300V. Contact resistance: < 5 mΩ. Insulation resistance: Length 0~20M >100MΩ;Length 20~40M >20MΩ. Signal type: Ethernet CAT6A, 10 Gbps. Standards: M12 connector for IEC 61076-2-109. Protection:IP67. Operation temperature: -25 °C~80 °C. Storage conditions: Temperature 25±3°C; Humidity 35%~70%. RoHS conformity: Yes.\nP/N NOTE：MCXS087A7AC59Mxxx；Mxxx NDICATES THE HARNESS LENGTH.L；FOR EXAMPLE: M001,EXPRESS: L=0.1M；M010,EXPRESS: L=1M；M100,EXPRESS: L=10M",
+   "confidence": "high"
+  },
+  {
+   "sha256": "4f74150256f16c9aef60c66c261073c5ad62d370ed2943bbbadd83f7ea9719fb",
+   "file": "images/store/4f74150256f16c9aef60c66c261073c5ad62d370ed2943bbbadd83f7ea9719fb.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/APOLLO%2012X/APOLLO2%2012X%20%E5%AE%89%E5%8D%93%E6%8C%87%E5%AF%BC.png",
+   "section": "5 安装方式",
+   "caption": "图2.1.1 正面图",
+   "kind": "drawing",
+   "title": "APOLLO2 12X RAM 安装指导",
+   "text": "产品尺寸\n产品尺寸：1190.4；798.8；1231.7；137.4；125.2；172\n安装孔：4*M5；152；120\nRAM 支架安装说明\n① 逆时针旋转支架把手，取出其中一个支架底座。\n② 箭头所示的为固定孔位，请选择其中一种安装方案。（或）\n③ 箭头所示的位置为产品背面与RAM支架固定位置。\n④ 将RAM支架底座序号与产品背部序号一一对应，使用螺丝紧固后。再放回RAM支架原位置，顺时针旋转支架把手，完成安装。\n扭力:2N.m　M5x10*4PCS\nRAM 支架　RAM 支架底座　A\n1.本版所示图形与实物可能有差异，请以实物为参考。2.本版说明书仅限所述产品与RAM-101U系列支架组装，请根据实际需求安装。\n深圳从平技术有限公司",
+   "confidence": "high"
+  }
+ ],
+ "doc_url": "https://www.cpuniverse.cn/online-documents-cn/Introduction/Apollo2-12X/content.html"
+}

@@ -1,0 +1,57 @@
+{
+  "format": 1,
+  "title": {
+    "en": "Alone-show CP tools",
+    "zh": "从平定制工具集"
+  },
+  "description": {
+    "en": "CP customization suite: product docs, firmware/issues, and USB upgrade/flash sub-plugins in one bundle.",
+    "zh": "从平定制工具集：产品资料、固件与问题、U 盘升级与线刷，一个 bundle 三个子插件。"
+  },
+  "metadata": {
+    "categories": {},
+    "labels": {},
+    "sortKeys": {}
+  },
+  "plugins": [
+    {
+      "name": "@local/cp-tools",
+      "title": {
+        "en": "CP Tools",
+        "zh": "从平工具集"
+      },
+      "description": {
+        "en": "One bundle with three independently toggleable sub-plugins: /cp-docs product documentation, /firmware firmware & issue lookup, /cpservice USB upgrade packages and full-device flashing.",
+        "zh": "一个 bundle、三个可独立开关的子插件：/cp-docs 产品资料、/firmware 固件与问题检索、/cpservice U 盘升级包与整机线刷。"
+      },
+      "icon": "icons/cp-tools.svg",
+      "author": "Alone-show",
+      "homepage": "https://github.com/Alone-show/cp-tools",
+      "repository": {
+        "url": "https://github.com/Alone-show/cp-tools"
+      },
+      "metadata": {
+        "keywords": [
+          "dsh",
+          "dsh-plugin",
+          "cpdevice",
+          "product-docs",
+          "firmware",
+          "cpservice"
+        ],
+        "labels": []
+      },
+      "versions": [
+        {
+          "version": "1.0.0",
+          "publishTimestamp": 1794210816,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/Alone-show/cp-tools"
+          },
+          "engines": {}
+        }
+      ]
+    }
+  ]
+}

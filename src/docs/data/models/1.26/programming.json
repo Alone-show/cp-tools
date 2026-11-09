@@ -1,0 +1,111 @@
+{
+ "pages": [
+  {
+   "slug": "2.6.21-TANK-1",
+   "title": "2.6 编程参考信息 · TANK 1",
+   "url": "https://www.cpuniverse.cn/online-documents-cn/DeveloperGuide/ProgrammingTable/Tank1/content.html",
+   "tables": [
+    {
+     "heading": "2 编程信息",
+     "header": [
+      "名称",
+      "设备节点",
+      "备注"
+     ],
+     "rows": [
+      [
+       "RS232",
+       "/dev/ttyHSL0",
+       "对应 CP 功能线束上 DB9-B"
+      ],
+      [
+       "",
+       "/dev/ttyHSL1",
+       "内部使用"
+      ],
+      [
+       "高精度模块，或低精度定位模块",
+       "/dev/ttyHSL2",
+       ""
+      ],
+      [
+       "RS232",
+       "/dev/ttyHSL3",
+       "对应 CP 功能线束上 DB9-A"
+      ],
+      [
+       "OUTPU1",
+       "/dev/gpio_dev",
+       "echo “100006”到设备节点使能关 / echo “100007”到设备节点使能关"
+      ],
+      [
+       "OUTPU2",
+       "/dev/gpio_dev",
+       "echo “100008”到设备节点使能关 / echo “100009”到设备节点使能关"
+      ],
+      [
+       "GPS电源",
+       "/dev/gpio_dev",
+       "echo “100011”到设备节点使能关 / echo “100010”到设备节点使能关"
+      ],
+      [
+       "AN1",
+       "/dev/video0",
+       "对应线束AN1，视频输入1"
+      ],
+      [
+       "AHD2",
+       "/dev/video1",
+       "对应线束AHD2，视频输入2"
+      ],
+      [
+       "AHD3",
+       "/dev/video2",
+       "对应线束AHD2，视频输入3"
+      ],
+      [
+       "AN4",
+       "/dev/video3",
+       "对应线束AN4，视频输入4"
+      ],
+      [
+       "GPS LED",
+       "/dev/gpio_dev",
+       "echo \"100000\"到设备节点关闭; / echo \"100001\"到设备节点开启"
+      ],
+      [
+       "WIFI LED",
+       "/dev/gpio_dev",
+       "echo \"100002\"到设备节点关闭; / echo \"100003\"到设备节点开启"
+      ],
+      [
+       "4G LED",
+       "/dev/gpio_dev",
+       "echo \"100004\"到设备节点关闭; / echo \"100005\"到设备节点开启"
+      ],
+      [
+       "USER LED",
+       "/dev/gpio_dev",
+       "echo \"100016\"到设备节点关闭; / echo \"100017\"到设备节点开启"
+      ]
+     ]
+    },
+    {
+     "heading": "3 高精度对应的 COM 串口",
+     "header": [
+      "设备节点",
+      "UBLOX",
+      "UM482"
+     ],
+     "rows": [
+      [
+       "/dev/ttyHSL2",
+       "COM1",
+       "COM3"
+      ]
+     ]
+    }
+   ]
+  }
+ ]
+}

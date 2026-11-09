@@ -1,0 +1,112 @@
+{
+ "pages": [
+  {
+   "slug": "2.6.19-SPRING-10-PRO-PLUS-2nd-Gen",
+   "title": "2.6 编程参考信息 · SPRING 10 PRO/PLUS 二代",
+   "url": "https://www.cpuniverse.cn/online-documents-cn/DeveloperGuide/ProgrammingTable/Spring10pro-plusGen2/content.html",
+   "tables": [
+    {
+     "heading": "2 编程信息",
+     "header": [
+      "名称",
+      "设备节点",
+      "备注"
+     ],
+     "rows": [
+      [
+       "高精度",
+       "/dev/ttyS0",
+       ""
+      ],
+      [
+       "debug",
+       "/dev/ttyS2",
+       "debug 调试信息打印"
+      ],
+      [
+       "RS485",
+       "/dev/ttyS3",
+       "对应 CP_26PIN 功能线束上 DB9-C"
+      ],
+      [
+       "GNSS",
+       "/dev/ttyS4",
+       ""
+      ],
+      [
+       "Bluetooth",
+       "/dev/ttyS8",
+       "蓝牙与主控通信"
+      ],
+      [
+       "RS232A",
+       "/dev/ttyWK1",
+       "对应 CP_26PIN 功能线束上 DB9-A"
+      ],
+      [
+       "RS232B",
+       "/dev/ttyWK2",
+       "对应 CP_26PIN 功能线束上 DB9-B"
+      ],
+      [
+       "电台",
+       "/dev/ttyWK3",
+       ""
+      ],
+      [
+       "OUTPUT1",
+       "/sys/class/gpio/gpio135/value",
+       "对应 CP_26PIN 功能线束上OUTPUT1 / 写1控制输出"
+      ],
+      [
+       "OUTPUT2",
+       "/sys/class/gpio/gpio15/value",
+       "对应 CP_26PIN 功能线束上OUTPUT2 / 写1控制输出"
+      ],
+      [
+       "CAMERA_0",
+       "/dev/video0",
+       "对应功能线束上CAMERA_0接口"
+      ],
+      [
+       "CAMERA_1",
+       "/dev/video1",
+       "对应功能线束上CAMERA_2接口"
+      ],
+      [
+       "CAMERA_12V",
+       "/sys/class/gpio/gpio103/value",
+       "控制功能线束上CAMERA_12V电源; / 写1控制输出"
+      ]
+     ]
+    },
+    {
+     "heading": "3 高精度对应的 COM 串口",
+     "header": [
+      "设备节点",
+      "UM982",
+      "UM980",
+      "MXT906B",
+      "P20E"
+     ],
+     "rows": [
+      [
+       "/dev/ttyS0",
+       "COM2",
+       "COM2",
+       "COM2",
+       "COM2"
+      ],
+      [
+       "/dev/ttyS4",
+       "COM1",
+       "COM1",
+       "COM1",
+       "COM1"
+      ]
+     ]
+    }
+   ]
+  }
+ ]
+}

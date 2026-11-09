@@ -1,0 +1,743 @@
+{
+ "builtAt": "2026-11-03T04:11:26.499Z",
+ "source": "/home/my/Documents/deepseek-harness/default-workspace/work/cpdoc/ai-readable",
+ "note": "由 lib/import.js 从 work/cpdoc/ai-readable 生成；run: node lib/import.js",
+ "models": [
+  {
+   "id": "1.1",
+   "no": "1.1",
+   "model": "APOLLO 7 PRO",
+   "name": "APOLLO 7 PRO",
+   "family": "APOLLO PRO",
+   "doc_url": "https://www.cpuniverse.cn/online-documents-cn/Introduction/ApolloPro-7/content.html",
+   "aliases": [
+    "APOLLO 7 PRO",
+    "APOLLO7PRO",
+    "APOLLO PRO 7"
+   ],
+   "cores": [
+    "apollo7pro",
+    "apollopro7"
+   ],
+   "cp_codes": [],
+   "spec": "models/1.1/spec.json",
+   "programming": "models/1.1/programming.json",
+   "workpoints": null
+  },
+  {
+   "id": "1.2",
+   "no": "1.2",
+   "model": "APOLLO 8 PRO",
+   "name": "APOLLO 8 PRO",
+   "family": "APOLLO PRO",
+   "doc_url": "https://www.cpuniverse.cn/online-documents-cn/Introduction/ApolloPro-8/content.html",
+   "aliases": [
+    "APOLLO 8 PRO",
+    "APOLLO8PRO"
+   ],
+   "cores": [
+    "apollo8pro"
+   ],
+   "cp_codes": [],
+   "spec": "models/1.2/spec.json",
+   "programming": "models/1.2/programming.json",
+   "workpoints": null
+  },
+  {
+   "id": "1.3",
+   "no": "1.3",
+   "model": "APOLLO 10 PRO",
+   "name": "APOLLO 10 PRO",
+   "family": "APOLLO PRO",
+   "doc_url": "https://www.cpuniverse.cn/online-documents-cn/Introduction/ApolloPro-10/content.html",
+   "aliases": [
+    "APOLLO 10 PRO",
+    "APOLLO10PRO"
+   ],
+   "cores": [
+    "apollo10pro"
+   ],
+   "cp_codes": [],
+   "spec": "models/1.3/spec.json",
+   "programming": "models/1.3/programming.json",
+   "workpoints": null
+  },
+  {
+   "id": "1.4",
+   "no": "1.4",
+   "model": "APOLLO 10 PRO 电台",
+   "name": "APOLLO 10 PRO 电台",
+   "family": "APOLLO PRO",
+   "doc_url": "https://www.cpuniverse.cn/online-documents-cn/Introduction/ApolloPro-10-radio/content.html",
+   "aliases": [
+    "APOLLO 10 PRO 电台",
+    "APOLLO10PRO电台",
+    "APOLLO 10 PRO RADIO"
+   ],
+   "cores": [
+    "apollo10proradio"
+   ],
+   "cp_codes": [],
+   "spec": "models/1.4/spec.json",
+   "programming": "models/1.4/programming.json",
+   "workpoints": null
+  },
+  {
+   "id": "1.5",
+   "no": "1.5",
+   "model": "APOLLO X",
+   "name": "APOLLO X",
+   "family": "APOLLO PRO",
+   "doc_url": "https://www.cpuniverse.cn/online-documents-cn/Introduction/ApolloPro-X/content.html",
+   "aliases": [
+    "APOLLO X",
+    "APOLLOX",
+    "APOLLO-X"
+   ],
+   "cores": [
+    "apollox"
+   ],
+   "cp_codes": [],
+   "spec": "models/1.5/spec.json",
+   "programming": "models/1.5/programming.json",
+   "workpoints": null
+  },
+  {
+   "id": "1.6",
+   "no": "1.6",
+   "model": "APOLLO 7 二代",
+   "name": "APOLLO 7 二代",
+   "family": "APOLLO 二代",
+   "doc_url": "https://www.cpuniverse.cn/online-documents-cn/Introduction/Apollo2-7/content.html",
+   "aliases": [
+    "APOLLO 7 二代",
+    "APOLLO2 7",
+    "APOLLO2-7",
+    "CP022-APOLLO2 7"
+   ],
+   "cores": [
+    "apollo7gen2",
+    "apollo7",
+    "cp022apollo7"
+   ],
+   "cp_codes": [
+    "CP022-APOLLO2 7"
+   ],
+   "spec": "models/1.6/spec.json",
+   "programming": "models/1.6/programming.json",
+   "workpoints": "models/1.6/workpoints.json"
+  },
+  {
+   "id": "1.7",
+   "no": "1.7",
+   "model": "APOLLO 7A 二代",
+   "name": "APOLLO 7A 二代",
+   "family": "APOLLO 二代",
+   "doc_url": "https://www.cpuniverse.cn/online-documents-cn/Introduction/Apollo2-7A/content.html",
+   "aliases": [
+    "APOLLO 7A 二代",
+    "APOLLO2 7A",
+    "APOLLO2-7A",
+    "CP022-2-APOLLO2 7A"
+   ],
+   "cores": [
+    "apollo7agen2",
+    "apollo7a",
+    "cp0222apollo7a"
+   ],
+   "cp_codes": [
+    "CP022-2-APOLLO2 7A"
+   ],
+   "spec": "models/1.7/spec.json",
+   "programming": "models/1.7/programming.json",
+   "workpoints": "models/1.7/workpoints.json"
+  },
+  {
+   "id": "1.8",
+   "no": "1.8",
+   "model": "APOLLO 10 二代",
+   "name": "APOLLO 10 二代",
+   "family": "APOLLO 二代",
+   "doc_url": "https://www.cpuniverse.cn/online-documents-cn/Introduction/Apollo2-10/content.html",
+   "aliases": [
+    "APOLLO 10 二代",
+    "APOLLO2 10",
+    "APOLLO2-10",
+    "CP030-APOLLO2 10"
+   ],
+   "cores": [
+    "apollo10gen2",
+    "apollo10",
+    "cp030apollo10"
+   ],
+   "cp_codes": [
+    "CP030-APOLLO2 10"
+   ],
+   "spec": "models/1.8/spec.json",
+   "programming": "models/1.8/programming.json",
+   "workpoints": "models/1.8/workpoints.json"
+  },
+  {
+   "id": "1.9",
+   "no": "1.9",
+   "model": "APOLLO 12 二代",
+   "name": "APOLLO 12 二代",
+   "family": "APOLLO 二代",
+   "doc_url": "https://www.cpuniverse.cn/online-documents-cn/Introduction/Apollo2-12/content.html",
+   "aliases": [
+    "APOLLO 12 二代",
+    "APOLLO2 12",
+    "APOLLO2-12",
+    "CP022-APOLLO2 12"
+   ],
+   "cores": [
+    "apollo12gen2",
+    "apollo12",
+    "cp022apollo12"
+   ],
+   "cp_codes": [
+    "CP022-APOLLO2 12"
+   ],
+   "spec": "models/1.9/spec.json",
+   "programming": "models/1.9/programming.json",
+   "workpoints": "models/1.9/workpoints.json"
+  },
+  {
+   "id": "1.10",
+   "no": "1.10",
+   "model": "APOLLO 12 二代 特别版",
+   "name": "APOLLO 12 二代 特别版",
+   "family": "APOLLO 二代",
+   "doc_url": "https://www.cpuniverse.cn/online-documents-cn/Introduction/Apollo2-12%E7%89%B9%E5%88%AB%E7%89%88/content.html",
+   "aliases": [
+    "APOLLO 12 二代 特别版",
+    "APOLLO2 12 特别版",
+    "APOLLO2-12 特别版"
+   ],
+   "cores": [
+    "apollo12gen2special",
+    "apollo12special"
+   ],
+   "cp_codes": [],
+   "spec": "models/1.10/spec.json",
+   "programming": "models/1.10/programming.json",
+   "workpoints": null
+  },
+  {
+   "id": "1.11",
+   "no": "1.11",
+   "model": "APOLLO 12A 二代",
+   "name": "APOLLO 12A 二代",
+   "family": "APOLLO 二代",
+   "doc_url": "https://www.cpuniverse.cn/online-documents-cn/Introduction/Apollo2-12A/content.html",
+   "aliases": [
+    "APOLLO 12A 二代",
+    "APOLLO2 12A",
+    "APOLLO2-12A",
+    "CP022-2-APOLLO2 12A"
+   ],
+   "cores": [
+    "apollo12agen2",
+    "apollo12a",
+    "cp0222apollo12a"
+   ],
+   "cp_codes": [
+    "CP022-2-APOLLO2 12A"
+   ],
+   "spec": "models/1.11/spec.json",
+   "programming": "models/1.11/programming.json",
+   "workpoints": "models/1.11/workpoints.json"
+  },
+  {
+   "id": "1.12",
+   "no": "1.12",
+   "model": "APOLLO 12A 二代 特别版",
+   "name": "APOLLO 12A 二代 特别版",
+   "family": "APOLLO 二代",
+   "doc_url": "https://www.cpuniverse.cn/online-documents-cn/Introduction/Apollo2-12A%E7%89%B9%E5%88%AB%E7%89%88/content.html",
+   "aliases": [
+    "APOLLO 12A 二代 特别版",
+    "APOLLO2 12A 特别版"
+   ],
+   "cores": [
+    "apollo12agen2special",
+    "apollo12aspecial"
+   ],
+   "cp_codes": [],
+   "spec": "models/1.12/spec.json",
+   "programming": "models/1.12/programming.json",
+   "workpoints": null
+  },
+  {
+   "id": "1.13",
+   "no": "1.13",
+   "model": "APOLLO 12 PRO",
+   "name": "APOLLO 12 PRO",
+   "family": "APOLLO 二代",
+   "doc_url": "https://www.cpuniverse.cn/online-documents-cn/Introduction/Apollo2-12PRO/content.html",
+   "aliases": [
+    "APOLLO 12 PRO",
+    "APOLLO2 12PRO",
+    "APOLLO2-12PRO",
+    "APOLLO 12PRO",
+    "CP025-APOLLO2 12PRO"
+   ],
+   "cores": [
+    "apollo12pro",
+    "cp025apollo12pro"
+   ],
+   "cp_codes": [
+    "CP025-APOLLO2 12PRO"
+   ],
+   "spec": "models/1.13/spec.json",
+   "programming": "models/1.13/programming.json",
+   "workpoints": "models/1.13/workpoints.json"
+  },
+  {
+   "id": "1.14",
+   "no": "1.14",
+   "model": "APOLLO 12 PRO 特别版",
+   "name": "APOLLO 12 PRO 特别版",
+   "family": "APOLLO 二代",
+   "doc_url": "https://www.cpuniverse.cn/online-documents-cn/Introduction/Apollo2-12PRO%E7%89%B9%E5%88%AB%E7%89%88/content.html",
+   "aliases": [
+    "APOLLO 12 PRO 特别版",
+    "APOLLO2 12PRO 特别版",
+    "APOLLO 12PRO 特别版"
+   ],
+   "cores": [
+    "apollo12prospecial"
+   ],
+   "cp_codes": [],
+   "spec": "models/1.14/spec.json",
+   "programming": "models/1.14/programming.json",
+   "workpoints": null
+  },
+  {
+   "id": "1.15",
+   "no": "1.15",
+   "model": "APOLLO 12 PLUS",
+   "name": "APOLLO 12 PLUS",
+   "family": "APOLLO 二代",
+   "doc_url": "https://www.cpuniverse.cn/online-documents-cn/Introduction/Apollo2-12PLUS/content.html",
+   "aliases": [
+    "APOLLO 12 PLUS",
+    "APOLLO2 12PLUS",
+    "APOLLO2-12PLUS",
+    "APOLLO 12PLUS",
+    "APOLLO 12 PLUS LW",
+    "CP026-APOLLO2 12PLUS",
+    "CP026-APOLLO2 12PLUS LW"
+   ],
+   "cores": [
+    "apollo12plus",
+    "apollo12pluslw",
+    "cp026apollo12plus",
+    "cp026apollo12pluslw"
+   ],
+   "cp_codes": [
+    "CP026-APOLLO2 12PLUS",
+    "CP026-APOLLO2 12PLUS LW"
+   ],
+   "spec": "models/1.15/spec.json",
+   "programming": "models/1.15/programming.json",
+   "workpoints": "models/1.15/workpoints.json"
+  },
+  {
+   "id": "1.16",
+   "no": "1.16",
+   "model": "APOLLO 12 X",
+   "name": "APOLLO 12 X",
+   "family": "APOLLO 二代",
+   "doc_url": "https://www.cpuniverse.cn/online-documents-cn/Introduction/Apollo2-12X/content.html",
+   "aliases": [
+    "APOLLO 12 X",
+    "APOLLO2 12X",
+    "APOLLO2-12X",
+    "APOLLO 12X",
+    "CP026-APOLLO 12X"
+   ],
+   "cores": [
+    "apollo12x",
+    "cp026apollo12x"
+   ],
+   "cp_codes": [
+    "CP026-APOLLO 12X"
+   ],
+   "spec": "models/1.16/spec.json",
+   "programming": "models/1.16/programming.json",
+   "workpoints": "models/1.16/workpoints.json"
+  },
+  {
+   "id": "1.17",
+   "no": "1.17",
+   "model": "SPRING 7",
+   "name": "SPRING 7",
+   "family": "SPRING",
+   "doc_url": "https://www.cpuniverse.cn/online-documents-cn/Introduction/Spring-7/content.html",
+   "aliases": [
+    "SPRING 7",
+    "SPRING7"
+   ],
+   "cores": [
+    "spring7"
+   ],
+   "cp_codes": [],
+   "spec": "models/1.17/spec.json",
+   "programming": "models/1.17/programming.json",
+   "workpoints": null
+  },
+  {
+   "id": "1.18",
+   "no": "1.18",
+   "model": "SPRING 8",
+   "name": "SPRING 8",
+   "family": "SPRING",
+   "doc_url": "https://www.cpuniverse.cn/online-documents-cn/Introduction/Spring-8/content.html",
+   "aliases": [
+    "SPRING 8",
+    "SPRING8",
+    "SPRING-8"
+   ],
+   "cores": [
+    "spring8"
+   ],
+   "cp_codes": [],
+   "spec": "models/1.18/spec.json",
+   "programming": "models/1.18/programming.json",
+   "workpoints": null
+  },
+  {
+   "id": "1.19",
+   "no": "1.19",
+   "model": "SPRING 10",
+   "name": "SPRING 10",
+   "family": "SPRING",
+   "doc_url": "https://www.cpuniverse.cn/online-documents-cn/Introduction/Spring-10/content.html",
+   "aliases": [
+    "SPRING 10",
+    "SPRING10",
+    "SPRING-10",
+    "CP029-SPRING 10  华测"
+   ],
+   "cores": [
+    "spring10",
+    "cp029spring10huace"
+   ],
+   "cp_codes": [
+    "CP029-SPRING 10  华测"
+   ],
+   "spec": "models/1.19/spec.json",
+   "programming": "models/1.19/programming.json",
+   "workpoints": "models/1.19/workpoints.json"
+  },
+  {
+   "id": "1.20",
+   "no": "1.20",
+   "model": "SPRING 10 电台",
+   "name": "SPRING 10 电台",
+   "family": "SPRING",
+   "doc_url": "https://www.cpuniverse.cn/online-documents-cn/Introduction/Spring-10-radio/content.html",
+   "aliases": [
+    "SPRING 10 电台",
+    "SPRING10 电台",
+    "SPRING-10 电台"
+   ],
+   "cores": [
+    "spring10radio"
+   ],
+   "cp_codes": [],
+   "spec": "models/1.20/spec.json",
+   "programming": "models/1.20/programming.json",
+   "workpoints": null
+  },
+  {
+   "id": "1.21",
+   "no": "1.21",
+   "model": "SPRING 10 二代",
+   "name": "SPRING 10 二代",
+   "family": "SPRING",
+   "doc_url": "https://www.cpuniverse.cn/online-documents-cn/Introduction/Spring2-10/content.html",
+   "aliases": [
+    "SPRING 10 二代",
+    "SPRING2 10",
+    "SPRING2-10",
+    "T3 / SPRING2"
+   ],
+   "cores": [
+    "spring10gen2",
+    "spring210",
+    "t3spring2"
+   ],
+   "cp_codes": [],
+   "spec": "models/1.21/spec.json",
+   "programming": "models/1.21/programming.json",
+   "workpoints": null
+  },
+  {
+   "id": "1.22",
+   "no": "1.22",
+   "model": "SPRING 10 二代 特别版",
+   "name": "SPRING 10 二代 特别版",
+   "family": "SPRING",
+   "doc_url": "https://www.cpuniverse.cn/online-documents-cn/Introduction/Spring2-10%E7%89%B9%E5%88%AB%E7%89%88/content.html",
+   "aliases": [
+    "SPRING 10 二代 特别版",
+    "SPRING2 10 特别版",
+    "SPRING2-10 特别版"
+   ],
+   "cores": [
+    "spring10gen2special",
+    "spring210special"
+   ],
+   "cp_codes": [],
+   "spec": "models/1.22/spec.json",
+   "programming": "models/1.22/programming.json",
+   "workpoints": null
+  },
+  {
+   "id": "1.23",
+   "no": "1.23",
+   "model": "SPRING 10 PRO 二代",
+   "name": "SPRING 10 PRO 二代",
+   "family": "SPRING",
+   "doc_url": "https://www.cpuniverse.cn/online-documents-cn/Introduction/Spring2Pro-10/content.html",
+   "aliases": [
+    "SPRING 10 PRO 二代",
+    "SPRING2-10PRO",
+    "SP2-10PRO",
+    "SPRING2 10PRO",
+    "SPRING 10PRO 二代",
+    "SPRING 10 PRO 2代",
+    "CP023-SPRING2 10PRO",
+    "CP023-SPRING2 10PRO 雷沃"
+   ],
+   "cores": [
+    "spring10progen2",
+    "spring210pro",
+    "sp210pro",
+    "cp023spring210pro",
+    "cp023spring210prolovol"
+   ],
+   "cp_codes": [
+    "CP023-SPRING2 10PRO",
+    "CP023-SPRING2 10PRO 雷沃"
+   ],
+   "spec": "models/1.23/spec.json",
+   "programming": "models/1.23/programming.json",
+   "workpoints": "models/1.23/workpoints.json"
+  },
+  {
+   "id": "1.24",
+   "no": "1.24",
+   "model": "SPRING 10 PRO 二代 特别版",
+   "name": "SPRING 10 PRO 二代 特别版",
+   "family": "SPRING",
+   "doc_url": "https://www.cpuniverse.cn/online-documents-cn/Introduction/Spring2Pro-10%E7%89%B9%E5%88%AB%E7%89%88/content.html",
+   "aliases": [
+    "SPRING 10 PRO 二代 特别版",
+    "SPRING2-10PRO 特别版",
+    "SP2-10PRO 特别版"
+   ],
+   "cores": [
+    "spring10progen2special",
+    "spring210prospecial",
+    "sp210prospecial"
+   ],
+   "cp_codes": [],
+   "spec": "models/1.24/spec.json",
+   "programming": "models/1.24/programming.json",
+   "workpoints": null
+  },
+  {
+   "id": "1.25",
+   "no": "1.25",
+   "model": "SPRING 10 PLUS 二代",
+   "name": "SPRING 10 PLUS 二代",
+   "family": "SPRING",
+   "doc_url": "https://www.cpuniverse.cn/online-documents-cn/Introduction/Spring2Plus-10/content.html",
+   "aliases": [
+    "SPRING 10 PLUS 二代",
+    "SPRING2-10PLUS",
+    "SP2-10PLUS",
+    "SPRING2 10PLUS",
+    "CP023-SPRING2 10PLUS"
+   ],
+   "cores": [
+    "spring10plusgen2",
+    "spring210plus",
+    "sp210plus",
+    "cp023spring210plus"
+   ],
+   "cp_codes": [
+    "CP023-SPRING2 10PLUS"
+   ],
+   "spec": "models/1.25/spec.json",
+   "programming": "models/1.25/programming.json",
+   "workpoints": "models/1.25/workpoints.json"
+  },
+  {
+   "id": "1.26",
+   "no": "1.26",
+   "model": "TANK 1",
+   "name": "TANK 1",
+   "family": "TANK",
+   "doc_url": "https://www.cpuniverse.cn/online-documents-cn/Introduction/Tank/content.html",
+   "aliases": [
+    "TANK 1",
+    "TANK1",
+    "SC60 / TANK"
+   ],
+   "cores": [
+    "tank1",
+    "sc60tank"
+   ],
+   "cp_codes": [],
+   "spec": "models/1.26/spec.json",
+   "programming": "models/1.26/programming.json",
+   "workpoints": null
+  },
+  {
+   "id": "1.27",
+   "no": "1.27",
+   "model": "TANK 2",
+   "name": "TANK 2",
+   "family": "TANK",
+   "doc_url": "https://www.cpuniverse.cn/online-documents-cn/Introduction/Tank2/content.html",
+   "aliases": [
+    "TANK 2",
+    "TANK2",
+    "TANK-2",
+    "CP020-TANK2"
+   ],
+   "cores": [
+    "tank2",
+    "cp020tank2"
+   ],
+   "cp_codes": [
+    "CP020-TANK2"
+   ],
+   "spec": "models/1.27/spec.json",
+   "programming": "models/1.27/programming.json",
+   "workpoints": "models/1.27/workpoints.json"
+  },
+  {
+   "id": "1.28",
+   "no": "1.28",
+   "model": "MEGA1",
+   "name": "MEGA1",
+   "family": "MEGA",
+   "doc_url": "https://www.cpuniverse.cn/online-documents-cn/Introduction/MEGA1/content.html",
+   "aliases": [
+    "MEGA1",
+    "MEGA 1",
+    "MEGA-1",
+    "MEGA"
+   ],
+   "cores": [
+    "mega1",
+    "mega"
+   ],
+   "cp_codes": [],
+   "spec": "models/1.28/spec.json",
+   "programming": "models/1.28/programming.json",
+   "workpoints": null
+  }
+ ],
+ "programming_pages": [
+  {
+   "slug": "2.6.1-APOLLO-PRO-Series",
+   "title": "2.6 编程参考信息 · APOLLO PRO 系列",
+   "url": "https://www.cpuniverse.cn/online-documents-cn/DeveloperGuide/ProgrammingTable/ApolloProSeries/content.html",
+   "sections": [
+    "2.6.1",
+    "2.6.2",
+    "2.6.3",
+    "2.6.4",
+    "2.6.5"
+   ]
+  },
+  {
+   "slug": "2.6.11-APOLLO-12-PRO-PLUS-X",
+   "title": "2.6 编程参考信息 · APOLLO 12 PRO / 12 PLUS / 12 X",
+   "url": "https://www.cpuniverse.cn/online-documents-cn/DeveloperGuide/ProgrammingTable/Apollo12pro-plus/content.html",
+   "sections": [
+    "2.6.11",
+    "2.6.12",
+    "2.6.13"
+   ]
+  },
+  {
+   "slug": "2.6.14-SPRING-1st-Gen",
+   "title": "2.6 编程参考信息 · SPRING 7/8/10/10 电台",
+   "url": "https://www.cpuniverse.cn/online-documents-cn/DeveloperGuide/ProgrammingTable/Spring1/content.html",
+   "sections": [
+    "2.6.14",
+    "2.6.15",
+    "2.6.16",
+    "2.6.17"
+   ]
+  },
+  {
+   "slug": "2.6.18-SPRING-10-2nd-Gen",
+   "title": "2.6 编程参考信息 · SPRING 10 二代",
+   "url": "https://www.cpuniverse.cn/online-documents-cn/DeveloperGuide/ProgrammingTable/Spring2/content.html",
+   "sections": [
+    "2.6.18"
+   ]
+  },
+  {
+   "slug": "2.6.19-SPRING-10-PRO-PLUS-2nd-Gen",
+   "title": "2.6 编程参考信息 · SPRING 10 PRO/PLUS 二代",
+   "url": "https://www.cpuniverse.cn/online-documents-cn/DeveloperGuide/ProgrammingTable/Spring10pro-plusGen2/content.html",
+   "sections": [
+    "2.6.19",
+    "2.6.20"
+   ]
+  },
+  {
+   "slug": "2.6.21-TANK-1",
+   "title": "2.6 编程参考信息 · TANK 1",
+   "url": "https://www.cpuniverse.cn/online-documents-cn/DeveloperGuide/ProgrammingTable/Tank1/content.html",
+   "sections": [
+    "2.6.21"
+   ]
+  },
+  {
+   "slug": "2.6.22-TANK-2",
+   "title": "2.6 编程参考信息 · TANK 2",
+   "url": "https://www.cpuniverse.cn/online-documents-cn/DeveloperGuide/ProgrammingTable/Tank2/content.html",
+   "sections": [
+    "2.6.22"
+   ]
+  },
+  {
+   "slug": "2.6.23-MEGA1",
+   "title": "2.6 编程参考信息 · MEGA1",
+   "url": "https://www.cpuniverse.cn/online-documents-cn/DeveloperGuide/ProgrammingTable/Mega1/content.html",
+   "sections": [
+    "2.6.23"
+   ]
+  },
+  {
+   "slug": "2.6.6-APOLLO-2nd-Gen-Series",
+   "title": "2.6 编程参考信息 · APOLLO 二代系列（7/7A/12/12A）",
+   "url": "https://www.cpuniverse.cn/online-documents-cn/DeveloperGuide/ProgrammingTable/ApolloGen2Series/content.html",
+   "sections": [
+    "2.6.6",
+    "2.6.7",
+    "2.6.9",
+    "2.6.10"
+   ]
+  },
+  {
+   "slug": "2.6.8-APOLLO-10-2nd-Gen",
+   "title": "2.6 编程参考信息 · APOLLO 10 二代",
+   "url": "https://www.cpuniverse.cn/online-documents-cn/DeveloperGuide/ProgrammingTable/Apollo10Gen2/content.html",
+   "sections": [
+    "2.6.8"
+   ]
+  }
+ ],
+ "unmapped_cp": []
+}

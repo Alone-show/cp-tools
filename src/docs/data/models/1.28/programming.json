@@ -1,0 +1,209 @@
+{
+ "pages": [
+  {
+   "slug": "2.6.23-MEGA1",
+   "title": "2.6 编程参考信息 · MEGA1",
+   "url": "https://www.cpuniverse.cn/online-documents-cn/DeveloperGuide/ProgrammingTable/Mega1/content.html",
+   "tables": [
+    {
+     "heading": "2 编程信息",
+     "header": [
+      "名称",
+      "设备节点",
+      "备注"
+     ],
+     "rows": [
+      [
+       "高精度串口",
+       "/dev/ttyS0",
+       "COM2"
+      ],
+      [
+       "高精度串口",
+       "/dev/ttyS7",
+       "COM1"
+      ],
+      [
+       "E49-433串口",
+       "/dev/ttyS5",
+       ""
+      ],
+      [
+       "车载以太网",
+       "eth0",
+       ""
+      ],
+      [
+       "以太网",
+       "eth1",
+       ""
+      ],
+      [
+       "RS232B",
+       "/dev/ttyS3",
+       "对应 CP 功能线束上 DB9-B"
+      ],
+      [
+       "RS232A",
+       "/dev/ttyS4",
+       "对应 CP 功能线束上 DB9-A"
+      ],
+      [
+       "RS485",
+       "/dev/ttyS8",
+       "对应 CP 功能线束上 DB9-C"
+      ],
+      [
+       "蓝牙模块串口",
+       "/dev/ttyS9",
+       "主控与蓝牙模块通信的串口"
+      ],
+      [
+       "CAMERA_0",
+       "/dev/video0",
+       "对应 CP 功能线束上 CAMERA_0"
+      ],
+      [
+       "CAMERA_1",
+       "/dev/video1",
+       "对应 CP 功能线束上 CAMERA_1"
+      ],
+      [
+       "CAMERA_2",
+       "/dev/video2",
+       "对应 CP 功能线束上 CAMERA_2"
+      ],
+      [
+       "CAMERA_3",
+       "/dev/video3",
+       "对应 CP 功能线束上 CAMERA_3"
+      ],
+      [
+       "CAMERA_5",
+       "/dev/video8",
+       "对应 CP 功能线束上 CAMERA_5"
+      ],
+      [
+       "CAMERA_6",
+       "/dev/video9",
+       "对应 CP 功能线束上 CAMERA_6"
+      ],
+      [
+       "CAMERA_7",
+       "/dev/video10",
+       "对应 CP 功能线束上 CAMERA_7"
+      ],
+      [
+       "CAMERA_8",
+       "/dev/video11",
+       "对应 CP 功能线束上 CAMERA_8"
+      ],
+      [
+       "AHD_PEREN",
+       "/sys/class/gpio/gpio142/value",
+       "控制线束上CAMERA_12V电源，写 1 控制输出"
+      ],
+      [
+       "OUTPUT1",
+       "/sys/class/gpio/gpio61/value",
+       ""
+      ],
+      [
+       "OUTPUT2",
+       "/sys/class/gpio/gpio52/value",
+       ""
+      ],
+      [
+       "USB_OTG",
+       "/sys/class/gpio/gpio54/value",
+       "控制切换USB模式"
+      ],
+      [
+       "UM982_PEREN",
+       "/sys/class/gpio/gpio34/value",
+       ""
+      ],
+      [
+       "UM982_LAN_EN",
+       "/sys/class/gpio/gpio35/value",
+       ""
+      ],
+      [
+       "E49-443 PWREN",
+       "/sys/class/gpio/gpio62/value",
+       "E49模组供电使能引脚"
+      ],
+      [
+       "E49-433 M0",
+       "/sys/class/gpio/gpio40/value",
+       "E49模组工作模式配置引脚"
+      ],
+      [
+       "E49-433 M1",
+       "/sys/class/gpio/gpio39/value",
+       "E49模组工作模式配置引脚"
+      ],
+      [
+       "E49-433 AUX",
+       "/sys/class/gpio/gpio38/value",
+       "E49无线收发缓冲指示和自检指示"
+      ],
+      [
+       "PTT_IN",
+       "/sys/class/gpio/gpio77/value",
+       "手麦按键"
+      ],
+      [
+       "ADC_IN1",
+       "/sys/bus/iio/devices/iio:device0/in_voltage3_raw",
+       ""
+      ],
+      [
+       "ADC_IN2",
+       "/sys/bus/iio/devices/iio:device0/in_voltage4_raw",
+       ""
+      ]
+     ]
+    },
+    {
+     "heading": "3 高精度对应的 COM 串口",
+     "header": [
+      "设备节点",
+      "UM980",
+      "UM982",
+      "UMD982",
+      "P20D",
+      "P20F",
+      "VD-U8",
+      "UM220",
+      "MXT906AM"
+     ],
+     "rows": [
+      [
+       "/dev/ttyS0",
+       "COM2",
+       "COM2",
+       "COM2",
+       "COM2",
+       "COM2",
+       "-",
+       "-",
+       "-"
+      ],
+      [
+       "/dev/ttyS7",
+       "COM1",
+       "COM1",
+       "COM1",
+       "COM1",
+       "COM1",
+       "COM1",
+       "COM1",
+       "COM1"
+      ]
+     ]
+    }
+   ]
+  }
+ ]
+}

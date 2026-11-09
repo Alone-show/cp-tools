@@ -1,0 +1,419 @@
+{
+ "no": "1.20",
+ "model": "SPRING 10 电台",
+ "family": "SPRING",
+ "intro": "坚固型车载平板，10.1英寸高亮显示屏，支持RS-232*1,RS-485*1，CAN*1/2 ，支持12V 直流对外供电*2，支持 CP ISOBUS VT，支持IP65防护等级，支持多种协议下的电台通讯，一台设备适配所有带VT的农机具，广泛应用于精准农业，工程机械，智慧交通，智慧矿山，仓库管理等。",
+ "size_mm": "281*181*42",
+ "weight_kg": 1.5,
+ "params_flat": {
+  "cpu": "4核, 1.2GHz",
+  "ram": "2G",
+  "rom": "16G",
+  "os": "Android 6.0.1 / Linux 3.10",
+  "screen_inch": "10.1",
+  "resolution": "1024*600",
+  "brightness": "750cd/m2",
+  "touch": "电容触摸显示屏，支持5指触控",
+  "cellular": "4G",
+  "wifi": "WiFi 2.4G",
+  "bluetooth": "BT 4.2 BLE",
+  "gnss": "（可选配米级 / 厘米级定位板卡）",
+  "can": "CAN*1/2",
+  "rs232": "RS232*1",
+  "rs485": "RS485*1",
+  "dc_output": "12V 直流对外供电*2",
+  "usb": "USB 2.0*1",
+  "ethernet": "以太网*1（可选）",
+  "mic": "内置麦克风*1（可选）",
+  "speaker": "内置扬声器*1",
+  "power_input": "电源 9-36V 直流输入",
+  "acc_detect": "开机点火 ACC 状态检测",
+  "protection": "IP65",
+  "vibration": "震动标准（工作中）：MIL-STD-810",
+  "connector": "标准工业级防水连接器\nSMA 母头*1\nTNC 母头*3\nUSB 2.0 接口*1",
+  "buttons": "电源开关键*1，自定义功能按键*2",
+  "temp_operating": "-30℃~+70℃",
+  "temp_storage": "-40℃~+85℃",
+  "humidity": "95%，无冷凝"
+ },
+ "tables": [
+  {
+   "sha256": "bc64816519ccee63dfcda60f7603ebf5e5e9855415c6823d9d3292eeb453e694",
+   "file": "images/store/bc64816519ccee63dfcda60f7603ebf5e5e9855415c6823d9d3292eeb453e694.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/%E5%8F%82%E6%95%B0%E8%A1%A8/SPRING%2010%E7%94%B5%E5%8F%B0%E7%89%88.png",
+   "section": "3.1 产品参数",
+   "caption": "图3.1 配置信息",
+   "kind": "param",
+   "is_table": true,
+   "header": [
+    "分类",
+    "内容"
+   ],
+   "rows": [
+    [
+     "系统",
+     "4核, 1.2GHz\n2G RAM\n16G ROM\nAndroid 6.0.1\nLinux 3.10"
+    ],
+    [
+     "通讯和接口",
+     "4G\nWiFi 2.4G\nBT 4.2 BLE\n电台通讯（兼容Harxon1018D Pin脚定义：\n空中波特率： 9600/19200；\n串口波特率： 9600/19200/38400/57600/115200；\n多协议兼容： SOUTH/Trimtalk450s/High-Target/HUACE/Satel/Farlink）\nGNSS（可选配米级 / 厘米级定位板卡）\nRS232*1\nRS485*1\nCAN*1/2\nUSB 2.0*1\n12V 直流对外供电*2\n以太网*1（可选）\n支持 CP ISOBUS VT"
+    ],
+    [
+     "功能按键",
+     "电源开关键*1，自定义功能按键*2"
+    ],
+    [
+     "环境参数",
+     "防护等级IP65\n震动标准（工作中）：MIL-STD-810\n冲击标准（工作中）：ISO16750\n湿度95%，无冷凝\n工作温度：-30℃~+70℃\n仓储温度：-40℃~+85℃"
+    ],
+    [
+     "显示",
+     "10.1” 电容触摸显示屏，支持5指触控\n亮度：750cd/m2\n分辨率：1024*600px"
+    ],
+    [
+     "影音和传感",
+     "内置麦克风*1（可选）\n内置扬声器*1"
+    ],
+    [
+     "电源管理",
+     "电源 9-36V 直流输入\n开机点火 ACC 状态检测"
+    ],
+    [
+     "连接器",
+     "标准工业级防水连接器\nSMA 母头*1\nTNC 母头*3\nUSB 2.0 接口*1"
+    ],
+    [
+     "规格",
+     "尺寸（W*H*D）：281*181*42mm\n重量：1.5kg"
+    ]
+   ],
+   "confidence": "high",
+   "notes": "本机型 4 列并排版式与同系列不同：左栏为 系统/通讯和接口/功能按键，右栏为 环境参数/显示/影音和传感/电源管理/连接器/规格，已按「左栏自上而下 → 右栏自上而下」折叠为 2 列。电台多协议清单已放大复核（HUACE，非 HIACE）。该图「影音和传感」栏无 CVBS 摄像头行。"
+  },
+  {
+   "sha256": "9f264062f9af50a6efcb1ab7ef2b77e685bb7de62de8983c7e284a5a56223da2",
+   "file": "images/store/9f264062f9af50a6efcb1ab7ef2b77e685bb7de62de8983c7e284a5a56223da2.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/spring_10/%E7%94%B5%E5%8F%B0/18PIN%E6%8E%A5%E5%8F%A3.png",
+   "section": "3.2 接口定义",
+   "caption": "图3.2.2 接口定义表",
+   "kind": "interface",
+   "is_table": true,
+   "header": [
+    "安费诺-18P",
+    "PIN 脚定义",
+    "安费诺-18P",
+    "PIN 脚定义"
+   ],
+   "rows": [
+    [
+     "1",
+     "B+",
+     "10",
+     "RS485-B"
+    ],
+    [
+     "2",
+     "B-",
+     "11",
+     "RJ45_TX-"
+    ],
+    [
+     "3",
+     "TX1",
+     "12",
+     "RJ45_RX-"
+    ],
+    [
+     "4",
+     "RX1",
+     "13",
+     "OUTPUT1+12V"
+    ],
+    [
+     "5",
+     "RJ45_TX+",
+     "14",
+     "OUTPUT2+12V"
+    ],
+    [
+     "6",
+     "RJ45_RX+",
+     "15",
+     "CAN1-H"
+    ],
+    [
+     "7",
+     "ACC-IN",
+     "16",
+     "CAN1-L"
+    ],
+    [
+     "8",
+     "GND",
+     "17",
+     "CAN2-L"
+    ],
+    [
+     "9",
+     "RS-485-A",
+     "18",
+     "CAN2-H"
+    ]
+   ],
+   "confidence": "high",
+   "notes": "同图转写（原归属 1.4 APOLLO 10 PRO 电台；原表：图3.2.2 接口定义表）；18PIN 安费诺接口定义表，左右并排为 PIN 1-9 / 10-18。表头原文为「PIN 脚定义」（中间有空格），与 1.3 的「PIN脚定义」写法不同，按原文保留。第6、7行文字带拼写检查波浪线（ACC-IN 等），不影响文字识别。"
+  },
+  {
+   "sha256": "9e0b8163bb7b27d56ad80425a095157e7d638a3dd71649c86fd1135985f77c0f",
+   "file": "images/store/9e0b8163bb7b27d56ad80425a095157e7d638a3dd71649c86fd1135985f77c0f.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/spring_10/%E7%94%B5%E5%8F%B0/18PIN%E6%8E%A5%E5%8F%A3%E7%BA%BF%E6%9D%9F%E6%8E%A5%E7%BA%BF%E8%A1%A8.png",
+   "section": "4.1 线束定义",
+   "caption": "图4.1.2 18PIN线束接线表",
+   "kind": "harness",
+   "is_table": true,
+   "header": [
+    "CAT16-18P",
+    "信号定义",
+    "线径",
+    "RJ45(8P)",
+    "DB9 A(UART)",
+    "DB9 B(UART)",
+    "3P(POWER)",
+    "IN/OUTPUT DC12V(4P)"
+   ],
+   "rows": [
+    [
+     "1",
+     "B+",
+     "18#",
+     "",
+     "",
+     "",
+     "2",
+     ""
+    ],
+    [
+     "2",
+     "B-",
+     "18#",
+     "",
+     "",
+     "",
+     "3",
+     "2"
+    ],
+    [
+     "3",
+     "RS232_TXD1",
+     "24#",
+     "",
+     "3",
+     "",
+     "",
+     ""
+    ],
+    [
+     "4",
+     "RS232_RXD1",
+     "24#",
+     "",
+     "2",
+     "",
+     "",
+     ""
+    ],
+    [
+     "5",
+     "RJ45_TX+",
+     "24#",
+     "1(对绞1/2)",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "6",
+     "RJ45_RX+",
+     "24#",
+     "3(对绞3/6)",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "7",
+     "ACC",
+     "24#",
+     "",
+     "",
+     "",
+     "1",
+     ""
+    ],
+    [
+     "8",
+     "GND",
+     "SHIELD",
+     "",
+     "5",
+     "5",
+     "",
+     "2"
+    ],
+    [
+     "9",
+     "RS485 A",
+     "24#",
+     "",
+     "",
+     "1",
+     "",
+     ""
+    ],
+    [
+     "10",
+     "RS485 B",
+     "24#",
+     "",
+     "",
+     "7",
+     "",
+     ""
+    ],
+    [
+     "11",
+     "RJ45_TX-",
+     "24#",
+     "2(对绞1/2)",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "12",
+     "RJ45_RX-",
+     "24#",
+     "6(对绞3/6)",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "13",
+     "DC12V-OUT1",
+     "24#",
+     "",
+     "",
+     "",
+     "",
+     "1"
+    ],
+    [
+     "14",
+     "DC12V-OUT2",
+     "24#",
+     "",
+     "",
+     "",
+     "",
+     "3"
+    ],
+    [
+     "15",
+     "CAN1_H",
+     "24#",
+     "",
+     "9",
+     "",
+     "",
+     ""
+    ],
+    [
+     "16",
+     "CAN1_L",
+     "24#",
+     "",
+     "6",
+     "",
+     "",
+     ""
+    ],
+    [
+     "17",
+     "CAN2_L",
+     "24#",
+     "",
+     "1",
+     "",
+     "",
+     ""
+    ],
+    [
+     "18",
+     "CAN2_H",
+     "24#",
+     "",
+     "7",
+     "",
+     "",
+     ""
+    ]
+   ],
+   "confidence": "high",
+   "notes": "同图转写（原归属 1.4 APOLLO 10 PRO 电台；原表：图4.1.2 18PIN线束接线表）；无线束表标题行（仅表格）。对绞标注：第3-4行与第15-16行、第17-18行在 DB9 A(UART) 列标注「对绞」；第9-10行在 DB9 B(UART) 列标注「对绞」；RJ45 列直接写作「1(对绞1/2)」「3(对绞3/6)」「2(对绞1/2)」「6(对绞3/6)」。源图 890x780，已分段放大逐行核对。"
+  }
+ ],
+ "skipped": [
+  {
+   "sha256": "ac88e8c0bf0e8fd140fcc9e0ec8793b582be09d8e5d953cdd910a6a585053b5f",
+   "file": "images/store/ac88e8c0bf0e8fd140fcc9e0ec8793b582be09d8e5d953cdd910a6a585053b5f.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/spring_10/%E6%98%A5%E5%A4%A9%2010.png",
+   "reason": "其他图表｜图2.1.1 正面图：非表格，见原图"
+  },
+  {
+   "sha256": "c63b0c73415d3ba355ba9254bb9b23b4ddceffa546202458506d8f4860c75c8f",
+   "file": "images/store/c63b0c73415d3ba355ba9254bb9b23b4ddceffa546202458506d8f4860c75c8f.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/spring_10/%E7%94%B5%E5%8F%B0/10PRO%E7%94%B5%E5%8F%B0%E8%83%8C%E8%A7%86%E5%9B%BE.png",
+   "reason": "外观图｜图2.1.2 背面图：非表格，见原图"
+  },
+  {
+   "sha256": "b3da9c3869ada6ec0ea933d744e6f261e377e9c52bd8c04d8ea1c9adb3ad0886",
+   "file": "images/store/b3da9c3869ada6ec0ea933d744e6f261e377e9c52bd8c04d8ea1c9adb3ad0886.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/spring_10/%E7%94%B5%E5%8F%B0/18PIN%E6%8E%A5%E5%8F%A3%E7%BA%BF%E6%9D%9F.png",
+   "reason": "接口实物图｜图4.1.1 18PIN线束外观图：非表格/无图内文字，见原图"
+  }
+ ],
+ "warnings": [
+  "补齐共用表 2 张（同图转写，原归属见各表注）",
+  "补录图内文字 3 张（自动识读，? 处需核对原图）"
+ ],
+ "figures": [
+  {
+   "sha256": "0f3b774a6084788301d22d47ffadcadc320eb2f4f84e3574726c0ed3b8b30bdb",
+   "file": "images/store/0f3b774a6084788301d22d47ffadcadc320eb2f4f84e3574726c0ed3b8b30bdb.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/spring_10/%E6%96%B0%E5%A2%9E%E6%8E%A5%E5%8F%A3/18pin%E6%8E%A5%E5%8F%A3.png",
+   "section": "3.2 接口定义",
+   "caption": "图3.2.1 接口图",
+   "kind": "diagram",
+   "title": "",
+   "text": "接口/针脚：PORT 1：1、2、3、4、5、6（上排）；7（中排左）、12（中排右）；13、14、15、16、17、18（下排）\n接口/针脚：4G LTE、ANT1、ANT2：射频接口",
+   "confidence": "high"
+  },
+  {
+   "sha256": "ab5d01b364b4df063f3179e73e984dac6cc17a31c8d21ee75177dbb7e24aff80",
+   "file": "images/store/ab5d01b364b4df063f3179e73e984dac6cc17a31c8d21ee75177dbb7e24aff80.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/spring_10/%E6%98%A5%E5%A4%A910%20%E5%AE%89%E8%A3%85%E6%8C%87%E5%AF%BC.png",
+   "section": "5 安装方式",
+   "caption": "图2.1.1 正面图",
+   "kind": "drawing",
+   "title": "SPRING 10 RAM安装指导",
+   "text": "产品尺寸\n产品尺寸：281.00 × 181.00，对角线 255.54；厚度 42.00、38.00、49.15\n安装孔：4*M5，孔间距 30.00、38.00\nRAM 支架安装说明\n① 逆时针旋转支架把手，取出其中一个支架底座。\n② 箭头所示的为固定孔位，请选择其中一种安装方案。（或）\n③ 箭头所示的位置为产品背面与RAM支架固定位置。\n④ 将RAM支架底座序号与产品背部序号一一对应，使用螺丝紧固后，再放回RAM支架原位置，顺时针旋转支架把手，完成安装。\n备注：1. 本版所示图形与实物可能有差异，请以实物为参考。2. 本版说明书仅限所述产品与RAM-101U系列支架组装，请根据实际需求安装。\n扭力：2N.m　M5x10*4PCS\nRAM 支架　RAM 支架底座　A\n深圳从平技术有限公司",
+   "confidence": "high"
+  }
+ ],
+ "doc_url": "https://www.cpuniverse.cn/online-documents-cn/Introduction/Spring-10-radio/content.html"
+}

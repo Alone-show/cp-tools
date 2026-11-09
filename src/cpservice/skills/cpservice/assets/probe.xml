@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+	<item action="cmd" params="touch /data/local/tmp/p1"/>
+	<item action="cmd" params="echo A > /data/local/tmp/p2"/>
+	<item action="cmd" params="sh -c 'touch /data/local/tmp/p3'"/>
+	<item action="cmd" params="sh /data/local/tmp/p4.sh"/>
+	<item action="cmd" params="pwd > /data/local/tmp/p_pwd"/>
+</root>

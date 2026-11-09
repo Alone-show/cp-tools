@@ -1,0 +1,761 @@
+{
+ "no": "1.1",
+ "model": "APOLLO 7 PRO",
+ "family": "APOLLO PRO",
+ "intro": "坚固型车载平板，7英寸高亮显示屏，8核强劲CPU，GPU支持OpenGLES 3.1，支持2路RS-232，1路RS-485，2路CAN (支持J1939, CANopen, ISO15765)，支持2路720p或者2路1080pAHD摄像头输入，支持2路INPUT，2路OUTPUT，支持 CP ISOBUS VT，一台设备适配所有带VT的农机具，支持 CP-Comm 高速总线架构，轻松完成软件开发，广泛应用于精准农业，工程机械，智慧交通，智慧矿山，仓库管理等。",
+ "size_mm": "194*127*29",
+ "weight_kg": 0.7,
+ "params_flat": {
+  "cpu": "8核, 1.8GHz",
+  "ram": "2G",
+  "rom": "16G",
+  "os": "Android 9.0",
+  "screen_inch": "7\"",
+  "resolution": "1024*600px",
+  "brightness": "750cd/m2",
+  "touch": "电容触摸显示屏，支持5指触控",
+  "cellular": "4G（可选配双SIM卡）",
+  "wifi": "WiFi 2.4G / 5G",
+  "bluetooth": "BT 2.1+ EDR / 3.0 / 4.1 LE / 4.2 BLE",
+  "gnss": "GNSS（可选配米级）",
+  "can": "CAN*2",
+  "rs232": "RS232*2",
+  "rs485": "RS485*1",
+  "dc_output": "12V 直流对外供电*2",
+  "io_input": "支持2路INPUT",
+  "io_output": "2路OUTPUT",
+  "usb": "USB 2.0*1",
+  "ethernet": "以太网*1（可选）",
+  "camera_in": "AHD 摄像头 720p*2",
+  "mic": "内置麦克风*1（可选）",
+  "speaker": "内置扬声器*1",
+  "power_input": "电源 9-36V 直流输入",
+  "acc_detect": "开机点火 ACC 状态检测",
+  "connector": "标准工业级防水连接器\nSMA 母头*2\nUSB 2.0 接口*1",
+  "protection": "防护等级IP65",
+  "temp_operating": "-30℃~+70℃",
+  "temp_storage": "-40℃~+85℃",
+  "humidity": "湿度95%，无冷凝",
+  "buttons": "电源开关键*1，自定义功能按键*2"
+ },
+ "tables": [
+  {
+   "sha256": "22455260cff120b3057f4a6cb44c75ec074dc68dfdfa7de081bcd40c9910e039",
+   "file": "images/store/22455260cff120b3057f4a6cb44c75ec074dc68dfdfa7de081bcd40c9910e039.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/%E5%8F%82%E6%95%B0%E8%A1%A8/APOLLO%207PRO.png",
+   "section": "3.1 产品参数",
+   "caption": "图3.1 配置信息",
+   "kind": "param",
+   "is_table": true,
+   "header": [
+    "分类",
+    "内容"
+   ],
+   "rows": [
+    [
+     "系统",
+     "8核, 1.8GHz\n2G RAM\n16G ROM\nAndroid 9.0"
+    ],
+    [
+     "通讯和接口",
+     "4G（可选配双SIM卡）\nWiFi 2.4G / 5G\nBT 2.1+ EDR / 3.0 / 4.1 LE / 4.2 BLE\nGNSS（可选配米级）\nRS232*2\nRS485*1\nCAN*2\n12V 直流对外供电*2\nUSB 2.0*1\n以太网*1（可选）\n支持 CP ISOBUS VT\n支持2路INPUT，2路OUTPUT"
+    ],
+    [
+     "环境参数",
+     "防护等级IP65\n震动标准（工作中）：MIL-STD-810\n冲击标准（工作中）：ISO16750\n湿度95%，无冷凝\n工作温度：-30℃~+70℃\n仓储温度：-40℃~+85℃"
+    ],
+    [
+     "显示",
+     "7\" 电容触摸显示屏，支持5指触控\n亮度：750cd/m2\n分辨率：1024*600px"
+    ],
+    [
+     "影音和传感",
+     "AHD 摄像头 720p*2\n内置麦克风*1（可选）\n内置扬声器*1"
+    ],
+    [
+     "电源管理",
+     "电源 9-36V 直流输入\n开机点火 ACC 状态检测\n内置超级电容，断电维系"
+    ],
+    [
+     "连接器",
+     "标准工业级防水连接器\nSMA 母头*2\nUSB 2.0 接口*1"
+    ],
+    [
+     "规格",
+     "尺寸(W*H*D)：194*127*29mm\n重量：0.70kg"
+    ],
+    [
+     "功能按键/指示灯",
+     "电源开关键*1，自定义功能按键*2"
+    ]
+   ],
+   "confidence": "high",
+   "notes": "图内标题为「产品参数」。原图为「分类|内容|分类|内容」并排排版，已按左栏自上而下→右栏自上而下折叠为2列（左栏：系统、通讯和接口、环境参数；右栏：显示、影音和传感、电源管理、连接器、规格、功能按键/指示灯）。环境参数末行为「仓储温度」（原文如此）。"
+  },
+  {
+   "sha256": "c444f9e5b0b658f739be28da13ed22c1146fb599b3f4b4dbb20932634b2cbdf4",
+   "file": "images/store/c444f9e5b0b658f739be28da13ed22c1146fb599b3f4b4dbb20932634b2cbdf4.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/spring_7/7%E6%8E%A5%E5%8F%A3%E5%9B%BE.png",
+   "section": "3.2 接口定义",
+   "caption": "图3.2.2 APOLLO 7PRO接口定义表",
+   "kind": "interface",
+   "is_table": true,
+   "header": [
+    "PORT1-12P",
+    "PIN脚定义",
+    "PORT2-10P",
+    "PIN脚定义"
+   ],
+   "rows": [
+    [
+     "1",
+     "TX2",
+     "1",
+     "CAN2-H"
+    ],
+    [
+     "2",
+     "RX2",
+     "2",
+     "CAN2-L"
+    ],
+    [
+     "3",
+     "B-",
+     "3",
+     "GND"
+    ],
+    [
+     "4",
+     "ACC+12V",
+     "4",
+     "CVBS+12V"
+    ],
+    [
+     "5",
+     "B-",
+     "5",
+     "GND"
+    ],
+    [
+     "6",
+     "TX1",
+     "6",
+     "CVBS1"
+    ],
+    [
+     "7",
+     "RX1",
+     "7",
+     "CVBS0"
+    ],
+    [
+     "8",
+     "12VOUT1",
+     "8",
+     "12out"
+    ],
+    [
+     "9",
+     "CAN1-H",
+     "9",
+     "RS485-A"
+    ],
+    [
+     "10",
+     "CAN1-L",
+     "10",
+     "RS485-B"
+    ],
+    [
+     "11",
+     "B+12V",
+     "",
+     ""
+    ],
+    [
+     "12",
+     "B+12V",
+     "",
+     ""
+    ]
+   ],
+   "confidence": "high",
+   "notes": "原图为 4 列并排（PORT1-12P 左栏 / PORT2-10P 右栏），按阅读顺序保留原表头与列顺序；PORT2 第 11、12 行为空。"
+  },
+  {
+   "sha256": "29d21e0a566b9c2302648d06a1eeecbf9a6ec0e8e1348fac502be05808f54fe3",
+   "file": "images/store/29d21e0a566b9c2302648d06a1eeecbf9a6ec0e8e1348fac502be05808f54fe3.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/spring_7/7B%E6%8E%A5%E5%8F%A3%E5%9B%BE.png",
+   "section": "3.2 接口定义",
+   "caption": "图3.2.4 APOLLO 7BPRO接口定义表",
+   "kind": "interface",
+   "is_table": true,
+   "header": [
+    "PORT1-12P",
+    "PIN脚定义",
+    "PORT2-10P",
+    "PIN脚定义"
+   ],
+   "rows": [
+    [
+     "1",
+     "MCUIN1",
+     "1",
+     "RJ45_TX+"
+    ],
+    [
+     "2",
+     "MCUIN2",
+     "2",
+     "RJ45_TX-"
+    ],
+    [
+     "3",
+     "B-",
+     "3",
+     "GND"
+    ],
+    [
+     "4",
+     "ACC+12V",
+     "4",
+     "CVBS+12V"
+    ],
+    [
+     "5",
+     "B-",
+     "5",
+     "GND"
+    ],
+    [
+     "6",
+     "TX1",
+     "6",
+     "RJ45_RX+"
+    ],
+    [
+     "7",
+     "RX1",
+     "7",
+     "RJ45_RX-"
+    ],
+    [
+     "8",
+     "audio-out",
+     "8",
+     "12out"
+    ],
+    [
+     "9",
+     "CAN1-H",
+     "9",
+     "RS485-A"
+    ],
+    [
+     "10",
+     "CAN1-L",
+     "10",
+     "RS485-B"
+    ],
+    [
+     "11",
+     "B+12V",
+     "",
+     ""
+    ],
+    [
+     "12",
+     "B+12V",
+     "",
+     ""
+    ]
+   ],
+   "confidence": "high",
+   "notes": "原图为 4 列并排（PORT1-12P 左栏 / PORT2-10P 右栏），按阅读顺序保留原表头与列顺序；PORT2 第 11、12 行为空。（7PRO 版见另一张同版式表）"
+  },
+  {
+   "sha256": "a876bd30332143f1e9fad92103c08fa19db864382715514b9b6742ae7f1844b7",
+   "file": "images/store/a876bd30332143f1e9fad92103c08fa19db864382715514b9b6742ae7f1844b7.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/apollo7%20pro/7pro%20%E6%8E%A5%E7%BA%BF%E8%A1%A8.png",
+   "section": "4.1.1 PROT1",
+   "caption": "图4.1.1.2 PROT1线束定义图",
+   "kind": "harness",
+   "is_table": true,
+   "header": [
+    "安费诺12PIN",
+    "信号定义",
+    "DB9公头(A)",
+    "DB9公头(B)",
+    "M12 3P(POWER)",
+    "M12 4P(12VOUT)"
+   ],
+   "rows": [
+    [
+     "1 棕",
+     "TX2",
+     "",
+     "3",
+     "",
+     ""
+    ],
+    [
+     "2 蓝",
+     "RX2",
+     "",
+     "2",
+     "",
+     ""
+    ],
+    [
+     "3 白",
+     "B-",
+     "",
+     "5",
+     "3",
+     "2"
+    ],
+    [
+     "4 绿",
+     "ACC",
+     "",
+     "",
+     "1",
+     ""
+    ],
+    [
+     "5 黄",
+     "B-",
+     "5",
+     "",
+     "3",
+     ""
+    ],
+    [
+     "6 灰",
+     "TX1",
+     "3",
+     "",
+     "",
+     ""
+    ],
+    [
+     "7 粉",
+     "RX1",
+     "2",
+     "",
+     "",
+     ""
+    ],
+    [
+     "8 红",
+     "MI-12VOUT",
+     "",
+     "",
+     "",
+     "1"
+    ],
+    [
+     "9 黑",
+     "CAN1 H",
+     "9",
+     "",
+     "",
+     ""
+    ],
+    [
+     "10 橙",
+     "CAN1 L",
+     "6",
+     "",
+     "",
+     ""
+    ],
+    [
+     "11 紫",
+     "B+",
+     "",
+     "",
+     "2",
+     ""
+    ],
+    [
+     "12 浅绿",
+     "B+",
+     "",
+     "",
+     "2",
+     ""
+    ]
+   ],
+   "confidence": "high",
+   "notes": "图内标题为「接线表」。第9-10行 DB9公头(A) 列旁标注「对绞」（CAN1 H/L 对绞）。M12 3P(POWER) 列第11、12行在 B+ 处为合并单元格「2」，已分别填写到两行。第4行（ACC）该单元格显示为「1」后带一条细竖线，疑为截图光标残留，按「1」转写。"
+  },
+  {
+   "sha256": "5de89607f39dcd2aa5d55e47a7e203666a70baf2fb1d86f872d40a16a2279740",
+   "file": "images/store/5de89607f39dcd2aa5d55e47a7e203666a70baf2fb1d86f872d40a16a2279740.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/spring_7/spring7_port2%E7%BA%BF%E6%9D%9F%E5%AE%9A%E4%B9%89%E5%9B%BE.png",
+   "section": "4.1.2 PROT2",
+   "caption": "图4.1.2.2 PROT2线束定义图",
+   "kind": "harness",
+   "is_table": true,
+   "header": [
+    "安费诺10PIN",
+    "信号定义",
+    "M12 4P(CAMERA A)",
+    "M12 4P(CAMERA B)",
+    "DB9公头(485)"
+   ],
+   "rows": [
+    [
+     "1 棕",
+     "CAN2 H",
+     "",
+     "",
+     "9"
+    ],
+    [
+     "2 蓝",
+     "CAN2 L",
+     "",
+     "",
+     "6"
+    ],
+    [
+     "3 白",
+     "GND",
+     "2",
+     "",
+     ""
+    ],
+    [
+     "4 绿",
+     "CVBS-12V",
+     "1",
+     "",
+     ""
+    ],
+    [
+     "5 黄",
+     "GND",
+     "",
+     "2",
+     "5"
+    ],
+    [
+     "6 灰",
+     "CVBS-IN2",
+     "4",
+     "",
+     ""
+    ],
+    [
+     "7 粉",
+     "CVBS-IN1",
+     "",
+     "4",
+     ""
+    ],
+    [
+     "8 红",
+     "12V OUT",
+     "",
+     "1",
+     ""
+    ],
+    [
+     "9 黑",
+     "RS485 A",
+     "",
+     "",
+     "1"
+    ],
+    [
+     "10 橙",
+     "RS485 B",
+     "",
+     "",
+     "7"
+    ]
+   ],
+   "confidence": "high",
+   "notes": "第1-2行、第9-10行 DB9公头(485) 列旁标注「对绞」。该列第1/2行为 CAN2 H/L（9/6），第5行为 5，第9/10行为 RS485 A/B（1/7），均按图原样保留。"
+  },
+  {
+   "sha256": "642e9579222c164a7357198b1d570336f9d7f8045fb66988b9225ac0efedb0ea",
+   "file": "images/store/642e9579222c164a7357198b1d570336f9d7f8045fb66988b9225ac0efedb0ea.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/apollo7%20pro/7bpro%20%E6%8E%A5%E7%BA%BF%E8%A1%A8.png",
+   "section": "4.2.1 PROT1",
+   "caption": "图4.2.1.2 PROT1线束定义图",
+   "kind": "harness",
+   "is_table": true,
+   "header": [
+    "安费诺12PIN",
+    "信号定义",
+    "DB9公头 (A)",
+    "INPUT IO",
+    "M12 3P(POWER)",
+    "AUDIO LINEOUT"
+   ],
+   "rows": [
+    [
+     "1 棕",
+     "INPUT IO1",
+     "",
+     "INPUT 1",
+     "",
+     ""
+    ],
+    [
+     "2 蓝",
+     "INPUT IO2",
+     "",
+     "INPUT 2",
+     "",
+     ""
+    ],
+    [
+     "3 白",
+     "B-",
+     "",
+     "GND",
+     "3",
+     "GND"
+    ],
+    [
+     "4 绿",
+     "ACC",
+     "",
+     "",
+     "1",
+     ""
+    ],
+    [
+     "5 黄",
+     "B-",
+     "5",
+     "",
+     "3",
+     ""
+    ],
+    [
+     "6 灰",
+     "TX1",
+     "3",
+     "",
+     "",
+     ""
+    ],
+    [
+     "7 粉",
+     "RX1",
+     "2",
+     "",
+     "",
+     ""
+    ],
+    [
+     "8 红",
+     "AUDIO-LINEOUT",
+     "",
+     "",
+     "",
+     "AUDIO-LINEOUT"
+    ],
+    [
+     "9 黑",
+     "CAN1 H",
+     "9",
+     "",
+     "",
+     ""
+    ],
+    [
+     "10 橙",
+     "CAN1 L",
+     "6",
+     "",
+     "",
+     ""
+    ],
+    [
+     "11 紫",
+     "B+",
+     "",
+     "",
+     "2",
+     ""
+    ],
+    [
+     "12 浅绿",
+     "B+",
+     "",
+     "",
+     "2",
+     ""
+    ]
+   ],
+   "confidence": "high",
+   "notes": "图内标题为「接线表」。第9-10行 DB9公头 (A) 列旁标注「对绞」。M12 3P(POWER) 列第11、12行 B+ 处为合并单元格「2」，已分别填写到两行。"
+  },
+  {
+   "sha256": "0a58dde6a9916547952b6c01c248802752e1efcc9a5ad4c6c7be49393051551e",
+   "file": "images/store/0a58dde6a9916547952b6c01c248802752e1efcc9a5ad4c6c7be49393051551e.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/spring_7/spring7B_port2%E7%BA%BF%E6%9D%9F%E5%AE%9A%E4%B9%89%E5%9B%BE.png",
+   "section": "4.2.2 PROT2",
+   "caption": "图4.2.2.2 PROT2线束定义图",
+   "kind": "harness",
+   "is_table": true,
+   "header": [
+    "安费诺10PIN",
+    "信号定义",
+    "RJ45",
+    "OUTPUT_IO",
+    "DB9公头 (RS485)"
+   ],
+   "rows": [
+    [
+     "1 棕",
+     "RJ45_TX+",
+     "1",
+     "",
+     ""
+    ],
+    [
+     "2 蓝",
+     "RJ45_TX-",
+     "2",
+     "",
+     ""
+    ],
+    [
+     "3 白",
+     "GND",
+     "",
+     "GND",
+     ""
+    ],
+    [
+     "4 绿",
+     "OUTPUT_IO1",
+     "",
+     "OUTPUT_IO1",
+     ""
+    ],
+    [
+     "5 黄",
+     "GND",
+     "",
+     "",
+     "5"
+    ],
+    [
+     "6 灰",
+     "RJ45_RX+",
+     "3",
+     "",
+     ""
+    ],
+    [
+     "7 粉",
+     "RJ45_RX-",
+     "6",
+     "",
+     ""
+    ],
+    [
+     "8 红",
+     "OUTPUT_IO2",
+     "",
+     "OUTPUT_IO2",
+     ""
+    ],
+    [
+     "9 黑",
+     "RS485 A",
+     "",
+     "",
+     "1"
+    ],
+    [
+     "10 橙",
+     "RS485 B",
+     "",
+     "",
+     "7"
+    ]
+   ],
+   "confidence": "high",
+   "notes": "第1-2行、第6-7行 RJ45 列旁标注「对绞」（TX、RX 差分对），第9-10行 DB9公头 (RS485) 列旁标注「对绞」。"
+  }
+ ],
+ "skipped": [
+  {
+   "sha256": "d5b9d0d2cc4ebab658e9d4d612007740e4b8b6320e886799c9892b61934b4a93",
+   "file": "images/store/d5b9d0d2cc4ebab658e9d4d612007740e4b8b6320e886799c9892b61934b4a93.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/spring_7/%E6%AD%A3%E9%9D%A2%E5%9B%BE.png",
+   "reason": "外观图｜图2.1.1 正面图：非表格，见原图"
+  },
+  {
+   "sha256": "68fe7a2c6016646372c7c53ca26014de89ff178b12d9f0306d38700891b9d688",
+   "file": "images/store/68fe7a2c6016646372c7c53ca26014de89ff178b12d9f0306d38700891b9d688.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/spring_7/%E8%83%8C%E9%9D%A2%E5%9B%BE.png",
+   "reason": "外观图｜图2.1.2 背面图：非表格，见原图"
+  },
+  {
+   "sha256": "e62a792fae5bf392f3ffaa12a631b7426f5801f8da5503309622f52ad6c44ce8",
+   "file": "images/store/e62a792fae5bf392f3ffaa12a631b7426f5801f8da5503309622f52ad6c44ce8.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/spring_7/spring7_port1%E7%BA%BF%E6%9D%9F%E5%A4%96%E8%A7%82%E5%9B%BE.png",
+   "reason": "线束外观图｜图4.1.1.1 PROT1线束外观图：非表格/无图内文字，见原图"
+  },
+  {
+   "sha256": "07a89702e67600c2c51e9eebb4c8d4decc2dd8d06518ed7f9e0cce8152e21855",
+   "file": "images/store/07a89702e67600c2c51e9eebb4c8d4decc2dd8d06518ed7f9e0cce8152e21855.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/spring_7/spring7_port2%E7%BA%BF%E6%9D%9F%E5%A4%96%E8%A7%82%E5%9B%BE.png",
+   "reason": "线束外观图｜图4.1.2.1 PROT2线束外观图：非表格/无图内文字，见原图"
+  },
+  {
+   "sha256": "66e87133b1daeea2a3c0545a2e5a0c9ddaa2080f23c7d176a30701526366fa29",
+   "file": "images/store/66e87133b1daeea2a3c0545a2e5a0c9ddaa2080f23c7d176a30701526366fa29.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/spring_7/spring7B_port1%E7%BA%BF%E6%9D%9F%E5%A4%96%E8%A7%82%E5%9B%BE.png",
+   "reason": "线束外观图｜图4.2.1.1 PROT1线束外观图：非表格/无图内文字，见原图"
+  },
+  {
+   "sha256": "210bb8737d9b2886d5aa9441369d9b1bdf27db2c5afe3e96fae8a171bb0e0365",
+   "file": "images/store/210bb8737d9b2886d5aa9441369d9b1bdf27db2c5afe3e96fae8a171bb0e0365.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/spring_7/spring7B_port2%E7%BA%BF%E6%9D%9F%E5%A4%96%E8%A7%82%E5%9B%BE.png",
+   "reason": "线束外观图｜图4.2.2.1 PROT2线束外观图：非表格/无图内文字，见原图"
+  }
+ ],
+ "warnings": [
+  "intro 写「支持2路720p或者2路1080pAHD摄像头输入」，参数表「影音和传感」仅写「AHD 摄像头 720p*2」，以图为准。",
+  "尺寸/重量：参数表「规格」为 194*127*29mm / 0.70kg，与任务字段 194*127*29mm / 0.7 kg 一致。",
+  "补齐共用表 2 张（同图转写，原归属见各表注）",
+  "补录图内文字 6 张（自动识读，? 处需核对原图）"
+ ],
+ "figures": [
+  {
+   "sha256": "9579389842ae0c0e83882670780bdf0ec58d242da84d0f32822484981c8d5a33",
+   "file": "images/store/9579389842ae0c0e83882670780bdf0ec58d242da84d0f32822484981c8d5a33.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/spring_7/7A.png",
+   "section": "3.2 接口定义",
+   "caption": "图3.2.3 APOLLO 7BPRO接口图",
+   "kind": "drawing",
+   "title": "",
+   "text": "接口/针脚：1 2 3 4 5 6 7 8 9 10 11 12（左侧一组）；1 2 3 4 5 6 7 8 9 10 11 12（右侧一组）",
+   "confidence": "high"
+  },
+  {
+   "sha256": "b9fcc352ddd3328a4f1f775a8227f1d290f6d3de4d5892cc2b1b2b46aaf259c5",
+   "file": "images/store/b9fcc352ddd3328a4f1f775a8227f1d290f6d3de4d5892cc2b1b2b46aaf259c5.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/spring_7/%E5%AE%89%E8%A3%85%E6%8C%87%E5%AF%BC%E5%9B%BE%E7%A4%BA.png",
+   "section": "5 安装方式",
+   "caption": "图2.1.1 正面图",
+   "kind": "drawing",
+   "title": "SPRING 7 RAM安装指导",
+   "text": "产品尺寸\n产品尺寸：194.00 × 127.00，对角线 176.35；厚度 29.00、32.20、43.00\n安装孔：4*M5，孔间距 30.00、38.00\nRAM 支架安装说明\n① 逆时针旋转支架把手，取出其中一个支架底座。\n② 箭头所示的为固定孔位，请选择其中一种安装方案。（或）\n③ 箭头所示的位置为产品背面与RAM支架固定位置。\n④ 将RAM支架底座序号与产品背部序号一一对应，使用螺丝紧固后，再放回RAM支架原位置，顺时针旋转支架把手，完成安装。\n备注：1. 本版所示图形与实物可能有差异，请以实物为参考。2. 本版说明书仅限所述产品与RAM-101U系列支架组装，请根据实际需求安装。\n扭力：2N.m　M5x10*4PCS\nRAM 支架　RAM 支架底座　A\n深圳从平技术有限公司",
+   "confidence": "high"
+  }
+ ],
+ "doc_url": "https://www.cpuniverse.cn/online-documents-cn/Introduction/ApolloPro-7/content.html"
+}

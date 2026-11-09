@@ -1,0 +1,154 @@
+{
+ "pages": [
+  {
+   "slug": "2.6.18-SPRING-10-2nd-Gen",
+   "title": "2.6 编程参考信息 · SPRING 10 二代",
+   "url": "https://www.cpuniverse.cn/online-documents-cn/DeveloperGuide/ProgrammingTable/Spring2/content.html",
+   "tables": [
+    {
+     "heading": "2 编程信息",
+     "header": [
+      "名称",
+      "设备节点",
+      "备注"
+     ],
+     "rows": [
+      [
+       "高精度模块",
+       "/dev/ttyS0",
+       ""
+      ],
+      [
+       "Dubug调试",
+       "/dev/ttyS0",
+       "debug默认关闭"
+      ],
+      [
+       "高精度模块 / 低精度定位模块",
+       "/dev/ttyS2",
+       "是否是高精度模组或低精度模组取决于硬件选贴"
+      ],
+      [
+       "RS232",
+       "/dev/ttyS4",
+       "对应 CP_26PIN 功能线束上 DB9-B"
+      ],
+      [
+       "MCU uart",
+       "/dev/ttyS5",
+       "T3 与 MCU 通信专用(can数据转发)"
+      ],
+      [
+       "RS232",
+       "/dev/ttyS6",
+       "对应 CP_26PIN 功能线束上 DB9-A"
+      ],
+      [
+       "RS485",
+       "/dev/ttyS7",
+       "对应 CP_26PIN 功能线束上 DB9-C"
+      ],
+      [
+       "RS485 读写控制",
+       "/sys/devices/virtual/misc/sunxi-gps/rf-ctrl/max485_state",
+       "写1控制写; / 写0控制读"
+      ],
+      [
+       "OUTPUT1",
+       "/sys/devices/virtual/misc/sunxi-gps/rf-ctrl/ext12v_pwren1_state",
+       "对应功能线束上OUTPUT1接口; / 写1控制电压输出"
+      ],
+      [
+       "OUTPUT2",
+       "/sys/devices/virtual/misc/sunxi-gps/rf-ctrl/ext12v_pwren2_state",
+       "对应功能线束上OUTPUT2接口; / 写1控制电压输出"
+      ],
+      [
+       "OUTPUT3",
+       "/sys/devices/virtual/misc/sunxi-gps/rf-ctrl/ext12v_pwren3_state",
+       "对应功能线束上OUTPUT3接口; / 写1控制电压输出"
+      ],
+      [
+       "CAMERA_0",
+       "/dev/video4",
+       "对应功能线束上CAMER_0接口"
+      ],
+      [
+       "CAMERA_1",
+       "/dev/video5",
+       "对应功能线束上CAMER_1接口"
+      ],
+      [
+       "CAMERA_2",
+       "/dev/video6",
+       "对应功能线束上CAMER_2接口"
+      ],
+      [
+       "CAMERA_3",
+       "/dev/video7",
+       "对应功能线束上CAMER_3接口"
+      ],
+      [
+       "CAMERA_PWR_12V",
+       "/sys/devices/virtual/misc/sunxi-gps/rf-ctrl/cvbs1_pwren_state",
+       "摄像头1电源; / 写1控制电源输出"
+      ],
+      [
+       "CAMERA_PWR_12V",
+       "/sys/devices/virtual/misc/sunxi-gps/rf-ctrl/cvbs2_pwren_state",
+       "摄像头2电源; / 写1控制电源输出"
+      ],
+      [
+       "4G模组电源",
+       "/sys/devices/virtual/misc/sunxi-ril/rf-ctrl/modem_pwren",
+       "写0关闭电源"
+      ],
+      [
+       "4G模组切换sim卡",
+       "/sys/devices/virtual/misc/sunxi-ril/rf-ctrl/rf_pwren",
+       "写1切换到内置卡 / 写0切换到外置卡"
+      ]
+     ]
+    },
+    {
+     "heading": "3 高精度对应的 COM 串口",
+     "header": [
+      "设备节点",
+      "UBLOX",
+      "UM982",
+      "UM4B0",
+      "UM482",
+      "UM960",
+      "UM980",
+      "MXT906B",
+      "P20E"
+     ],
+     "rows": [
+      [
+       "/dev/ttyS0",
+       "/",
+       "COM2",
+       "COM3",
+       "COM3",
+       "COM1",
+       "COM1",
+       "COM1",
+       "COM1"
+      ],
+      [
+       "/dev/ttyS2",
+       "COM1",
+       "COM1",
+       "COM1",
+       "COM1",
+       "COM2",
+       "COM2",
+       "COM2",
+       "COM2"
+      ]
+     ]
+    }
+   ]
+  }
+ ]
+}

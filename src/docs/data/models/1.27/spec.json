@@ -1,0 +1,845 @@
+{
+ "no": "1.27",
+ "model": "TANK 2",
+ "family": "TANK",
+ "intro": "高端坚固型车载控制盒，最大3路RS232(其中1路与RS485复用，1路与CAN复用)，最大支持4路CAN，支持1T算力，支持AHD 摄像头输入720p*4 / 1080p*2，支持Android 11.0和Linux 5.10双操作系统，支持4G/5G通讯，支持千兆以太网，支持HDMI，广泛应用于农业机械自动化，工程机械自动化，物流运输，交通运输等。",
+ "size_mm": "203.52*126.56*55.5",
+ "weight_kg": 0.69,
+ "params_flat": {
+  "cpu": "4核, 2.0GHz",
+  "ram": "2G RAM, 支持最高8G",
+  "rom": "16G ROM, 支持最高256G",
+  "os": "Android 11.0\nLinux 5.10, Qt 5.15",
+  "screen_inch": "10.1″ / 12.1″",
+  "resolution": "1024*600px / 1024*768px",
+  "touch": "支持外接触摸屏\n（10.1″ 1024*600px /\n12.1″ 1024*768px，电容触摸屏）",
+  "cellular": "4G / 5G",
+  "wifi": "WiFi 2.4G / 5G",
+  "bluetooth": "BT 2.1+ EDR / 3.0 / 4.1 LE / 4.2 BLE",
+  "gnss": "GNSS（可选配米级 / 厘米级定位板卡）\n可选配惯导模组",
+  "can": "CAN*2\nCAN FD*1\nCAN FD*1 / RS232*1",
+  "rs232": "CAN FD*1 / RS232*1\nRS485*1 / RS232*1\nRS232*1",
+  "rs485": "RS485*1 / RS232*1",
+  "io_input": "DI*1",
+  "dc_output": "5V/12V 直流对外供电*2 or 5V/12V直流对外供电*1 & PPS*1",
+  "adc_input": "ADC*2，最大输入5V",
+  "usb": "USB 3.0（Type-C)*1",
+  "ethernet": "千兆以太网*1",
+  "camera_in": "AHD 摄像头输入 720p*4 / 1080p*2",
+  "speaker": "外置扬声器*1，与外置麦克风*1+ADC*1复用",
+  "mic": "外置麦克风*1（与外置扬声器*1+ADC*1复用）",
+  "power_input": "电源 9-36V 直流输入",
+  "acc_detect": "开机点火 ACC 状态检测",
+  "protection": "IP67",
+  "vibration": "震动标准（工作中）：MIL-STD-810",
+  "temp_operating": "-30℃~+70℃",
+  "temp_storage": "-40℃~+85℃",
+  "humidity": "湿度95%，无冷凝",
+  "connector": "26PIN 连接器*1\nTNC 母头*2\nType-C 接口*1",
+  "indicator": "LED双色指示灯*5（电源/WiFi/GNSS/蜂窝/CAN）"
+ },
+ "tables": [
+  {
+   "sha256": "6a49b4f76f885c81edfc36634ccd8ff6451dd42556e6eafaa861b0d61f904589",
+   "file": "images/store/6a49b4f76f885c81edfc36634ccd8ff6451dd42556e6eafaa861b0d61f904589.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/tank/%E5%8F%82%E6%95%B0%E8%A1%A82.png",
+   "section": "3.1 产品参数",
+   "caption": "图3.1 配置信息",
+   "kind": "param",
+   "is_table": true,
+   "header": [
+    "分类",
+    "内容"
+   ],
+   "rows": [
+    [
+     "系统",
+     "4核, 2.0GHz\n2G RAM, 支持最高8G\n16G ROM, 支持最高256G\nAndroid 11.0\nLinux 5.10, Qt 5.15"
+    ],
+    [
+     "通讯和接口",
+     "4G / 5G\nWiFi 2.4G / 5G\nBT 2.1+ EDR / 3.0 / 4.1 LE / 4.2 BLE\nGNSS（可选配米级 / 厘米级定位板卡）\n可选配惯导模组\nCAN*2\nCAN FD*1\nCAN FD*1 / RS232*1\nRS485*1 / RS232*1\nRS232*1\nDI*1\n5V/12V 直流对外供电*2 or 5V/12V直流对外供电*1 & PPS*1\nADC*2，最大输入5V\nUSB 3.0（Type-C)*1\n千兆以太网*1\n支持 CP ISOBUS VT"
+    ],
+    [
+     "环境参数",
+     "防护等级IP67\n震动标准（工作中）：MIL-STD-810\n冲击标准（工作中）：ISO16750\n湿度95%，无冷凝\n工作温度： -30℃~+70℃\n仓储温度： -40℃~+85℃"
+    ],
+    [
+     "显示",
+     "支持外接触摸屏\n（10.1″ 1024*600px /\n12.1″ 1024*768px，电容触摸屏）"
+    ],
+    [
+     "影音和传感",
+     "AHD 摄像头输入 720p*4 / 1080p*2\n支持CP AVM 360° 环视影像\nHDMI*1\n外置扬声器*1，与外置麦克风*1+ADC*1复用"
+    ],
+    [
+     "电源管理",
+     "电源 9-36V 直流输入\n开机点火 ACC 状态检测\n可选配 UPS 外接电池"
+    ],
+    [
+     "连接器",
+     "26PIN 连接器*1\nTNC 母头*2\nType-C 接口*1"
+    ],
+    [
+     "规格",
+     "尺寸(W*H*D)：203.52*126.56*55.5mm\n重量：0.69kg"
+    ],
+    [
+     "功能按键/指示灯",
+     "LED双色指示灯*5（电源/WiFi/GNSS/蜂窝/CAN）"
+    ]
+   ],
+   "confidence": "high",
+   "notes": "原表为「分类|内容|分类|内容」4列并排，已按左栏自上而下→右栏自上而下折叠为2列；左栏为 系统/通讯和接口/环境参数，右栏为 显示/影音和传感/电源管理/连接器/规格/功能按键/指示灯。"
+  },
+  {
+   "sha256": "c9b8be72dfaa0e56aec72d3826597d222be589f6c58256469cad88db49939866",
+   "file": "images/store/c9b8be72dfaa0e56aec72d3826597d222be589f6c58256469cad88db49939866.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/tank/TANK2%20%E6%8E%A5%E5%8F%A3%E5%AE%9A%E4%B9%89%E8%A1%A8.png",
+   "section": "3.2 接口定义",
+   "caption": "图3.2.2 26P 接口定义表",
+   "kind": "interface",
+   "is_table": true,
+   "header": [
+    "安费诺-26P",
+    "PIN脚定义"
+   ],
+   "rows": [
+    [
+     "1",
+     "VCC_12V_AHD"
+    ],
+    [
+     "2",
+     "ADC_A/SPKN"
+    ],
+    [
+     "3",
+     "CAN2-H"
+    ],
+    [
+     "4",
+     "CAN1-H"
+    ],
+    [
+     "5",
+     "GND"
+    ],
+    [
+     "6",
+     "RS232_RX1"
+    ],
+    [
+     "7",
+     "RS232_RX2/485_B"
+    ],
+    [
+     "8",
+     "ACC"
+    ],
+    [
+     "9",
+     "ADC_B/OUTPUT1"
+    ],
+    [
+     "10",
+     "CAN2_L"
+    ],
+    [
+     "11",
+     "CAN1_L"
+    ],
+    [
+     "12",
+     "RS232_TX1"
+    ],
+    [
+     "13",
+     "RS232_TX2/485_A"
+    ],
+    [
+     "14",
+     "B+"
+    ],
+    [
+     "15",
+     "AHD1"
+    ],
+    [
+     "16",
+     "AHD3"
+    ],
+    [
+     "17",
+     "CAN3_H"
+    ],
+    [
+     "18",
+     "INPUT1"
+    ],
+    [
+     "19",
+     "CAN4_H/RS232_RX3"
+    ],
+    [
+     "20",
+     "B-"
+    ],
+    [
+     "21",
+     "MIC_P/BOOT/SPK"
+    ],
+    [
+     "22",
+     "AHD2"
+    ],
+    [
+     "23",
+     "AHD4"
+    ],
+    [
+     "24",
+     "CAN3_L"
+    ],
+    [
+     "25",
+     "OUTPUT2/PPS"
+    ],
+    [
+     "26",
+     "CAN4_L/RS232-TX3"
+    ]
+   ],
+   "confidence": "high",
+   "notes": "原表为4列并排（安费诺-26P|PIN脚定义 ×2），已折叠为2列；PIN 1-26 连续。原图中 PIN2 的 SPKN、PIN7 的 /485_B、PIN9 的 ADC_B/、PIN13 的 /485_A、PIN19 整格、PIN21 的 MIC_P/BOOT/、PIN25 的 /PPS、PIN26 整格为灰色字体（表示复用/可选），内容仍按原样转录。"
+  },
+  {
+   "sha256": "057d44656dfd4301a15657231d93c2401723efba865f50def0bdcbc7bf08a5cb",
+   "file": "images/store/057d44656dfd4301a15657231d93c2401723efba865f50def0bdcbc7bf08a5cb.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/tank/TANK2%20M12%E6%8E%A5%E5%8F%A3%E5%AE%9A%E4%B9%89.png",
+   "section": "3.2 接口定义",
+   "caption": "图3.2.3 M12 接口定义表（Ethernet Interface definition）",
+   "kind": "interface",
+   "is_table": true,
+   "header": [
+    "PIN",
+    "Definition"
+   ],
+   "rows": [
+    [
+     "1",
+     "PHY_MDI_0+"
+    ],
+    [
+     "2",
+     "PHY_MDI_0-"
+    ],
+    [
+     "3",
+     "PHY_MDI_1+"
+    ],
+    [
+     "4",
+     "PHY_MDI_1-"
+    ],
+    [
+     "5",
+     "PHY_MDI_3+"
+    ],
+    [
+     "6",
+     "PHY_MDI_3-"
+    ],
+    [
+     "7",
+     "PHY_MDI_2-"
+    ],
+    [
+     "8",
+     "PHY_MDI_2+"
+    ]
+   ],
+   "confidence": "high",
+   "notes": "原图为左右并排的两张 M12 8PIN 子表，本记录为左表，表头「Ethernet Interface definition」；右表见同一 sha256 的另一条记录。PIN 1-8 连续。"
+  },
+  {
+   "sha256": "057d44656dfd4301a15657231d93c2401723efba865f50def0bdcbc7bf08a5cb",
+   "file": "images/store/057d44656dfd4301a15657231d93c2401723efba865f50def0bdcbc7bf08a5cb.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/tank/TANK2%20M12%E6%8E%A5%E5%8F%A3%E5%AE%9A%E4%B9%89.png",
+   "section": "3.2 接口定义",
+   "caption": "图3.2.3 M12 接口定义表（LCD Interface definition）",
+   "kind": "interface",
+   "is_table": true,
+   "header": [
+    "PIN",
+    "Definition"
+   ],
+   "rows": [
+    [
+     "1",
+     "VCC_12V"
+    ],
+    [
+     "2",
+     "GND"
+    ],
+    [
+     "3",
+     "FPD_OUT-"
+    ],
+    [
+     "4",
+     "FPD_OUT+"
+    ],
+    [
+     "5",
+     "NC"
+    ],
+    [
+     "6",
+     "DC5V_TFT"
+    ],
+    [
+     "7",
+     "DC5V_TFT"
+    ],
+    [
+     "8",
+     "DC5V_TFT"
+    ]
+   ],
+   "confidence": "high",
+   "notes": "同一张图中右表，表头「LCD Interface definition」。PIN 1-8 连续。"
+  },
+  {
+   "sha256": "6d22817367d23cdacf76fd1ba302bb24617ac2fc9c85c473e7faa4b471cd0ae3",
+   "file": "images/store/6d22817367d23cdacf76fd1ba302bb24617ac2fc9c85c473e7faa4b471cd0ae3.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/tank/TANK2%20%E7%BA%BF%E6%9D%9F%E6%8E%A5%E7%BA%BF%E8%A1%A8.png",
+   "section": "4.1 TANK2线束定义",
+   "caption": "图4.1.2 26P接线图",
+   "kind": "harness",
+   "is_table": true,
+   "header": [
+    "TE-26P",
+    "PIN定义",
+    "线径",
+    "线贴纸",
+    "线颜色",
+    "M1_4P(AHD IN1)",
+    "M2_4P(AHD IN2)",
+    "M3_4P(AHD IN3)",
+    "M4_4P(AHD IN4)",
+    "M5_3P(POWER)",
+    "M6_4P(IO IN/OUT)",
+    "DB9A（公头）",
+    "DB9B(公头)",
+    "M7_4P(ADC BOOT)"
+   ],
+   "rows": [
+    [
+     "1",
+     "VCC_12V_AHD",
+     "24#",
+     "AHD12V",
+     "黄色",
+     "1",
+     "1",
+     "1",
+     "1",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "2",
+     "ADC_A/SPKN",
+     "24#",
+     "ADC-A",
+     "浅白色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "3"
+    ],
+    [
+     "3",
+     "CAN2_H",
+     "24#",
+     "CAN2-H",
+     "蓝色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "7对绞线（1/7）",
+     "",
+     ""
+    ],
+    [
+     "4",
+     "CAN1_H",
+     "24#",
+     "CAN1-H",
+     "绿色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "9对绞线（6/9）",
+     "",
+     ""
+    ],
+    [
+     "5",
+     "GND",
+     "18#",
+     "GND",
+     "黑色",
+     "2",
+     "2",
+     "2",
+     "2",
+     "",
+     "1-2",
+     "5",
+     "5",
+     "1-2"
+    ],
+    [
+     "6",
+     "RS232_RX1",
+     "24#",
+     "RS232-RX1",
+     "黑灰色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "2对绞线（2/3）",
+     "",
+     ""
+    ],
+    [
+     "7",
+     "RS232_RX2/485_B",
+     "24#",
+     "RS232_RX2/485-B",
+     "黑紫色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "2对绞线（2/3）",
+     ""
+    ],
+    [
+     "8",
+     "ACC",
+     "24#",
+     "ACC",
+     "红色",
+     "",
+     "",
+     "",
+     "",
+     "1",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "9",
+     "ADC_B/OUTPUT1",
+     "24#",
+     "ADC_B/OUTPUT1",
+     "浅白色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "4"
+    ],
+    [
+     "10",
+     "CAN2_L",
+     "24#",
+     "CAN2-L",
+     "黑蓝色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "1对绞线（1/7）",
+     "",
+     ""
+    ],
+    [
+     "11",
+     "CAN1_L",
+     "24#",
+     "CAN1-L",
+     "黑绿色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "6对绞线（6/9）",
+     "",
+     ""
+    ],
+    [
+     "12",
+     "RS232_TX1",
+     "24#",
+     "RS232-TX1",
+     "灰色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "3对绞线（2/3）",
+     "",
+     ""
+    ],
+    [
+     "13",
+     "RS232_TX2/485_A",
+     "24#",
+     "RS232_TX2/485_A",
+     "紫色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "3对绞线（2/3）",
+     ""
+    ],
+    [
+     "14",
+     "B+",
+     "18#",
+     "B+",
+     "黄色",
+     "",
+     "",
+     "",
+     "",
+     "2",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "15",
+     "AHD1",
+     "24#",
+     "AHD1",
+     "浅白色",
+     "4",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "16",
+     "AHD3",
+     "24#",
+     "AHD3",
+     "浅白色",
+     "",
+     "",
+     "4",
+     "",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "17",
+     "CAN3_H",
+     "24#",
+     "CAN3_H",
+     "白色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "9对绞线（6/9）",
+     ""
+    ],
+    [
+     "18",
+     "INPUT1",
+     "24#",
+     "INPUT1",
+     "黑粉红色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "3",
+     "",
+     "",
+     ""
+    ],
+    [
+     "19",
+     "CAN4-H/RS232-RX3",
+     "24#",
+     "CAN4_H",
+     "棕色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "7对绞线（1/7）",
+     ""
+    ],
+    [
+     "20",
+     "B-",
+     "18#",
+     "B-",
+     "黑色",
+     "",
+     "",
+     "",
+     "",
+     "3",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "21",
+     "MIC_P/BOOT/SPKP",
+     "24#",
+     "SPK",
+     "浅白色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "22",
+     "AHD2",
+     "24#",
+     "AHD2",
+     "浅白色",
+     "",
+     "4",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "23",
+     "AHD4",
+     "24#",
+     "AHD4",
+     "浅白色",
+     "",
+     "",
+     "",
+     "4",
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "24",
+     "CAN3_L",
+     "24#",
+     "CAN3_L",
+     "黑白色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "6对绞线（6/9）",
+     ""
+    ],
+    [
+     "25",
+     "OUTPUT2/PPS",
+     "24#",
+     "OUTPUT2/PPS",
+     "粉红色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "4",
+     "",
+     "",
+     ""
+    ],
+    [
+     "26",
+     "CAN4_L/RS232-TX3",
+     "24#",
+     "CAN4_L",
+     "黑棕色",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "",
+     "对绞线（1/7）",
+     ""
+    ]
+   ],
+   "confidence": "high",
+   "notes": "表标题「接线表」。PIN 1-26 连续。DB9A/DB9B 的对绞线单元格在原图中跨两行合并（如 7对绞线（1/7）与 1对绞线（1/7）上下相邻），已按行拆开并把针号写进单元格。第26行 DB9B 单元格原文仅「对绞线（1/7）」，未见到首位针号（可能被单元格边框裁切），按原样记录、未臆测。第21行（MIC_P/BOOT/SPKP）各连接器列均无针号。"
+  }
+ ],
+ "skipped": [
+  {
+   "sha256": "32c9409bfa0a1199968f4fa9d832c5701fdccc1eecfbcc0d643411521c04d971",
+   "file": "images/store/32c9409bfa0a1199968f4fa9d832c5701fdccc1eecfbcc0d643411521c04d971.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/tank/%E6%AD%A3%E9%9D%A2%E5%9B%BE2.png",
+   "reason": "外观图｜图2.1.1 正面图：非表格，见原图"
+  },
+  {
+   "sha256": "95653e55ef476a49583365dc62b8ecc93bd2c0d32c5867accc7473e7ab769f06",
+   "file": "images/store/95653e55ef476a49583365dc62b8ecc93bd2c0d32c5867accc7473e7ab769f06.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/tank/%E5%8F%8D%E9%9D%A2%E5%9B%BE2.png",
+   "reason": "外观图｜图2.1.2 背面图：非表格，见原图"
+  },
+  {
+   "sha256": "bf60ad86038d5bb0c5e7b39b3fa690ae107f7faef0afb563b08d6737b822adc0",
+   "file": "images/store/bf60ad86038d5bb0c5e7b39b3fa690ae107f7faef0afb563b08d6737b822adc0.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/tank/TANK2%20%E7%BA%BF%E6%9D%9F.png",
+   "reason": "线束外观图｜图4.1.1 26P线束外观图：非表格/无图内文字，见原图"
+  }
+ ],
+ "warnings": [
+  "尺寸：参数表 203.52*126.56*55.5mm 与任务文字 203.52*126.56*55.5mm 一致。",
+  "重量：参数表 0.69kg 与任务文字 0.69 kg 一致。",
+  "同一张 sha256=057d4465… 的 M12 接口图含 Ethernet / LCD 两张子表，已分别转写为两条 tables 记录（sha256 集合仍与 candidates 一致）。",
+  "线束表第26行 DB9B 单元格原图仅显示「对绞线（1/7）」，缺首位针号，未猜测补全。",
+  "补录图内文字 6 张（自动识读，? 处需核对原图）"
+ ],
+ "figures": [
+  {
+   "sha256": "87629a07b2b9f29ef6a0aafd4ff7f52de0a57e662e186076da520c37c3320317",
+   "file": "images/store/87629a07b2b9f29ef6a0aafd4ff7f52de0a57e662e186076da520c37c3320317.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/tank/TANK2%E6%8E%A5%E5%8F%A3%E5%9B%BE.png",
+   "section": "3.2 接口定义",
+   "caption": "图3.2.1 接口图",
+   "kind": "drawing",
+   "title": "",
+   "text": "接口：TNC、TNC、M12 connector、LCD、Ethernet\n接口/针脚：26P 连接器标注 1、8、14、20（左）与 7、13、19、26（右）\n备注：26P 连接器内印有 A",
+   "confidence": "high"
+  },
+  {
+   "sha256": "51a9d89b8911eff3ae93964efe06e162be7eec0185de12f4cec16fd0a2de739b",
+   "file": "images/store/51a9d89b8911eff3ae93964efe06e162be7eec0185de12f4cec16fd0a2de739b.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/tank/TANK%20IMU%20%E5%9D%90%E6%A0%87.png",
+   "section": "3.2 接口定义",
+   "caption": "图3.2.3=4 IMU坐标方向图",
+   "kind": "photo",
+   "title": "",
+   "text": "产品尺寸：40.73mm、89.58mm、37.21mm\n接口/针脚：顶部标识 5G/LTE、SYS、CAN、WIFI、GNSS\n备注：CR.DEVICE；Y／X／Z 轴向标注；Z(方向朝外)",
+   "confidence": "medium"
+  },
+  {
+   "sha256": "fc3beca745d4c7c20f26ce55ed115f4f654afc9e4a4206e13fbaf27dc101d821",
+   "file": "images/store/fc3beca745d4c7c20f26ce55ed115f4f654afc9e4a4206e13fbaf27dc101d821.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/APOLLO2%2012/APOLLO2%20M12%E4%BB%A5%E5%A4%AA%E7%BD%91%E7%BA%BF%E6%9D%9F.png",
+   "section": "4.1.3",
+   "caption": "图4.1.3 M12以太网线束",
+   "kind": "drawing",
+   "title": "CUSTOMER DRAWING（M12 X-CODE MALE TO RJ45 CABLE ASSEMBLY）",
+   "text": "产品尺寸：LENGTH M(Meters)；53MM；44.5MM；M12*1；TOLERANCE 0-2.99 M = +100.0/-25.0mm；3-8.99 M = +150.0/-25.0mm；9-14.99 M = +300.0/-25.0mm；15-OVER M = +450.0/-25.0mm\n接口/针脚：P1 CONNECTOR: M12 X-CODE MALE（FACE VIEW 1 2 3 4 5 6 7 8）；P2 RJ45 MALE 8Pin（FACE VIEW 1 2 3 4 5 6 7 8）；WIRING DIAGRAM P1 1 2 3 4 5 6 7 8 —— P2 1 2 3 4 5 6 7 8，SHIELD，shell，TWIST PAIR\n线序：white-orange、orange、white-green、green、white-brown、brown、white-blue、blue\n备注：TPU BLACK OVERMOLD；CABLE,CAT6A 24AWG*4P,GREEN TPU JACKET\nTechnical data: Ethernet cable assembly;M12 X-CODED 8-position to RJ45; CAT6A,S/FTP 4x2xAWG26,TPU;360° shielded, Plug Straight. Materials: Male Contact: Brass,Ni/Au plated；Shielding shell: Brass, Cu/Ni plated；Male plastic housing: PA66,black；Coupling nut: Brass, Cu/Ni plated；Cable: TPU blue；PLUG:RJ45\nSpecifications: Rated current at 40℃: 0.5A；Rated voltage: 50V AC / 60V DC；Withstand voltages: 300V；Contact resistance: < 5 mΩ；Insulation resistance: Length 0~20M >100MΩ;Length 20~40M >20MΩ；Signal type: Ethernet CAT6A, 10 Gbps；Standards: M12 connector for IEC 61076-2-109；Protection:IP67(M12)；Operation temperature: -40 ℃~80 ℃；Storage conditions: Temperature 25±3℃; Humidity 35%~70%；RoHS conformity: Yes\nP/N NOTE: P82112-Mxxx；Mx INDICATES THE HARNESS LENGTH L；FOR EXAMPLE: M005,EXPRESS: L=0.5 M；M010,EXPRESS: L=1 M；M100,EXPRESS: L=10 M\n图号/版本：DWG NO. P82112-Mxxx；SIZE A4；SCALE NONE；REV 01；SHEET 1 OF 1；REVISIONS 01 NEW DRAWING 25May24 Jode Tommy\nAmphinol；Sine Systems；44724 Marley Drive；Clinton Township, MI 48036",
+   "confidence": "high"
+  },
+  {
+   "sha256": "92b6ccd90e0153d48138a4a6e7d80f878c7622145c97c04913e7e01db44ae333",
+   "file": "images/store/92b6ccd90e0153d48138a4a6e7d80f878c7622145c97c04913e7e01db44ae333.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/APOLLO%2012X/%E5%89%AF%E5%B1%8F%E7%BA%BF%E6%9D%9F.png",
+   "section": "4.1.4",
+   "caption": "图4.1.4 M12 LCD线束",
+   "kind": "drawing",
+   "title": "M12 X-CODE MALE TO MALE CABLE ASSEMBLY（图框内 CUSTOMER DRAWING）",
+   "text": "产品尺寸：53MM；Ø14.6MM；LENGTH M(Meters)\n接口/针脚：P1 1 white-orange、2 orange、3 white-green、4 green、5 white-brown、6 brown、7 white-blue、8 blue、shell；P2 1 white-orange、2 orange、3 white-green、4 green、5 white-brown、6 brown、7 white-blue、8 blue、shell；CONNECTOR：M12 X-CODE MALE；WIRING DIAGRAM：SHIELD、TWIST PAIR、FACE VIEW\n备注原文：CABLE,CAT6A 24AWG*4P,GREEN TPU JACKET；PVC OVERMOLD,BLK\nTechnical data：Ethernet cable assembly:M12 X-CODED 8-position; CAT6A,S/FTP 4x2xAWG24,TPU;360° shielded, Plug Straight.\nMaterials：Male Contact: Copper alloy,Gold plated. Shielding shell: Copper alloy,Ni plated. Male plastic housing: Thermoplastic,black. Coupling nut: Copper alloy,Ni plated. Cable: CAT6A 24AWG*4P,Green TPU jacket.\nSpecifications：Rated current at 40°C: 0.5A. Rated voltage: 50V AC / 60V DC. Withstand voltages: 300V. Contact resistance: < 5 mΩ. Insulation resistance: Length 0~20M >100MΩ;Length 20~40M >20MΩ. Signal type: Ethernet CAT6A, 10 Gbps. Standards: M12 connector for IEC 61076-2-109. Protection:IP67. Operation temperature: -25 °C~80 °C. Storage conditions: Temperature 25±3°C; Humidity 35%~70%. RoHS conformity: Yes.\nP/N NOTE：MCXS087A7AC59Mxxx；Mxxx NDICATES THE HARNESS LENGTH.L；FOR EXAMPLE: M001,EXPRESS: L=0.1M；M010,EXPRESS: L=1M；M100,EXPRESS: L=10M",
+   "confidence": "high"
+  },
+  {
+   "sha256": "1b3004dd8f04230941b1f3c8dad4ac1397b79c004adc6b5d721a6e72043e89a5",
+   "file": "images/store/1b3004dd8f04230941b1f3c8dad4ac1397b79c004adc6b5d721a6e72043e89a5.png",
+   "src": "https://mdmobs.cpuniverse.cn/gitbook/01-%E4%BA%A7%E5%93%81%E4%BB%8B%E7%BB%8D/tank/%E5%AE%89%E8%A3%85%E6%8C%87%E5%AF%BC.png",
+   "section": "2.1.1",
+   "caption": "图2.1.1 正面图",
+   "kind": "drawing",
+   "title": "产品尺寸 / RAM 支架安装说明 / TANK2 RAM安装指导",
+   "text": "产品尺寸\nRAM 支架安装说明\n产品尺寸：203.53、193.72、191.72、187.37、55.50、138.70、130.08、114.00、40.00、38.00、30.00\n安装孔：4*M5、4*M5\nRAM 支架\nRAM 支架底座\n或\n① 逆时针旋转支架把手，取出其中一个支架底座。\n② 箭头所示的为固定孔位，请选择其中一种安装方案。\n③ 箭头所示的位置为产品背面与RAM支架固定位置。\n④ 将RAM支架底座序号与产品背部序号一一对应，使用螺丝紧固后。再放回RAM支架原位置，顺时针旋转支架把手，完成安装。\n丝印：CHDEVICE\n扭力:2N·m\nM5x10*4PCS\n备注：1.本版所示图形与实物可能有差异，请以实物为参考。2.本版说明书仅限所述产品与RAM-101U系列支架组装，请根据实际需求安装。\n深圳从平技术有限公司",
+   "confidence": "high"
+  }
+ ],
+ "doc_url": "https://www.cpuniverse.cn/online-documents-cn/Introduction/Tank2/content.html"
+}

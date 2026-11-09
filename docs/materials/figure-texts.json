@@ -1,0 +1,296 @@
+{
+ "414491400a0d35f7e9b7178971082bec82aa8e1dbbef7f2a46eb4c0112195d04": {
+  "sha": "414491400a0d35f7e9b7178971082bec82aa8e1dbbef7f2a46eb4c0112195d04",
+  "kind": "photo",
+  "title": "",
+  "text": "接口/针脚：V1；V2；V3；V4；ANT1；ANT2；4G\n左侧多针插座内部针脚编号字迹过小，无法辨认（?）",
+  "confidence": "high"
+ },
+ "4f74150256f16c9aef60c66c261073c5ad62d370ed2943bbbadd83f7ea9719fb": {
+  "sha": "4f74150256f16c9aef60c66c261073c5ad62d370ed2943bbbadd83f7ea9719fb",
+  "kind": "drawing",
+  "title": "APOLLO2 12X RAM 安装指导",
+  "text": "产品尺寸\n产品尺寸：1190.4；798.8；1231.7；137.4；125.2；172\n安装孔：4*M5；152；120\nRAM 支架安装说明\n① 逆时针旋转支架把手，取出其中一个支架底座。\n② 箭头所示的为固定孔位，请选择其中一种安装方案。（或）\n③ 箭头所示的位置为产品背面与RAM支架固定位置。\n④ 将RAM支架底座序号与产品背部序号一一对应，使用螺丝紧固后。再放回RAM支架原位置，顺时针旋转支架把手，完成安装。\n扭力:2N.m　M5x10*4PCS\nRAM 支架　RAM 支架底座　A\n1.本版所示图形与实物可能有差异，请以实物为参考。2.本版说明书仅限所述产品与RAM-101U系列支架组装，请根据实际需求安装。\n深圳从平技术有限公司",
+  "confidence": "high"
+ },
+ "5daa5fea493bbbd5287d341b6363e409dd1e7646f343047d3fd7a2663ab6e621": {
+  "sha": "5daa5fea493bbbd5287d341b6363e409dd1e7646f343047d3fd7a2663ab6e621",
+  "kind": "diagram",
+  "title": "standard edition n(n≤4)*1080P+m(m≤4)*720P connection method／custom-made n(n≤4)*1080P+m(m≤4)*720P connection method",
+  "text": "standard edition n(n≤4)*1080P+m(m≤4)*720P connection method\ncustom-made n(n≤4)*1080P+m(m≤4)*720P connection method\n接口/针脚：2pin；1 to 2 harness；AHD IN1；AHD IN2；AHD0；AHD1；AHD2；AHD3；AHD5；AHD6；AHD7；AHD8；1080P；720P\nn=1:connect AHD0　n=2:connect HAD0~1　n=3:connect AHD0~2　n=4:connect AHD0~3\nm=1:connect AHD5　m=2:connect HAD5~6　m=3:connect AHD5~7　m=4:connect AHD5~8\n左侧与右侧圆形端口标号字迹过小，无法辨认（?1—?4）",
+  "confidence": "medium"
+ },
+ "69ab0213bf768eb9ad8f2745da5e7d5c96e398c1792e61a1f54e52948b043e0a": {
+  "sha": "69ab0213bf768eb9ad8f2745da5e7d5c96e398c1792e61a1f54e52948b043e0a",
+  "kind": "drawing",
+  "title": "APOLLO 12PRO 特别版 RAM 安装指导",
+  "text": "产品尺寸\n产品尺寸：1190.4；798.8；1231.7；137.4；125.2；172\n安装孔：4*M5；152；120\nRAM 支架安装说明\n① 逆时针旋转支架把手，取出其中一个支架底座。\n② 箭头所示的为固定孔位，请选择其中一种安装方案。（或）\n③ 箭头所示的位置为产品背面与RAM支架固定位置。\n④ 将RAM支架底座序号与产品背部序号一一对应，使用螺丝紧固后。再放回RAM支架原位置，顺时针旋转支架把手，完成安装。\n扭力:2N.m　M5x10*4PCS\nRAM 支架　RAM 支架底座　A\n1.本版所示图形与实物可能有差异，请以实物为参考。2.本版说明书仅限所述产品与RAM-101U系列支架组装，请根据实际需求安装。\n深圳从平技术有限公司",
+  "confidence": "high"
+ },
+ "308e8a995be272f1d80e97448034eb479dcb5962aaa3a69c52411008e2eac09c": {
+  "sha": "308e8a995be272f1d80e97448034eb479dcb5962aaa3a69c52411008e2eac09c",
+  "kind": "drawing",
+  "title": "SPRING2 10PLUS　RAM 安装指导",
+  "text": "产品尺寸\n产品尺寸：281.00、180.96、255.85、35.15、27.67、39.67\n安装孔：4*M5、47.09、48.41\nRAM 支架安装说明\n① 逆时针旋转支架把手，取出其中一个支架底座。\n② 箭头所示的为固定孔位，请选择其中一种安装方案。（或）\n③ 箭头所示的位置为产品背面与RAM支架固定位置。\n④ 将RAM支架底座序号与产品背部序号一一对应，使用螺丝紧固后。再放回RAM支架原位置，顺时针旋转支架把手，完成安装。\n标注：RAM 支架、RAM 支架底座、A\n备注：1.本版所示图形与实物可能有差异，请以实物为参考。\n备注：2.本版说明书仅限所述产品与RAM-101U系列支架组装，请根据实际需求安装。\n扭矩:2N.m　M5x10*4PCS\n深圳从平技术有限公司",
+  "confidence": "high"
+ },
+ "746a27a776bc9d1859247af01173c1f21d0df93d8632f044337c5a98711ce41d": {
+  "sha": "746a27a776bc9d1859247af01173c1f21d0df93d8632f044337c5a98711ce41d",
+  "kind": "drawing",
+  "title": "",
+  "text": "产品尺寸：135.9±0.3、30±0.3\n安装孔：4*⌀6\n铭牌：CPDEVICE\n铭牌：Model No.: TANK1\n铭牌：Power Input: 9V-36V\n条码下方印刷字符：7A5R0 · 26320001?\n铭牌：Made in China\n铭牌图标：RoHS、CE、划叉的垃圾桶图形\n备注：条码下方数字字迹极小，末位存疑",
+  "confidence": "medium"
+ },
+ "78e8aa8e4b2e6192b96a9b7ec1aa0e14f50b3e7ce09bf930514c484e2c90b1bd": {
+  "sha": "78e8aa8e4b2e6192b96a9b7ec1aa0e14f50b3e7ce09bf930514c484e2c90b1bd",
+  "kind": "drawing",
+  "title": "APOLLO2 7PRO　RAM 安装指导",
+  "text": "产品尺寸\n产品尺寸：200.00、134.00、176.53、32.56、40.77\n安装孔：4*M5、38.00、30.00\nRAM 支架安装说明\n① 逆时针旋转支架把手，取出其中一个支架底座。\n② 箭头所示的为固定孔位，请选择其中一种安装方案。（或）\n③ 箭头所示的位置为产品背面与RAM支架固定位置。\n④ 将RAM支架底座序号与产品背部序号一一对应，使用螺丝紧固后。再放回RAM支架原位置，顺时针旋转支架把手，完成安装。\n标注：RAM 支架、RAM 支架底座、A\n备注：1.本版所示图形与实物可能有差异，请以实物为参考。\n备注：2.本版说明书仅限所述产品与RAM-101U系列支架组装，请根据实际需求安装。\n扭矩:2N.m　M5x10*4PCS\n深圳从平技术有限公司",
+  "confidence": "high"
+ },
+ "7eb61acd5b9100fdbbd7532d383a9b1fd6523a294bac419537cb3995198989eb": {
+  "sha": "7eb61acd5b9100fdbbd7532d383a9b1fd6523a294bac419537cb3995198989eb",
+  "kind": "drawing",
+  "title": "APOLLO X　RAM 安装指导",
+  "text": "产品尺寸\n产品尺寸：320.02、252.02、308.90、52.03、48.23、41.83\n安装孔：4*M5、30.00、38.00\nRAM 支架安装说明\n① 逆时针旋转支架把手，取出其中一个支架底座。\n② 箭头所示的为固定孔位，请选择其中一种安装方案。（或）\n③ 箭头所示的位置为产品背面与RAM支架固定位置。\n④ 将RAM支架底座序号与产品背部序号一一对应，使用螺丝紧固后。再放回RAM支架原位置，顺时针旋转支架把手，完成安装。\n标注：RAM 支架、RAM 支架底座、A\n备注：1.本版所示图形与实物可能有差异，请以实物为参考。\n备注：2.本版说明书仅限所述产品与RAM-101U系列支架组装，请根据实际需求安装。\n扭矩:2N.m　M5x10*4PCS\n深圳从平技术有限公司",
+  "confidence": "high"
+ },
+ "986c5a0ec1f7e6fe10c579756ca46c026e66041b2789fd5e36cfa7fc5a2c453e": {
+  "sha": "986c5a0ec1f7e6fe10c579756ca46c026e66041b2789fd5e36cfa7fc5a2c453e",
+  "kind": "drawing",
+  "title": "APOLLO2 10　RAM 安装指导",
+  "text": "产品尺寸\n产品尺寸：248.9、167.5、255.85、30.15、33.25、44.25\n安装孔：4*M5、38\nRAM 支架安装说明\n① 逆时针旋转支架把手，取出其中一个支架底座。\n② 箭头所示的为固定孔位，请选择其中一种安装方案。（或）\n③ 箭头所示的位置为产品背面与RAM支架固定位置。\n④ 将RAM支架底座序号与产品背部序号一一对应，使用螺丝紧固后。再放回RAM支架原位置，顺时针旋转支架把手，完成安装。\n标注：RAM 支架、RAM 支架底座、A\n备注：1.本版所示图形与实物可能有差异，请以实物为参考。\n备注：2.本版说明书仅限所述产品与RAM-101U系列支架组装，请根据实际需求安装。\n扭矩:2N.m　M5x10*4PCS\n深圳从平技术有限公司",
+  "confidence": "high"
+ },
+ "996a14fbb781950993d0e5525adf86ed2225218125b47b19d4e9d48c2025cd08": {
+  "sha": "996a14fbb781950993d0e5525adf86ed2225218125b47b19d4e9d48c2025cd08",
+  "kind": "drawing",
+  "title": "APOLLO2 12A特别版 RAM安装指导",
+  "text": "产品尺寸\n产品尺寸：297.60 × 198.70，对角线 307.93；厚度 34.35、31.30、3.00\n安装孔：4*M5，孔间距 38.00、30.00\nRAM 支架安装说明\n① 逆时针旋转支架把手，取出其中一个支架底座。\n② 箭头所示的为固定孔位，请选择其中一种安装方案。（或）\n③ 箭头所示的位置为产品背面与RAM支架固定位置。\n④ 将RAM支架底座序号与产品背部序号一一对应，使用螺丝紧固后，再放回RAM支架原位置，顺时针旋转支架把手，完成安装。\n备注：1. 本版所示图形与实物可能有差异，请以实物为参考。2. 本版说明书仅限所述产品与RAM-101U系列支架组装，请根据实际需求安装。\n扭力：2N.m　M5x10*4PCS\nRAM 支架　RAM 支架底座　A\n深圳从平技术有限公司",
+  "confidence": "high"
+ },
+ "9b960c0fe24726f17b5f1bc51778d25a7c7ff8f33e4151ca1d2689e70e47bc8c": {
+  "sha": "9b960c0fe24726f17b5f1bc51778d25a7c7ff8f33e4151ca1d2689e70e47bc8c",
+  "kind": "drawing",
+  "title": "SPRING2 10 RAM安装指导",
+  "text": "产品尺寸\n产品尺寸：281.00 × 181.00，对角线 255.54；厚度 40.00、32.50、44.50\n安装孔：4*M5，孔间距 47.09、48.41\nRAM 支架安装说明\n① 逆时针旋转支架把手，取出其中一个支架底座。\n② 箭头所示的为固定孔位，请选择其中一种安装方案。（或）\n③ 箭头所示的位置为产品背面与RAM支架固定位置。\n④ 将RAM支架底座序号与产品背部序号一一对应，使用螺丝紧固后，再放回RAM支架原位置，顺时针旋转支架把手，完成安装。\n备注：1. 本版所示图形与实物可能有差异，请以实物为参考。2. 本版说明书仅限所述产品与RAM-101U系列支架组装，请根据实际需求安装。\n扭力：2N.m　M5x10*4PCS\nRAM 支架　RAM 支架底座　A\n深圳从平技术有限公司",
+  "confidence": "high"
+ },
+ "a0e9ee209a60d6a2c92a0ed52d0c95efa231bed7975e501bcaa2aff2b6727556": {
+  "sha": "a0e9ee209a60d6a2c92a0ed52d0c95efa231bed7975e501bcaa2aff2b6727556",
+  "kind": "drawing",
+  "title": "APOLLO2 12 特别版 RAM安装指导",
+  "text": "产品尺寸\n产品尺寸：297.60 × 198.70，对角线 307.93；厚度 34.35、31.30、3.00\n安装孔：4*M5，孔间距 38.00、30.00\nRAM 支架安装说明\n① 逆时针旋转支架把手，取出其中一个支架底座。\n② 箭头所示的为固定孔位，请选择其中一种安装方案。（或）\n③ 箭头所示的位置为产品背面与RAM支架固定位置。\n④ 将RAM支架底座序号与产品背部序号一一对应，使用螺丝紧固后，再放回RAM支架原位置，顺时针旋转支架把手，完成安装。\n备注：1. 本版所示图形与实物可能有差异，请以实物为参考。2. 本版说明书仅限所述产品与RAM-101U系列支架组装，请根据实际需求安装。\n扭力：2N.m　M5x10*4PCS\nRAM 支架　RAM 支架底座　A\n深圳从平技术有限公司",
+  "confidence": "high"
+ },
+ "ab5d01b364b4df063f3179e73e984dac6cc17a31c8d21ee75177dbb7e24aff80": {
+  "sha": "ab5d01b364b4df063f3179e73e984dac6cc17a31c8d21ee75177dbb7e24aff80",
+  "kind": "drawing",
+  "title": "SPRING 10 RAM安装指导",
+  "text": "产品尺寸\n产品尺寸：281.00 × 181.00，对角线 255.54；厚度 42.00、38.00、49.15\n安装孔：4*M5，孔间距 30.00、38.00\nRAM 支架安装说明\n① 逆时针旋转支架把手，取出其中一个支架底座。\n② 箭头所示的为固定孔位，请选择其中一种安装方案。（或）\n③ 箭头所示的位置为产品背面与RAM支架固定位置。\n④ 将RAM支架底座序号与产品背部序号一一对应，使用螺丝紧固后，再放回RAM支架原位置，顺时针旋转支架把手，完成安装。\n备注：1. 本版所示图形与实物可能有差异，请以实物为参考。2. 本版说明书仅限所述产品与RAM-101U系列支架组装，请根据实际需求安装。\n扭力：2N.m　M5x10*4PCS\nRAM 支架　RAM 支架底座　A\n深圳从平技术有限公司",
+  "confidence": "high"
+ },
+ "b9fcc352ddd3328a4f1f775a8227f1d290f6d3de4d5892cc2b1b2b46aaf259c5": {
+  "sha": "b9fcc352ddd3328a4f1f775a8227f1d290f6d3de4d5892cc2b1b2b46aaf259c5",
+  "kind": "drawing",
+  "title": "SPRING 7 RAM安装指导",
+  "text": "产品尺寸\n产品尺寸：194.00 × 127.00，对角线 176.35；厚度 29.00、32.20、43.00\n安装孔：4*M5，孔间距 30.00、38.00\nRAM 支架安装说明\n① 逆时针旋转支架把手，取出其中一个支架底座。\n② 箭头所示的为固定孔位，请选择其中一种安装方案。（或）\n③ 箭头所示的位置为产品背面与RAM支架固定位置。\n④ 将RAM支架底座序号与产品背部序号一一对应，使用螺丝紧固后，再放回RAM支架原位置，顺时针旋转支架把手，完成安装。\n备注：1. 本版所示图形与实物可能有差异，请以实物为参考。2. 本版说明书仅限所述产品与RAM-101U系列支架组装，请根据实际需求安装。\n扭力：2N.m　M5x10*4PCS\nRAM 支架　RAM 支架底座　A\n深圳从平技术有限公司",
+  "confidence": "high"
+ },
+ "ba6fd530702a33a4ca35b4b9654862659c3d634d690df24b4d8195b4355004ca": {
+  "sha": "ba6fd530702a33a4ca35b4b9654862659c3d634d690df24b4d8195b4355004ca",
+  "kind": "drawing",
+  "title": "APOLLO2 12 RAM安装指导",
+  "text": "产品尺寸\n产品尺寸：318.07 × 219.87，对角线 312.06；厚度 31.01、28.01、45.31\n安装孔：4*M5，孔间距 38.00、30.00\nRAM 支架安装说明\n① 逆时针旋转支架把手，取出其中一个支架底座。\n② 箭头所示的为固定孔位，请选择其中一种安装方案。（或）\n③ 箭头所示的位置为产品背面与RAM支架固定位置。\n④ 将RAM支架底座序号与产品背部序号一一对应，使用螺丝紧固后，再放回RAM支架原位置，顺时针旋转支架把手，完成安装。\n备注：1. 本版所示图形与实物可能有差异，请以实物为参考。2. 本版说明书仅限所述产品与RAM-101U系列支架组装，请根据实际需求安装。\n扭力：2N.m　M5x10*4PCS\nRAM 支架　RAM 支架底座　A\n深圳从平技术有限公司",
+  "confidence": "high"
+ },
+ "bd2096df38661f0e2f360eb5d9fb233421d8ec72abaea04b836a4ec6b3e57508": {
+  "sha": "bd2096df38661f0e2f360eb5d9fb233421d8ec72abaea04b836a4ec6b3e57508",
+  "kind": "drawing",
+  "title": "MEGA1 RAM安装指导",
+  "text": "产品尺寸\n产品尺寸：270.9 × 173.5；33.2、43.3\n安装孔：4*M5，孔间距 38.0、30.0\nRAM 支架安装说明\n① RAM 支架　RAM 支架底座　逆时针旋转支架把手，取出其中一个支架底座。\n② 箭头所示为的固定孔位，请选择其中一种安装方案。（或）\n③ 箭头所示的位置为产品背面与RAM支架固定位置。\n④ 将RAM支架底座序号与产品背部序号一一对应，使用螺丝紧固后。再放回RAM支架原位置，顺时针旋转支架把手，完成安装。\n备注：1. 本版所示图形与实物可能有差异，请以实物为参考。2. 本版说明书仅限所述产品与RAM-101U系列支架组装，请根据实际需求安装。\n扭力：2N.m　M5x10*4PCS\nA\n深圳从平技术有限公司",
+  "confidence": "high"
+ },
+ "c45585643d4c0e4404a4c2451f0582e7f33fdc14406bb2bf455ffa40a50e043e": {
+  "sha": "c45585643d4c0e4404a4c2451f0582e7f33fdc14406bb2bf455ffa40a50e043e",
+  "kind": "drawing",
+  "title": "APOLLO2 12PLUS RAM安装指导",
+  "text": "产品尺寸\n产品尺寸：318.07 × 219.87，对角线 312.06；31.01、28.01、45.31\n安装孔：4*M5，孔间距 38.00、30.00\nRAM 支架安装说明\n① RAM 支架　RAM 支架底座　逆时针旋转支架把手，取出其中一个支架底座。\n② 箭头所示为的固定孔位，请选择其中一种安装方案。（或）\n③ 箭头所示的位置为产品背面与RAM支架固定位置。\n④ 将RAM支架底座序号与产品背部序号一一对应，使用螺丝紧固后。再放回RAM支架原位置，顺时针旋转支架把手，完成安装。\n备注：1. 本版所示图形与实物可能有差异，请以实物为参考。2. 本版说明书仅限所述产品与RAM-101U系列支架组装，请根据实际需求安装。\n扭力：2N.m　M5x10*4PCS\nA\n深圳从平技术有限公司",
+  "confidence": "high"
+ },
+ "cdd356c07cb2cd46261fc97359264188f91d853451ef69060604dba98c4109c4": {
+  "sha": "cdd356c07cb2cd46261fc97359264188f91d853451ef69060604dba98c4109c4",
+  "kind": "drawing",
+  "title": "SPRING 8 RAM安装指导",
+  "text": "产品尺寸\n产品尺寸：230.00 × 167.00，对角线 202.67；54.48、51.48、52.48\n安装孔：4*M5，孔间距 30.00、38.00\nRAM 支架安装说明\n① RAM 支架　RAM 支架底座　逆时针旋转支架把手，取出其中一个支架底座。\n② 箭头所示为的固定孔位，请选择其中一种安装方案。（或）\n③ 箭头所示的位置为产品背面与RAM支架固定位置。\n④ 将RAM支架底座序号与产品背部序号一一对应，使用螺丝紧固后。再放回RAM支架原位置，顺时针旋转支架把手，完成安装。\n备注：1. 本版所示图形与实物可能有差异，请以实物为参考。2. 本版说明书仅限所述产品与RAM-101U系列支架组装，请根据实际需求安装。\n扭力：3N.m　M5螺母*4PCS\nA\n深圳从平技术有限公司",
+  "confidence": "high"
+ },
+ "e9a69bc050bfdb6ffa884f609a21399adbd2eba472a283dd50f19366e256aae1": {
+  "sha": "e9a69bc050bfdb6ffa884f609a21399adbd2eba472a283dd50f19366e256aae1",
+  "kind": "drawing",
+  "title": "SPRING2 10-1 RAM安装指导",
+  "text": "产品尺寸\n产品尺寸：281.00 × 181，对角线 255.54；39.19、31.69、43.69\n安装孔：4*M5，孔间距 47.09、48.41\nRAM 支架安装说明\n① RAM 支架　RAM 支架底座　逆时针旋转支架把手，取出其中一个支架底座。\n② 箭头所示为的固定孔位，请选择其中一种安装方案。（或）\n③ 箭头所示的位置为产品背面与RAM支架固定位置。\n④ 将RAM支架底座序号与产品背部序号一一对应，使用螺丝紧固后。再放回RAM支架原位置，顺时针旋转支架把手，完成安装。\n备注：1. 本版所示图形与实物可能有差异，请以实物为参考。2. 本版说明书仅限所述产品与RAM-101U系列支架组装，请根据实际需求安装。\n扭力：2N.m　M5x10*4PCS\nA\n深圳从平技术有限公司",
+  "confidence": "medium"
+ },
+ "ed11534e608d193da0df67485308df211217960cdb689916f649a1b25c3f259a": {
+  "sha": "ed11534e608d193da0df67485308df211217960cdb689916f649a1b25c3f259a",
+  "kind": "drawing",
+  "title": "APOLLO2 12A RAM安装指导",
+  "text": "产品尺寸\n产品尺寸：318.07 × 219.87，对角线 312.06；31.01、28.01、45.31\n安装孔：4*M5，孔间距 38.00、30.00\nRAM 支架安装说明\n① RAM 支架　RAM 支架底座　逆时针旋转支架把手，取出其中一个支架底座。\n② 箭头所示为的固定孔位，请选择其中一种安装方案。（或）\n③ 箭头所示的位置为产品背面与RAM支架固定位置。\n④ 将RAM支架底座序号与产品背部序号一一对应，使用螺丝紧固后。再放回RAM支架原位置，顺时针旋转支架把手，完成安装。\n备注：1. 本版所示图形与实物可能有差异，请以实物为参考。2. 本版说明书仅限所述产品与RAM-101U系列支架组装，请根据实际需求安装。\n扭力：2N.m　M5x10*4PCS\nA\n深圳从平技术有限公司",
+  "confidence": "high"
+ },
+ "fe7797378dc065399b48d53e74892bd6073309d38ca26c8fd5ff6e612c9ddca4": {
+  "sha": "fe7797378dc065399b48d53e74892bd6073309d38ca26c8fd5ff6e612c9ddca4",
+  "kind": "drawing",
+  "title": "APOLLO2 12PRO RAM安装指导",
+  "text": "产品尺寸\n产品尺寸：318.07 × 219.87，对角线 312.06；31.01、28.01、45.31\n安装孔：4*M5，孔间距 38.00、30.00\nRAM 支架安装说明\n① RAM 支架　RAM 支架底座　逆时针旋转支架把手，取出其中一个支架底座。\n② 箭头所示为的固定孔位，请选择其中一种安装方案。（或）\n③ 箭头所示的位置为产品背面与RAM支架固定位置。\n④ 将RAM支架底座序号与产品背部序号一一对应，使用螺丝紧固后。再放回RAM支架原位置，顺时针旋转支架把手，完成安装。\n备注：1. 本版所示图形与实物可能有差异，请以实物为参考。2. 本版说明书仅限所述产品与RAM-101U系列支架组装，请根据实际需求安装。\n扭力：2N.m　M5x10*4PCS\nA\n深圳从平技术有限公司",
+  "confidence": "high"
+ },
+ "04c773a482b0fe4f9139f1a6573e879f313f3db8e27a5861da79eeafa9437d28": {
+  "sha": "04c773a482b0fe4f9139f1a6573e879f313f3db8e27a5861da79eeafa9437d28",
+  "kind": "diagram",
+  "title": "",
+  "text": "接口/针脚：矩形插座 左侧 1、8、14、20；右侧 7、13、19、26；插座内 13 针旁标 A\n接口/针脚：V1：4（上左）、1（上右）、3（下左）、2（下右）\n接口/针脚：V2：4（上左）、1（上右）、3（下左）、2（下右）\n接口/针脚：V3：4（上左）、1（上右）、3（下左）、2（下右）\n接口/针脚：V4：4（上左）、1（上右）、3（下左）、2（下右）",
+  "confidence": "high"
+ },
+ "09acc894df348cd06bf3b69311bfbe9895d29ae0acdea93c2a07a6a7beb5c10a": {
+  "sha": "09acc894df348cd06bf3b69311bfbe9895d29ae0acdea93c2a07a6a7beb5c10a",
+  "kind": "diagram",
+  "title": "",
+  "text": "接口/针脚：PORT 1：1、2、3（上排）／6、5、4（下排）\n接口/针脚：PORT 2：1、2、3、4、5、6（上排）／12、11、10、9、8、7（下排）\n接口/针脚：PORT 3：1、2、3、4、5、6（上排）／12、11、10、9、8、7（下排）\n接口/针脚：ANT2、ANT1：射频接口",
+  "confidence": "high"
+ },
+ "0f3b774a6084788301d22d47ffadcadc320eb2f4f84e3574726c0ed3b8b30bdb": {
+  "sha": "0f3b774a6084788301d22d47ffadcadc320eb2f4f84e3574726c0ed3b8b30bdb",
+  "kind": "diagram",
+  "title": "",
+  "text": "接口/针脚：PORT 1：1、2、3、4、5、6（上排）；7（中排左）、12（中排右）；13、14、15、16、17、18（下排）\n接口/针脚：4G LTE、ANT1、ANT2：射频接口",
+  "confidence": "high"
+ },
+ "3826eca1a7d326e65c65d9854da03390cf8ceb023e0e04fab91bc881c16764ee": {
+  "sha": "3826eca1a7d326e65c65d9854da03390cf8ceb023e0e04fab91bc881c16764ee",
+  "kind": "diagram",
+  "title": "",
+  "text": "接口/针脚：PORT2：左侧 1、8、14、20；右侧 7、13、19、26；13 针旁标 A\n接口/针脚：PORT1：左侧 1、8、14、20；右侧 7、13、19、26；13 针旁标 A\n接口/针脚：Ethernet connector：1、2、3、4、5、6、7、8",
+  "confidence": "high"
+ },
+ "4705e8e156fb931ecdb93d72e59672873c10934234f4cc17670a8148a11cdcde": {
+  "sha": "4705e8e156fb931ecdb93d72e59672873c10934234f4cc17670a8148a11cdcde",
+  "kind": "diagram",
+  "title": "",
+  "text": "接口/针脚：插座 左侧 1、8、14、20；右侧 7、13、19、26；13 针旁标 A\n接口/针脚：M12 Ethernet connector：1、2、3、4、5、6、7、8",
+  "confidence": "high"
+ },
+ "51a9d89b8911eff3ae93964efe06e162be7eec0185de12f4cec16fd0a2de739b": {
+  "sha": "51a9d89b8911eff3ae93964efe06e162be7eec0185de12f4cec16fd0a2de739b",
+  "kind": "photo",
+  "title": "",
+  "text": "产品尺寸：40.73mm、89.58mm、37.21mm\n接口/针脚：顶部标识 5G/LTE、SYS、CAN、WIFI、GNSS\n备注：CR.DEVICE；Y／X／Z 轴向标注；Z(方向朝外)",
+  "confidence": "medium"
+ },
+ "87629a07b2b9f29ef6a0aafd4ff7f52de0a57e662e186076da520c37c3320317": {
+  "sha": "87629a07b2b9f29ef6a0aafd4ff7f52de0a57e662e186076da520c37c3320317",
+  "kind": "drawing",
+  "title": "",
+  "text": "接口：TNC、TNC、M12 connector、LCD、Ethernet\n接口/针脚：26P 连接器标注 1、8、14、20（左）与 7、13、19、26（右）\n备注：26P 连接器内印有 A",
+  "confidence": "high"
+ },
+ "88ac2f59a4d33ff4a913d87ce3ba4ea491bb0c96ad93b0d4d9b4c5655f5d5e75": {
+  "sha": "88ac2f59a4d33ff4a913d87ce3ba4ea491bb0c96ad93b0d4d9b4c5655f5d5e75",
+  "kind": "drawing",
+  "title": "",
+  "text": "接口：PORT 1、PORT 2、PORT 3、4G LTE、ANT2、ANT1\n接口/针脚：PORT 1 标注 1、2、3（上）与 6、5、4（下）\n接口/针脚：PORT 2 标注 1、2、3、4、5、6（上）与 12、11、10、9、8、7（下）\n接口/针脚：PORT 3 标注 1、2、3、4、5、6（上）与 12、11、10、9、8、7（下）",
+  "confidence": "high"
+ },
+ "8f8a45817dd49cccdb9c0945fe5a2d7e1b1280ed2067e68f9181892c83b8c05d": {
+  "sha": "8f8a45817dd49cccdb9c0945fe5a2d7e1b1280ed2067e68f9181892c83b8c05d",
+  "kind": "drawing",
+  "title": "",
+  "text": "接口：LCD、26P 连接器、USB\n接口/针脚：26P 连接器标注 1、8、14、20（左）与 7、13、19、26（右）\n备注：USB 处仅为图形标识，无文字",
+  "confidence": "high"
+ },
+ "92b6ccd90e0153d48138a4a6e7d80f878c7622145c97c04913e7e01db44ae333": {
+  "sha": "92b6ccd90e0153d48138a4a6e7d80f878c7622145c97c04913e7e01db44ae333",
+  "kind": "drawing",
+  "title": "M12 X-CODE MALE TO MALE CABLE ASSEMBLY（图框内 CUSTOMER DRAWING）",
+  "text": "产品尺寸：53MM；Ø14.6MM；LENGTH M(Meters)\n接口/针脚：P1 1 white-orange、2 orange、3 white-green、4 green、5 white-brown、6 brown、7 white-blue、8 blue、shell；P2 1 white-orange、2 orange、3 white-green、4 green、5 white-brown、6 brown、7 white-blue、8 blue、shell；CONNECTOR：M12 X-CODE MALE；WIRING DIAGRAM：SHIELD、TWIST PAIR、FACE VIEW\n备注原文：CABLE,CAT6A 24AWG*4P,GREEN TPU JACKET；PVC OVERMOLD,BLK\nTechnical data：Ethernet cable assembly:M12 X-CODED 8-position; CAT6A,S/FTP 4x2xAWG24,TPU;360° shielded, Plug Straight.\nMaterials：Male Contact: Copper alloy,Gold plated. Shielding shell: Copper alloy,Ni plated. Male plastic housing: Thermoplastic,black. Coupling nut: Copper alloy,Ni plated. Cable: CAT6A 24AWG*4P,Green TPU jacket.\nSpecifications：Rated current at 40°C: 0.5A. Rated voltage: 50V AC / 60V DC. Withstand voltages: 300V. Contact resistance: < 5 mΩ. Insulation resistance: Length 0~20M >100MΩ;Length 20~40M >20MΩ. Signal type: Ethernet CAT6A, 10 Gbps. Standards: M12 connector for IEC 61076-2-109. Protection:IP67. Operation temperature: -25 °C~80 °C. Storage conditions: Temperature 25±3°C; Humidity 35%~70%. RoHS conformity: Yes.\nP/N NOTE：MCXS087A7AC59Mxxx；Mxxx NDICATES THE HARNESS LENGTH.L；FOR EXAMPLE: M001,EXPRESS: L=0.1M；M010,EXPRESS: L=1M；M100,EXPRESS: L=10M",
+  "confidence": "high"
+ },
+ "9579389842ae0c0e83882670780bdf0ec58d242da84d0f32822484981c8d5a33": {
+  "sha": "9579389842ae0c0e83882670780bdf0ec58d242da84d0f32822484981c8d5a33",
+  "kind": "drawing",
+  "title": "",
+  "text": "接口/针脚：1 2 3 4 5 6 7 8 9 10 11 12（左侧一组）；1 2 3 4 5 6 7 8 9 10 11 12（右侧一组）",
+  "confidence": "high"
+ },
+ "e316f87a5ae7cecb961d9db35061a22327997353c422816f9e4e810b9b067640": {
+  "sha": "e316f87a5ae7cecb961d9db35061a22327997353c422816f9e4e810b9b067640",
+  "kind": "drawing",
+  "title": "",
+  "text": "接口/针脚：PORT1 左列 1、8、14、20，右列 7、13、19、26；PORT2 左列 1、8、14、20，右列 7、13、19、26\n备注原文：SPK",
+  "confidence": "high"
+ },
+ "ecf17af949108200463aa2b3327c4aa4a0ba68d6fa743a923397c8b4c84446ce": {
+  "sha": "ecf17af949108200463aa2b3327c4aa4a0ba68d6fa743a923397c8b4c84446ce",
+  "kind": "drawing",
+  "title": "",
+  "text": "接口/针脚：\nPORT2：1 7 / 8 13 / 14 19 / 20 26（26 孔，第 3 排右侧印 A）\nPORT1：1 7 / 8 13 / 14 19 / 20 26（26 孔，第 3 排右侧印 A）\nSub screen connector M12：1 2 3 4 5 6 7 8",
+  "confidence": "high"
+ },
+ "05f2149dd2c537b4aeccef513837ff7c9148a081a51de7ca561de5722415ac30": {
+  "sha": "05f2149dd2c537b4aeccef513837ff7c9148a081a51de7ca561de5722415ac30",
+  "kind": "diagram",
+  "title": "standard edition 6*720P connection method",
+  "text": "standard edition 6*720P connection method\ncustom-made 6*720P connection method\n接口/针脚：\n左图：主机 26pin；V1、V2、V3、V4；AHD0、AHD1、AHD2、AHD3、AHD5、AHD6；1 to 2 harness；AHD IN1、AHD IN2；各端口标注 720P；部分接口标红色 ✕\n右图：主机 26pin（上方标两个红色 ✕）；V1、V2、V3、V4；AHD0、AHD1、AHD2、AHD3、AHD5、AHD6；1 to 2 harness；AHD IN1、AHD IN2；各端口标注 720P；V3、V4 的 AHD IN2 标红色 ✕；线束上印 AHD IN1 / AHD IN2",
+  "confidence": "high"
+ },
+ "1b3004dd8f04230941b1f3c8dad4ac1397b79c004adc6b5d721a6e72043e89a5": {
+  "sha": "1b3004dd8f04230941b1f3c8dad4ac1397b79c004adc6b5d721a6e72043e89a5",
+  "kind": "drawing",
+  "title": "产品尺寸 / RAM 支架安装说明 / TANK2 RAM安装指导",
+  "text": "产品尺寸\nRAM 支架安装说明\n产品尺寸：203.53、193.72、191.72、187.37、55.50、138.70、130.08、114.00、40.00、38.00、30.00\n安装孔：4*M5、4*M5\nRAM 支架\nRAM 支架底座\n或\n① 逆时针旋转支架把手，取出其中一个支架底座。\n② 箭头所示的为固定孔位，请选择其中一种安装方案。\n③ 箭头所示的位置为产品背面与RAM支架固定位置。\n④ 将RAM支架底座序号与产品背部序号一一对应，使用螺丝紧固后。再放回RAM支架原位置，顺时针旋转支架把手，完成安装。\n丝印：CHDEVICE\n扭力:2N·m\nM5x10*4PCS\n备注：1.本版所示图形与实物可能有差异，请以实物为参考。2.本版说明书仅限所述产品与RAM-101U系列支架组装，请根据实际需求安装。\n深圳从平技术有限公司",
+  "confidence": "high"
+ },
+ "3229021026726a8770fadcd1b8df08a709b7385cd1d8263ae2deff2fa7caf371": {
+  "sha": "3229021026726a8770fadcd1b8df08a709b7385cd1d8263ae2deff2fa7caf371",
+  "kind": "diagram",
+  "title": "standard edition 8*720P connection method / custom-made 8*720P connection method",
+  "text": "standard edition 8*720P connection method\ncustom-made 8*720P connection method\n26pin\n1 to 2 harness\nAHD IN1\nAHD IN2\nAHD0、AHD1、AHD2、AHD3、AHD5、AHD6、AHD7、AHD8\n720P\nV1、V2、V3、V4\n备注：standard edition 图中 1 to 2 harness 的 AHD IN1 支路标红色 ×（×2 处）；custom-made 图中 26pin 处标红色 ×。",
+  "confidence": "medium"
+ },
+ "523d5f9e4594d164e269f6617bba915c3692ac911bb3b3898a29abc57449b85f": {
+  "sha": "523d5f9e4594d164e269f6617bba915c3692ac911bb3b3898a29abc57449b85f",
+  "kind": "diagram",
+  "title": "standard edition 4*1080P+4*720P connection method / custom-made 4*1080P+4*720P connection method",
+  "text": "standard edition 4*1080P+4*720P connection method\ncustom-made 4*1080P+4*720P connection method\n26pin\n1 to 2 harness\nAHD IN1\nAHD IN2\nAHD0、AHD1\nAHD2、AHD3\nAHD5、AHD6、AHD7、AHD8\n1080P\n720P\n背面航空插座\n① 1 to 2 harness AHD IN1 支路标红色 ×、AHD IN2 ← AHD5 720P\n② 1 to 2 harness AHD IN1 支路标红色 ×、AHD IN2 ← AHD6 720P\n③ 1 to 2 harness AHD IN1 ← AHD2 1080P、AHD IN2 ← AHD7 720P\n④ 1 to 2 harness AHD IN1 ← AHD3 1080P、AHD IN2 ← AHD8 720P\n备注：左图 26pin 引出 AHD0、AHD1 两路 1080P，①② 的 AHD IN1 支路标红色 ×；右图 26pin 两位标红色 ×，改由背面航空插座 ①②③④ 经 1 to 2 harness 分 AHD IN1（1080P）/AHD IN2（720P）两路。",
+  "confidence": "high"
+ },
+ "5c6b5a24647f7f6e6e724f2d29aa68657e25503802a7e7aeefa68ec2489adf02": {
+  "sha": "5c6b5a24647f7f6e6e724f2d29aa68657e25503802a7e7aeefa68ec2489adf02",
+  "kind": "diagram",
+  "title": "standard edition 4*1080P connection method / standard edition 2*1080P connection method / custom-made 4*1080P connection method / custom-made 2*1080P connection method",
+  "text": "standard edition 4*1080P connection method\nstandard edition 2*1080P connection method\ncustom-made 4*1080P connection method\ncustom-made 2*1080P connection method\n26pin\nAHD0、AHD1、AHD2、AHD3\n1080P\n备注：standard edition 4*1080P——26pin ← AHD0 1080P、AHD1 1080P，①② 标红色 ×，③ ← AHD2 1080P，④ ← AHD3 1080P；standard edition 2*1080P——26pin ← AHD0、AHD1 均 1080P，①②③④ 全部标红色 ×；custom-made 4*1080P——26pin 两位标红色 ×，① ← AHD0 1080P、② ← AHD1 1080P、③ ← AHD2 1080P、④ ← AHD3 1080P；custom-made 2*1080P——26pin 两位标红色 ×，① ← AHD0 1080P、② ← AHD1 1080P，③④ 标红色 ×。",
+  "confidence": "high"
+ },
+ "84cdf8796503fb69925da9e131ff89979107cfcdf06c0ae8685fcbe14e678a87": {
+  "sha": "84cdf8796503fb69925da9e131ff89979107cfcdf06c0ae8685fcbe14e678a87",
+  "kind": "diagram",
+  "title": "standard edition 4*720P connection method / standard edition 2*720P connection method / custom-made 4*720P connection method / custom-made 2*720P connection method",
+  "text": "standard edition 4*720P connection method\nstandard edition 2*720P connection method\ncustom-made 4*720P connection method\ncustom-made 2*720P connection method\n26pin\nAHD0、AHD1、AHD2、AHD3\n720P\nV1、V2、V3、V4\n接口/针脚：26pin；V1、V2、V3、V4（图中文字为竖排）\n备注：standard edition 4*720P 中 26pin 接 AHD0、AHD1（各 720P），V1、V2 标红色 ×，V3 接 AHD2（720P）、V4 接 AHD3（720P）；standard edition 2*720P 中 26pin 接 AHD0、AHD1（各 720P），V1～V4 均标红色 ×；custom-made 4*720P 中 26pin 两路均标红色 ×，V1 接 AHD0、V2 接 AHD1、V3 接 AHD2、V4 接 AHD3（各 720P）；custom-made 2*720P 中 26pin 两路均标红色 ×，V1 接 AHD0、V2 接 AHD1（各 720P），V3、V4 标红色 ×。",
+  "confidence": "high"
+ },
+ "d8a1e8c74696a8ad19a3452cf1b3d870701ac0077de41cdcacce5b7c713d8b13": {
+  "sha": "d8a1e8c74696a8ad19a3452cf1b3d870701ac0077de41cdcacce5b7c713d8b13",
+  "kind": "diagram",
+  "title": "standard edition 6*1080P connection method / custom-made 6*1080P connection method",
+  "text": "standard edition 6*1080P connection method\ncustom-made 6*1080P connection method\n26pin\n1 to 2 harness\nAHD IN1\nAHD IN2\nAHD0、AHD1、AHD2、AHD3、AHD5、AHD6\n1080P\nV1、V2、V3、V4\n接口/针脚：26pin；V1、V2、V3、V4（图中文字为竖排）；1 to 2 harness 的 AHD IN1、AHD IN2\n备注：standard edition 中 26pin 接 AHD0、AHD1（各 1080P）；V1：AHD IN1 标红色 ×、AHD IN2 接 AHD5（1080P）；V2：AHD IN1 标红色 ×、AHD IN2 接 AHD6（1080P）；V3：AHD IN1 接 AHD2（1080P）、AHD IN2 标红色 ×；V4：AHD IN1 接 AHD3（1080P）、AHD IN2 标红色 ×。custom-made 中 26pin 两路均标红色 ×；V1：AHD IN1 接 AHD0、AHD IN2 接 AHD5（各 1080P）；V2：AHD IN1 接 AHD1、AHD IN2 接 AHD6（各 1080P）；V3：AHD IN1 接 AHD2（1080P）、AHD IN2 标红色 ×；V4：AHD IN1 接 AHD3（1080P）、AHD IN2 标红色 ×。",
+  "confidence": "high"
+ },
+ "fc3beca745d4c7c20f26ce55ed115f4f654afc9e4a4206e13fbaf27dc101d821": {
+  "sha": "fc3beca745d4c7c20f26ce55ed115f4f654afc9e4a4206e13fbaf27dc101d821",
+  "kind": "drawing",
+  "title": "CUSTOMER DRAWING（M12 X-CODE MALE TO RJ45 CABLE ASSEMBLY）",
+  "text": "产品尺寸：LENGTH M(Meters)；53MM；44.5MM；M12*1；TOLERANCE 0-2.99 M = +100.0/-25.0mm；3-8.99 M = +150.0/-25.0mm；9-14.99 M = +300.0/-25.0mm；15-OVER M = +450.0/-25.0mm\n接口/针脚：P1 CONNECTOR: M12 X-CODE MALE（FACE VIEW 1 2 3 4 5 6 7 8）；P2 RJ45 MALE 8Pin（FACE VIEW 1 2 3 4 5 6 7 8）；WIRING DIAGRAM P1 1 2 3 4 5 6 7 8 —— P2 1 2 3 4 5 6 7 8，SHIELD，shell，TWIST PAIR\n线序：white-orange、orange、white-green、green、white-brown、brown、white-blue、blue\n备注：TPU BLACK OVERMOLD；CABLE,CAT6A 24AWG*4P,GREEN TPU JACKET\nTechnical data: Ethernet cable assembly;M12 X-CODED 8-position to RJ45; CAT6A,S/FTP 4x2xAWG26,TPU;360° shielded, Plug Straight. Materials: Male Contact: Brass,Ni/Au plated；Shielding shell: Brass, Cu/Ni plated；Male plastic housing: PA66,black；Coupling nut: Brass, Cu/Ni plated；Cable: TPU blue；PLUG:RJ45\nSpecifications: Rated current at 40℃: 0.5A；Rated voltage: 50V AC / 60V DC；Withstand voltages: 300V；Contact resistance: < 5 mΩ；Insulation resistance: Length 0~20M >100MΩ;Length 20~40M >20MΩ；Signal type: Ethernet CAT6A, 10 Gbps；Standards: M12 connector for IEC 61076-2-109；Protection:IP67(M12)；Operation temperature: -40 ℃~80 ℃；Storage conditions: Temperature 25±3℃; Humidity 35%~70%；RoHS conformity: Yes\nP/N NOTE: P82112-Mxxx；Mx INDICATES THE HARNESS LENGTH L；FOR EXAMPLE: M005,EXPRESS: L=0.5 M；M010,EXPRESS: L=1 M；M100,EXPRESS: L=10 M\n图号/版本：DWG NO. P82112-Mxxx；SIZE A4；SCALE NONE；REV 01；SHEET 1 OF 1；REVISIONS 01 NEW DRAWING 25May24 Jode Tommy\nAmphinol；Sine Systems；44724 Marley Drive；Clinton Township, MI 48036",
+  "confidence": "high"
+ }
+}

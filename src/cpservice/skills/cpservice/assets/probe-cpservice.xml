@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  RK 安卓探针：拷到 U 盘根（或 sm 虚拟盘根）后【必须改名为 CpService.xml】再触发。
+  先 copy 脚本到固定路径，再 cmd 跑：结果写 /data/local/tmp、/sdcard，能找盘根时再回拷一份。
+  （不用 copyout：本机 7.5.4 的 copyout 以 system uid 写 FUSE 卷会被拒。）
+-->
+<root>
+	<item action="copy" params="probe-collect.sh" param1="/data/local/tmp"/>
+	<item action="cmd" params="sh /data/local/tmp/probe-collect.sh"/>
+</root>

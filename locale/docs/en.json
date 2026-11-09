@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "CP Docs Finder",
+    "description": "Type /cp-docs plus a natural-language question (e.g. \"SPRING2PRO screen size\") to look up local product specs and let the model answer."
+  }
+}

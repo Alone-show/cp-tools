@@ -1,0 +1,184 @@
+{
+ "pages": [
+  {
+   "slug": "2.6.1-APOLLO-PRO-Series",
+   "title": "2.6 编程参考信息 · APOLLO PRO 系列",
+   "url": "https://www.cpuniverse.cn/online-documents-cn/DeveloperGuide/ProgrammingTable/ApolloProSeries/content.html",
+   "tables": [
+    {
+     "heading": "2 编程信息",
+     "header": [
+      "名称",
+      "设备节点",
+      "备注"
+     ],
+     "rows": [
+      [
+       "低精度定位模块 / gps / 或高精度模块",
+       "/dev/ttyWK0",
+       ""
+      ],
+      [
+       "RS485",
+       "/dev/ttyWK1",
+       ""
+      ],
+      [
+       "RS485读写控制",
+       "/sys/devices/virtual/gpio_class/gpio_dev/max485_de_gpio_state",
+       "写1控制收使能 / 写0控制发使能"
+      ],
+      [
+       "高精度模块",
+       "/dev/ttyWK2",
+       ""
+      ],
+      [
+       "",
+       "/dev/ttyWK3",
+       "空闲"
+      ],
+      [
+       "RS232",
+       "/dev/ttyHSL0",
+       "对应 CP 功能线束上 DB9-A"
+      ],
+      [
+       "",
+       "/dev/ttyHSL1",
+       "内部使用"
+      ],
+      [
+       "RS232",
+       "/dev/ttyHSL2",
+       "对应 CP 功能线束上 DB9-B"
+      ],
+      [
+       "DC12V-OUT1",
+       "/dev/gpio_dev",
+       "对应功能线束DC12V-OUT1 / echo \"100006\"到设备节点关输出 / echo \"100007\"到设备节点开"
+      ],
+      [
+       "DC12V-OUT2",
+       "/dev/gpio_dev",
+       "对应功能线束DC12V-OUT2 / echo \"100008\"到设备节点关输出 / echo \"100009\"到设备节点开"
+      ],
+      [
+       "DC12V-OUT3",
+       "/dev/gpio_dev",
+       "对应功能线束DC12V-OUT3 / echo \"100018\"到设备节点关输出 / echo \"100019\"到设备节点开"
+      ],
+      [
+       "DC12V-OUT1",
+       "/sys/devices/virtual/gpio_class/gpio_dev/output1_gpio_state",
+       "对应功能线束DC12V-OUT1 / echo \"2\"到设备节点关输出 / echo \"1\"到设备节点开"
+      ],
+      [
+       "DC12V-OUT2",
+       "/sys/devices/virtual/gpio_class/gpio_dev/output2_gpio_state",
+       "对应功能线束DC12V-OUT2 / echo \"0\"到设备节点关输出 / echo \"1\"到设备节点开"
+      ],
+      [
+       "DC12V-OUT3",
+       "/sys/devices/virtual/gpio_class/gpio_dev/output3_gpio_state",
+       "对应功能线束DC12V-OUT3 / echo \"0\"到设备节点关输出 / echo \"1\"到设备节点开"
+      ],
+      [
+       "gps led",
+       "/sys/devices/virtual/gpio_class/gpio_dev/gps_led_gpio_state",
+       "写1使能开"
+      ],
+      [
+       "4g led",
+       "/sys/devices/virtual/gpio_class/gpio_dev/led_4g_state",
+       "写1使能开"
+      ],
+      [
+       "wifi led",
+       "/sys/devices/virtual/gpio_class/gpio_dev/wifi_led_gpio_state",
+       "写1使能开"
+      ],
+      [
+       "user led",
+       "/sys/devices/virtual/gpio_class/gpio_dev/user_led_state",
+       "写1使能开"
+      ],
+      [
+       "CVBS-IN1",
+       "/dev/video0",
+       "对应线束CVBS-IN1摄像头接口"
+      ],
+      [
+       "CVBS-IN2",
+       "/dev/video1",
+       "对应线束CVBS-IN2摄像头接口"
+      ],
+      [
+       "CVBS-IN3",
+       "/dev/video2",
+       "对应线束CVBS-IN3摄像头接口"
+      ],
+      [
+       "CVBS-IN4",
+       "/dev/video3",
+       "对应线束CVBS-IN4摄像头接口"
+      ],
+      [
+       "CVBS 12V",
+       "/dev/gpio_dev",
+       "echo -e \"100023\"到设备节点打开摄像头cvbs1供电 / echo -e \"100022\"到设备节点关闭摄像头cvbs1供电"
+      ],
+      [
+       "CVBS 12V",
+       "/dev/gpio_dev",
+       "echo -e \"100025\"到设备节点打开摄像头cvbs2供电 / echo -e \"100024\"到设备节点打开摄像头cvbs2供电"
+      ],
+      [
+       "CVBS 12V",
+       "/sys/devices/virtual/gpio_class/gpio_dev/cvbs1_pwr_gpio_state",
+       "写1使能打开摄像头cvbs1供电"
+      ],
+      [
+       "CVBS 12V",
+       "/sys/devices/virtual/gpio_class/gpio_dev/cvbs2_pwr_gpio_state",
+       "写1使能打开摄像头cvbs2供电"
+      ]
+     ]
+    },
+    {
+     "heading": "3 高精度对应的 COM 串口",
+     "header": [
+      "设备节点",
+      "UM982",
+      "UM4B0",
+      "UM482",
+      "南方电台"
+     ],
+     "rows": [
+      [
+       "ttyWK0",
+       "COM1",
+       "COM1",
+       "COM1",
+       "COM1"
+      ],
+      [
+       "ttyWK2",
+       "COM3",
+       "COM3",
+       "COM3",
+       "COM3"
+      ],
+      [
+       "ttyHSL2",
+       "",
+       "",
+       "",
+       "COM2"
+      ]
+     ]
+    }
+   ]
+  }
+ ]
+}

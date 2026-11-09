@@ -1,0 +1,212 @@
+{
+ "pages": [
+  {
+   "slug": "2.6.6-APOLLO-2nd-Gen-Series",
+   "title": "2.6 编程参考信息 · APOLLO 二代系列（7/7A/12/12A）",
+   "url": "https://www.cpuniverse.cn/online-documents-cn/DeveloperGuide/ProgrammingTable/ApolloGen2Series/content.html",
+   "tables": [
+    {
+     "heading": "2 编程信息",
+     "header": [
+      "名称",
+      "设备节点",
+      "备注"
+     ],
+     "rows": [
+      [
+       "高精度模块",
+       "/dev/ttyS0",
+       ""
+      ],
+      [
+       "MCU",
+       "/dev/ttyS1",
+       "rk3568 与 MCU 通讯"
+      ],
+      [
+       "RS232_B",
+       "/dev/ttyS3",
+       "对应 CP 功能线束上 DB9-B"
+      ],
+      [
+       "RS232_A",
+       "/dev/ttyS4",
+       "对应 CP 功能线束上 DB9-A"
+      ],
+      [
+       "RS485",
+       "/dev/ttyS9",
+       "对应 CP 功能线束上 DB9-C"
+      ],
+      [
+       "高精度模块",
+       "/dev/ttyS7",
+       ""
+      ],
+      [
+       "ADC_IN1",
+       "/sys/bus/iio/devices/iio:device0/in_voltage4_raw",
+       "对应 CP 功能线束上ADC_IN1 / cat设备节点即可以读出值"
+      ],
+      [
+       "ADC_IN2",
+       "/sys/bus/iio/devices/iio:device0/in_voltage5_raw",
+       "对应 CP 功能线束上ADC_IN2; / cat设备节点即可以读出值"
+      ],
+      [
+       "OUTPUT1",
+       "/sys/class/gpio/gpio135/value",
+       "对应 CP 功能线束上OUTPUT1; / 写1使能开"
+      ],
+      [
+       "OUTPUT2",
+       "/sys/class/gpio/gpio15/value",
+       "对应 CP 功能线束上OUTPUT2; / 写1使能开"
+      ],
+      [
+       "AHD_PWR",
+       "/sys/class/gpio/gpio103/value",
+       "对应 CP 功能线束上AHD_PWR; / 写1使能开"
+      ],
+      [
+       "CTR_OTG0ID",
+       "/sys/class/gpio/gpio103/value",
+       "板内OUPUT信号控制"
+      ],
+      [
+       "5V2_DEVICE_EN2",
+       "/sys/class/gpio/gpio102/value",
+       "板内OUPUT信号控制"
+      ],
+      [
+       "UM482_PWREN",
+       "/sys/class/gpio/gpio137/value",
+       "板内OUPUT信号控制"
+      ],
+      [
+       "CAN_PWR_EN",
+       "/sys/class/gpio/gpio61/value",
+       "板内OUPUT信号控制"
+      ],
+      [
+       "CAN0_ON_EN0",
+       "/sys/class/gpio/gpio154/value",
+       "对应线束DB9A的CAN1终端电阻的控制节点"
+      ],
+      [
+       "CAN1_ON_EN1",
+       "/sys/class/gpio/gpio128/value",
+       "对应线束DB9B的CAN2终端电阻的控制节点"
+      ],
+      [
+       "CAN2_ON_EN2",
+       "/sys/class/gpio/gpio99/value",
+       "对应线束DB9C的CAN3终端电阻的控制节点"
+      ],
+      [
+       "MCAM_PWR-EN",
+       "/sys/class/gpio/gpio100/value",
+       "板内OUPUT信号控制"
+      ],
+      [
+       "GNSS_LNA_EN",
+       "/sys/class/gpio/gpio101/value",
+       "板内OUPUT信号控制"
+      ],
+      [
+       "RS_485_EN",
+       "/sys/class/gpio/gpio134/value",
+       "板内OUPUT信号控制"
+      ],
+      [
+       "GNSS_RST_N",
+       "/sys/class/gpio/gpio136/value",
+       "板内OUPUT信号控制"
+      ],
+      [
+       "FUN_KEY1",
+       "/sys/class/gpio/gpio20/value",
+       "板内INPUT状态查询"
+      ],
+      [
+       "FUN_KEY2",
+       "/sys/class/gpio/gpio21/value",
+       "板内INPUT状态查询"
+      ],
+      [
+       "STATE3_VCC_12V_AHD",
+       "/sys/class/gpio/gpio22/value",
+       "板内INPUT状态查询"
+      ],
+      [
+       "STATE4_LNA_PWR",
+       "/sys/class/gpio/gpio23/value",
+       "板内INPUT状态查询"
+      ],
+      [
+       "AHD1",
+       "/dev/video0",
+       "对应 CP 功能线束上AHD1"
+      ],
+      [
+       "AHD2",
+       "/dev/video1",
+       "对应 CP 功能线束上AHD2"
+      ],
+      [
+       "AHD3",
+       "/dev/video2",
+       "对应 CP 功能线束上AHD3"
+      ],
+      [
+       "AHD4",
+       "/dev/video3",
+       "对应 CP 功能线束上AHD4"
+      ],
+      [
+       "CAN1",
+       "",
+       "使用CPComm的mcucan进行通讯"
+      ],
+      [
+       "CAN2",
+       "",
+       "使用CPComm的mcucan进行通讯"
+      ],
+      [
+       "CAN3",
+       "",
+       "使用CPComm的Socketcan或系统自带的Socketcan进行通讯，对应系统软件通道为CAN0"
+      ]
+     ]
+    },
+    {
+     "heading": "3 高精度对应的 COM 串口",
+     "header": [
+      "设备节点",
+      "UM980",
+      "MXT906B",
+      "P20E",
+      "P20F"
+     ],
+     "rows": [
+      [
+       "/dev/ttyS0",
+       "COM2",
+       "COM2",
+       "COM2",
+       "COM2"
+      ],
+      [
+       "/dev/ttyS7",
+       "COM1",
+       "COM1",
+       "COM1",
+       "COM1"
+      ]
+     ]
+    }
+   ]
+  }
+ ]
+}

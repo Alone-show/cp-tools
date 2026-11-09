@@ -1,0 +1,60 @@
+{
+  "name": "@local/cp-tools",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "从平（CP）定制工具集：一个 bundle、三个可独立开关的子插件——产品资料 /cp-docs、固件与问题 /firmware、U 盘升级与线刷 /cpservice。",
+  "exports": {
+    "./docs": "./src/docs/index.js",
+    "./firmware": "./src/firmware/index.js",
+    "./cpservice": "./src/cpservice/index.js",
+    "./docs/locale/*.json": "./locale/docs/*.json",
+    "./firmware/locale/*.json": "./locale/firmware/*.json",
+    "./cpservice/locale/*.json": "./locale/cpservice/*.json",
+    "./docs/icon": "./icons/docs.svg",
+    "./firmware/icon": "./icons/firmware.svg",
+    "./cpservice/icon": "./icons/cpservice.svg",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src/**",
+    "locale/**",
+    "icons/**",
+    "scripts/**",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node scripts/verify.mjs",
+    "verify": "node scripts/verify.mjs",
+    "check": "node scripts/check-package.mjs",
+    "import:docs": "node scripts/import-docs.mjs",
+    "login": "node scripts/tb-login.mjs",
+    "sync": "node scripts/sync.mjs",
+    "resolve": "node scripts/resolve-model.mjs"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "author": "Alone-show",
+  "homepage": "https://github.com/Alone-show/cp-tools",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Alone-show/cp-tools.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Alone-show/cp-tools/issues"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "cpdevice",
+    "product-docs",
+    "firmware",
+    "teambition",
+    "cpservice",
+    "usb-upgrade"
+  ]
+}
