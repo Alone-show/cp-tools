@@ -843,7 +843,13 @@ async function searchFromAlist(ctx, exec, args) {
   if (!collected.ok) {
     return { status: 'empty', resolvedModel: hit.name, note: 'alist 产品目录不可达。', rows: [] };
   }
-  const rows = collected.rows;
+  const includeDev = args.dev === true || ['1', 'true', 'yes'].includes(String(args.dev ?? '').toLowerCase());
+  const rowsSplit = splitDevRows(collected.rows, includeDev);
+  const rows = rowsSplit.rows;
+  const devNote =
+    rowsSplit.hidden > 0
+      ? `\n已隐藏 ${rowsSplit.hidden} 条 DEV 构建（默认只给量产版；确实要 DEV 请加 dev:true）。`
+      : '';
   return {
     status: rows.length ? 'ok' : 'empty',
     resolvedModel: hit.name,
@@ -857,7 +863,8 @@ async function searchFromAlist(ctx, exec, args) {
     rows,
     note:
       '本地没有 TB 看板索引，本次直接查 alist /PROD（只扫匹配的机型/客户/系统目录）。' +
-      '要 TB 阶段/任务链接/子任务状态请 /firmware sync。',
+      '要 TB 阶段/任务链接/子任务状态请 /firmware sync。' +
+      devNote,
     alist: { ok: true, rows: rows.length },
   };
 }
@@ -893,6 +900,23 @@ function versionHay(task) {
 
 const rowKey = (row) =>
   row.id ? `id:${row.id}` : `${String(row.customer ?? '').toUpperCase()}|${nz(row.version)}`;
+
+/**
+ * DEV 构建识别：版本串 / 标题 / 下载地址里的 `DEV-` 或 `DEV_`（如
+ * `CP_SP2-10PRO_D_DEV-DE9E2564_LCD10_B0_EU_20261103`）。
+ * 默认只给量产（不带 DEV 标识），用户点名要 DEV 时才放行。
+ */
+function isDevFirmware(row) {
+  const hay = [row?.version, row?.title, ...Object.values(row?.links ?? {})].filter(Boolean).join(' ');
+  return /DEV[-_]/i.test(hay);
+}
+
+/** 按 includeDev 过滤行；返回被隐藏的条数（用于 note 里如实交代）。 */
+function splitDevRows(rows, includeDev) {
+  if (includeDev || !Array.isArray(rows)) return { rows: rows ?? [], hidden: 0 };
+  const kept = rows.filter((row) => !isDevFirmware(row));
+  return { rows: kept, hidden: rows.length - kept.length };
+}
 
 /** 实时探测行并入快照行：同版本以实时结果为准（阶段/链接），其余字段保留 */
 function mergeLiveRows(baseRows, liveRows) {
@@ -1206,6 +1230,21 @@ async function search(ctx, exec, args) {
     }
   }
 
+  // 默认只给量产：未点名 DEV 时隐藏 DEV-xxxx 构建（用户要求：不带 DEV 标识就是量产版）
+  const includeDev = args.dev === true || ['1', 'true', 'yes'].includes(String(args.dev ?? '').toLowerCase());
+  let devHidden = 0;
+  {
+    const rowsSplit = splitDevRows(finalRows, includeDev);
+    devHidden += rowsSplit.hidden;
+    finalRows = rowsSplit.rows;
+  }
+  if (!includeDev && pending.length) {
+    const pendingSplit = splitDevRows(pending, includeDev);
+    devHidden += pendingSplit.hidden;
+    pending.length = 0;
+    pending.push(...pendingSplit.rows);
+  }
+
   const matchedCount = finalRows.length;
   finalRows = finalRows.slice(0, limit);
 
@@ -1265,6 +1304,11 @@ async function search(ctx, exec, args) {
     );
   }
   if (alistUsed) noteParts.push('已实时核对 alist /PROD，并用其补齐版本与直链');
+  if (devHidden > 0) {
+    noteParts.push(
+      `已隐藏 ${devHidden} 条 DEV 构建（默认只给量产版；确实要 DEV 请加 dev:true 或在需求里点名 DEV）`,
+    );
+  }
   // DSH 对工具返回值做无损 JSON 校验：值为 undefined 的属性会让整次调用
   // INVALID_TOOL_OUTPUT，所以没有提示时直接省略该字段（schema 里 note 是可选的）。
   if (customerDefaulted && !unlimited) {
@@ -1674,7 +1718,7 @@ function findToolFor(ctx) {
   return {
     name: 'firmware_find',
     description:
-      '按机型和操作系统定位量产固件，返回固件版本、构建日期、客户、以及 OSS 线刷/OTA 直链。每次调用都会实时核对 Teambition（补拉版本父任务详情，索引快照只作兜底）并实时扫描 alist /PROD 目录（不复用旧缓存），因此刚归档的版本也能立刻查到；单次约 3–8 秒。结果来源标注：source=tb-live 为实时 TB、alist 为 alist /PROD、both 为两边都有。liveChecked=false 表示实时核对失败（如未登录），此时 note 会说明快照时间，回答时应转述。机型支持自由写法（如 apollo 12 pro、SP2-10PRO），7/7A、12/12A 等价写法会合并命中。机型存在歧义时返回 status=needs_confirmation 和候选列表，必须先向用户确认再继续。未指定客户时默认按 CP 过滤，并在 note/otherCustomers 里列出其他客户，不要忽略这部分信息。',
+      '按机型和操作系统定位量产固件，返回固件版本、构建日期、客户、以及 OSS 线刷/OTA 直链。默认只返回量产版（不带 DEV 标识）：DEV-xxxx 构建默认被过滤，需要时传 dev:true 或在需求里点名 DEV；过滤数量会写在 note 里。每次调用都会实时核对 Teambition（补拉版本父任务详情，索引快照只作兜底）并实时扫描 alist /PROD 目录（不复用旧缓存），因此刚归档的版本也能立刻查到；单次约 3–8 秒。结果来源标注：source=tb-live 为实时 TB、alist 为 alist /PROD、both 为两边都有。liveChecked=false 表示实时核对失败（如未登录），此时 note 会说明快照时间，回答时应转述。机型支持自由写法（如 apollo 12 pro、SP2-10PRO），7/7A、12/12A 等价写法会合并命中。机型存在歧义时返回 status=needs_confirmation 和候选列表，必须先向用户确认再继续。未指定客户时默认按 CP 过滤，并在 note/otherCustomers 里列出其他客户，不要忽略这部分信息。',
     parameters: {
       type: 'object',
       properties: {
@@ -1689,6 +1733,7 @@ function findToolFor(ctx) {
         stage: { type: 'string', description: '阶段过滤，如 生产库归档' },
         limit: { type: 'integer', description: '返回条数上限，默认 5，最大 20' },
         verify: { type: 'boolean', description: '是否 HEAD 校验 minio 链接并返回体积；alist 兜底时额外解析 sha256sum.txt' },
+        dev: { type: 'boolean', description: '是否包含 DEV 构建（默认 false：只给量产版，不带 DEV 标识）' },
         all: { type: 'boolean', description: '包含没有固件链接的任务，默认 false' },
         source: {
           type: 'string',

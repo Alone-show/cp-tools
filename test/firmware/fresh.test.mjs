@@ -206,3 +206,30 @@ test('alist /PROD 的新归档在 TB 未更新时也能顶到第一行', async (
   assert.equal(result.rows.length, 1, 'limit 只回一条');
   delete process.env.DSH_FIRMWARE_NO_PROBE;
 });
+
+// 20261109：未点名 DEV 时只给量产（不带 DEV 标识的）固件
+test('默认过滤 DEV 构建，并在 note 里交代隐藏了几条', async () => {
+  process.env.DSH_ALIST_DISABLE = '1';
+  delete process.env.DSH_FIRMWARE_NO_PROBE;
+  const DEV = 'CP_TANK2_D_DEV-DE9E2564_LCD7-10_B0_EU_20261103';
+  setVersionProbe(async () => [row(V110, '生产库归档'), row(DEV, '生产库归档', { task: 'https://www.teambition.com/task/dev' })]);
+
+  const result = await search({}, {}, { model: 'tank2', system: 'Debian', limit: 5 });
+
+  assert.ok(result.rows.every((r) => !/DEV[-_]/i.test(r.version)), `结果里不应有 DEV 构建：${result.rows.map((r) => r.version)}`);
+  assert.equal(result.rows[0].version, V110);
+  assert.match(result.note ?? '', /已隐藏 1 条 DEV 构建/);
+  assert.match(result.note ?? '', /dev:true/);
+});
+
+test('显式 dev:true 时才返回 DEV 构建', async () => {
+  process.env.DSH_ALIST_DISABLE = '1';
+  delete process.env.DSH_FIRMWARE_NO_PROBE;
+  const DEV = 'CP_TANK2_D_DEV-DE9E2564_LCD7-10_B0_EU_20261103';
+  setVersionProbe(async () => [row(V110, '生产库归档'), row(DEV, '生产库归档', { task: 'https://www.teambition.com/task/dev' })]);
+
+  const result = await search({}, {}, { model: 'tank2', system: 'Debian', limit: 5, dev: true });
+
+  assert.ok(result.rows.some((r) => r.version === DEV), 'dev:true 时 DEV 构建应可见');
+  assert.doesNotMatch(result.note ?? '', /已隐藏 .* DEV 构建/);
+});

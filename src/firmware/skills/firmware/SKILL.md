@@ -1,6 +1,6 @@
 ---
 name: firmware
-description: 查固件、TB 版本任务/子任务（待解决/已解决）、以及 bug 是否修进正式版。固件, firmware, 线刷, OTA, 量产版本, 发版, Teambition, 子任务, 问题, 已解决, 待解决, 修复。
+description: 查固件、TB 版本任务/子任务（待解决/已解决）、以及 bug 是否修进正式版。默认只找量产固件（不带 DEV 标识），用户点名 DEV 时才返回 DEV 构建。固件, firmware, 线刷, OTA, 量产版本, 量产固件, DEV, DEV构建, 发版, Teambition, 子任务, 问题, 已解决, 待解决, 修复。
 ---
 
 # 固件与问题检索
@@ -20,7 +20,8 @@ description: 查固件、TB 版本任务/子任务（待解决/已解决）、�
 - 机型：`spring2pro`、`SP2-10PRO`、`apollo 12 pro`、`瑞芯微 / APOLLO 12 PRO`、`T3 / SPRING2`。
 - 系统：安卓 / Android、Debian、BuildRoot、Linux（`linux` = Debian + BuildRoot）。
 - 客户：`-c` / `--customer CP|SZ|QX|VR|*`；**缺省 CP**，`*` / 「所有客户」不限。
-- 其它：`--version`、`--mainline`、`--stage`、`-n/--limit`、`--verify`、`--all`、`--source auto|live|index`。
+- 其它：`--version`、`--mainline`、`--stage`、`-n/--limit`、`--verify`、`--all`、`--source auto|live|index`、`--dev`。
+- **DEV 构建默认不返回**：只给量产版（不带 `DEV-`/`DEV_` 标识）。用户明确说「要 DEV / DEV 版 / 看开发版」时才传 `dev: true`；被过滤的条数会写在返回的 `note` 里，回答时不要漏掉。
 - 用户说「最新的」→ `limit: 1`；没说条数用默认值。
 
 ## 子命令路由
