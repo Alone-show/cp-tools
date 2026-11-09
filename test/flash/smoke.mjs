@@ -164,4 +164,12 @@ function execFileSyncText(cmd, args) {
   return (r.stdout ?? '').trim();
 }
 
+// 8) 职责边界（20261109 拆分）：locale 不得再写「确认/confirm」，且必须描述整机线刷
+for (const lang of ['zh', 'en']) {
+  const meta = JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'locale', 'flash', `${lang}.json`), 'utf8')).meta;
+  const text = `${meta.title}${meta.description}`;
+  assert.ok(!/确认|confirm/i.test(text), `locale/flash/${lang}.json 不应再写「确认/confirm」（刷机前不等确认）`);
+  assert.ok(/线刷|flashing/i.test(text), `locale/flash/${lang}.json 应描述整机线刷`);
+}
+
 console.log(`smoke OK: flash | SKILL ${LINES} 行 | assets：${fs.readdirSync(path.join(SKILL_DIR, 'assets')).length} 个`);

@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "整机线刷",
-    "description": "整机镜像覆盖烧写（RK rk_upgrade_tool / T3 openixcli）：查版本 → 预检 → 确认 → 刷写 → 回线 → 只比版本号验收；调用命令 /flash。"
+    "description": "整机镜像覆盖烧写（RK rk_upgrade_tool / T3 openixcli）：查版本 → 预检 → 刷写 → 回线 → 只比版本号验收；调用命令 /flash。"
   }
 }

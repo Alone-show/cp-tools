@@ -43,7 +43,7 @@
 | 依赖 | 类型 | 处理 |
 |---|---|---|
 | cp-docs 的机型规则来自 firmware | 代码复制（隐式） | 改为同包 `shared/model-core.js` 硬依赖 |
-| cpservice 用 `/firmware` 查 OSS 线刷直链 | 运行时软依赖 | 保留 `firmware_find` 工具名；SKILL 文案说明“可用则用，否则本地 `.img`”；firmware 子插件 disable 时仍可出包 |
+| ~~cpservice 用 `/firmware` 查 OSS 线刷直链~~ | ~~运行时软依赖~~ | 2026-11-09 拆分后不再适用：线刷（含 `firmware_find` 取直链）已独立为 `/flash`，cpservice 只做 U 盘升级包，不依赖 firmware |
 | firmware 依赖 `.tbfw/token.json` | 运行时数据 | 共享 data-dir；保留 `DSH_TBFW_DIR`/`DSH_FIRMWARE_DIR` |
 | 三者依赖工作区数据目录 | 运行时数据 | `.cpdocs`/`.tbfw`/`.fixfinder` 原名保留，不迁移 |
 | 三个旧包各自的 GitHub 仓库/index.json | 发布 | 合并为一个仓库/索引；旧仓库归档说明（push 时才做） |
@@ -51,11 +51,15 @@
 
 ## 4. 目标结构
 
+> 2026-11-09 更新：整机线刷已从 `/cpservice` 拆出，新增第四个子插件 `/flash`
+> （`src/flash/`、`locale/flash/`、`test/flash/`、patch 第四行 `cp-flash`）。
+> 下面的结构是合并当时的快照，新增路径以此说明为准。
+
 ```text
 plugins/cp-tools/
 ├── package.json / cordis.patch.yml / index.json / README.md
 ├── icons/{docs,firmware,cpservice,cp-tools}.svg
-├── locale/{docs,firmware,cpservice}/{zh,en}.json
+├── locale/{docs,firmware,cpservice,flash}/{zh,en}.json
 ├── src/
 │   ├── shared/{model-core.js,skill.js,data-dir.js}
 │   ├── docs/{index.js,lib/*,data/**}

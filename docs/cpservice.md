@@ -1,10 +1,12 @@
 > **合并后说明（2026-11-09）**：本文件是合并前的详细说明，保留作为子插件文档。
-> 包名已改为 `@local/cp-tools`，入口为 `@local/cp-tools/{docs,firmware,cpservice}`；
+> 包名已改为 `@local/cp-tools`，入口为 `@local/cp-tools/{docs,firmware,cpservice,flash}`；
 > 源码路径已移到 `src/<子插件>/`，固定流程改用 `scripts/` 下的脚本。安装与总览见根 `README.md`。
 
 # E9631Service / CpService / RK Debian / T3 Linux（U 盘升级包 skill，调用命令 `/cpservice`）
 
 按需求生成 U 盘升级包（**RK 安卓 `CpService.xml`** / **T3 安卓 `E9631Service.xml`** / **RK Debian `unattended_installation.sh` + `auto_unattended_installation`** / **T3 Linux（Buildroot）盘根 `unattended_installation.sh`**），并在真机上验证。纯 skill，不带工具。
+
+**整机线刷已剥离**（2026-11-09）：全量覆盖烧写走独立 skill `flash`（`/flash`，源码 `src/flash/`），本 skill 只做 U 盘升级包。
 
 ## 结构（一份事实只写一处）
 
@@ -80,7 +82,7 @@ T3 Linux 现网包示例：`/home/my/customizationData/archive/雷沃/lovol_inst
 ## 自检
 
 ```bash
-node test/smoke.mjs     # 插件契约 + references/assets 齐全 + 去重/链接守卫 + 事实清单
+node scripts/verify.mjs --fast   # 插件契约 + references/assets 齐全 + 去重/链接守卫 + 事实清单
 ```
 
 skill 正文是运行时从 `src/cpservice/skills/cpservice/SKILL.md` 读的：改完要**新会话**（或重载插件）才生效。

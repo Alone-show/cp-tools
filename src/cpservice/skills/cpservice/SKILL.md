@@ -379,5 +379,5 @@ assets/generate-bootlogo.sh --image logo.png --chip RK --system Android --name <
 ## 11. 整机线刷（不在这里）
 
 整机 `.img` 覆盖烧写（会清 userdata、跨系统重装、救砖）走独立 skill **`flash`**（命令 `/flash`）：
-线刷脚本 `flash.sh`（plan/flash/verify）、线刷事实页、`rk_upgrade_tool`/`openixcli` 二进制都已迁到那边，
-验收口径也简化成「只比版本号」。本 skill 只负责 U 盘升级包（装应用/换 logo/换动画），别再在这里找线刷脚本。
+线刷脚本、线刷事实页与烧写工具都已迁到 `src/flash/`，验收口径也简化成「只比版本号」。
+本 skill 只负责 U 盘升级包（装应用/换 logo/换动画），别再在这里找线刷脚本。

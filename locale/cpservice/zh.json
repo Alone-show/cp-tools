@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "U 盘升级与线刷",
-    "description": "按平台生成并验证 U 盘升级包（RK 安卓 CpService.xml、T3 安卓 E9631Service.xml、RK Debian、T3 Linux Buildroot），并支持整机线刷；调用命令 /cpservice。"
+    "title": "U 盘升级",
+    "description": "按平台生成并验证 U 盘升级包（RK 安卓 CpService.xml、T3 安卓 E9631Service.xml、RK Debian、T3 Linux Buildroot）；调用命令 /cpservice。"
   }
 }

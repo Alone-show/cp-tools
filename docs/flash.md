@@ -8,7 +8,7 @@
 | 文件 | 角色 |
 |---|---|
 | `src/flash/index.js` | Cordis 子插件 `cp-flash`：只往 `ctx.skills` 注册 skill `flash` |
-| `src/flash/skills/flash/SKILL.md` | **SOP**：何时用 → 刷前 4 项确认 → S1–S7 步骤 → 验收口径 → 回线/OTG → 失败速查 → 省时跑法 → 附参数表 |
+| `src/flash/skills/flash/SKILL.md` | **SOP**：何时用 → 刷前 5 项核对 → S1–S6 步骤 → 验收口径 → 回线/OTG → 失败速查 → 省时跑法 → 附参数表 |
 | `src/flash/skills/flash/references/flash.md` | 事实页：工具与版本、设备模式与 USB、镜像判定、`flash.sh` 全参数、失败模式、沙箱 |
 | `src/flash/skills/flash/assets/flash.sh` | 线刷脚本：`doctor` / `plan` / `flash` / `verify` |
 | `src/flash/skills/flash/assets/tools/` | `rk_upgrade_tool` v2.22、`openixcli` 0.2.4、`VERSIONS.md`、license |

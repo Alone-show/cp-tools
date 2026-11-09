@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "USB Upgrade & Flash",
-    "description": "Build and verify USB upgrade packages for RK Android (CpService.xml), T3 Android (E9631Service.xml), RK Debian, and T3 Linux Buildroot, plus full-device flashing; invoke with /cpservice."
+    "title": "USB Upgrade",
+    "description": "Build and verify USB upgrade packages for RK Android (CpService.xml), T3 Android (E9631Service.xml), RK Debian, and T3 Linux Buildroot; invoke with /cpservice."
   }
 }

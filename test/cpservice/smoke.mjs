@@ -294,5 +294,17 @@ if (!hasFfmpeg) {
   }
 }
 
+// 10) 职责边界：整机线刷已拆到 skill `flash`（20261109），这里只留指针
+assert.ok(skill.content.includes('`flash`'), 'SKILL.md 应指明整机线刷走 skill flash');
+assert.ok(/不在这里/.test(skill.content), 'SKILL.md 应写明整机线刷不在本 skill');
+for (const bad of ['flash.sh', 'rk_upgrade_tool', 'openixcli']) {
+  assert.ok(!skill.content.includes(bad), `SKILL.md 不应再出现线刷资产 ${bad}（已迁到 src/flash）`);
+}
+for (const lang of ['zh', 'en']) {
+  const meta = JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'locale', 'cpservice', `${lang}.json`), 'utf8')).meta;
+  assert.ok(!/线刷|flashing/i.test(`${meta.title}${meta.description}`),
+    `locale/cpservice/${lang}.json 不应再宣称整机线刷（已剥离到 /flash）`);
+}
+
 console.log('smoke OK:', skill.name, '| description', skill.description.length, '字 | 正文', skill.content.length, '字');
 console.log('  refs:', refs.join(', '), '| assets:', listed.size, '个');
