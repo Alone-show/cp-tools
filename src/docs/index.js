@@ -1,5 +1,5 @@
 /**
- * @local/cp-docs —— /cp-docs + 自然语言的产品资料检索。
+ * @local/cp-tools/docs —— /cp-docs + 自然语言的产品资料检索。
  *
  * 只注册一个斜杠命令（不注册模型工具）：用户输入 /cp-docs SPRING2PRO 的屏幕尺寸，
  * 插件做机型归一（与 firmware-finder 共用 shared/model-core）；**唯一命中机型后把该机型全部本地资料整包**

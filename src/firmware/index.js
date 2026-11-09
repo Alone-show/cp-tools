@@ -360,7 +360,7 @@ async function readBoard(ctx, exec) {
     st = fs.statSync(file);
   } catch {
     throw new Error(
-      `没有本地索引 ${file}。先运行 tbfw 的同步（python3 tbfw/tb.py sync），或调用 firmware_sync 工具。`,
+      `没有本地索引 ${file}。先运行 npm run sync -- --tb，或调用 firmware_sync 工具。`,
     );
   }
   if (cache.file === file && cache.mtimeMs === st.mtimeMs && cache.board) return cache.board;
@@ -381,7 +381,7 @@ async function fetchPaged(headers, baseUrl, pick, maxPages = 300) {
       token ? `&pageToken=${encodeURIComponent(token)}` : ''
     }`;
     const r = await fetchImpl(url, { headers });
-    if (r.status === 401) throw new Error('Teambition 登录态失效，需要重新抓取 cookie（tbfw/login.sh）');
+    if (r.status === 401) throw new Error('Teambition 登录态失效，需要重新抓取 cookie（npm run login）');
     if (!r.ok) throw new Error(`${baseUrl} -> ${r.status}`);
     const j = await r.json();
     out.push(...(j.result ?? []));
@@ -425,7 +425,7 @@ async function syncBoard(ctx, exec, options = {}) {
   const dir = dirs.find((d) => fs.existsSync(path.join(d, 'token.json'))) ?? dirs[0];
   const tokFile = path.join(dir, 'token.json');
   if (!fs.existsSync(tokFile)) {
-    throw new Error(`缺少凭据文件 ${tokFile}。已查找: ${dirs.join(' | ')}。先运行 tbfw/login.sh。`);
+    throw new Error(`缺少凭据文件 ${tokFile}。已查找: ${dirs.join(' | ')}。先运行 npm run login。`);
   }
   const cookie = readCookie(tokFile);
   if (!cookie) throw new Error(`${tokFile} 里没有 teambition cookie`);

@@ -4,7 +4,7 @@
  * 为什么不复用 lib/search.js#lineMatchesModel：那里只有 sp2↔spring2 / apollo↔apollo2 两对替换，
  * 且要求双向 includes，`SPRING2PRO` 这种**省略尺寸段**的写法会一条线都选不中（→ needs_baseline）。
  *
- * 评分规则沿用 firmware-finder 的实现（gapScore 等，见 plugins/firmware-finder/index.js），
+ * 评分规则沿用 firmware-finder 的实现（gapScore 等，见 src/firmware/index.js），
  * 这里只按「芯片 + product」重新分组，保证不同芯片的同名机型绝不合并。
  */
 import { similarity } from './nl.js';

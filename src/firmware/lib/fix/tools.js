@@ -1,5 +1,5 @@
 /**
- * 修复判定工具（原 @local/fix-finder，0.5.0 起并入 @local/firmware-finder）。
+ * 修复判定工具（原 @local/fix-finder，0.5.0 起并入 firmware 子插件（现 @local/cp-tools/firmware））。
  *
  * 数据来源：https://alist.cpinnov.run 的 /PROD/<芯片>/<系统> 下每条产品线最新一版**正式构建**的
  * commit-logs.txt（累积全量 git log）。只索引 PROD：数据量小一半，且「是否已修复」只关心正式版。
