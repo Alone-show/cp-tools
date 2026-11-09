@@ -3,7 +3,7 @@
 #
 #   flash.sh doctor                                   环境自检（只读）
 #   flash.sh plan   [<img|url>] [参数]                只读：设备状态 / 镜像预检 / 将执行的命令
-#   flash.sh flash  <img|url> [验证参数]              进下载模式 → 线刷 → 等回线 → 验证 → 报告
+#   flash.sh flash  <img|url> [验证参数]              进下载模式 → 线刷 → 等回线 → 验证（结论只打终端）
 #   flash.sh verify [验证参数]                        只验证（设备已起系统，不刷）
 #
 # 平台与工具：
@@ -29,14 +29,19 @@
 # 公共参数：
 #   --serial S            adb 序列号（多设备必填；单设备自动选）
 #   --platform rk|t3      平台判不出来时强制
-#   --report F / --log F  报告 / 日志路径
+#   --log F               日志路径（默认 ~/Downloads/<镜像名>_flash_<时间>.log）
+#   --report F            可选：额外生成 md 报告（默认不生成，只打日志）
 #   --timeout-flash S     刷写超时，默认 2700
 #   --timeout-boot S      回线 + 起系统超时，默认 600
 #   --sha256 H            镜像 sha256 校验
-#   --cache-dir D         URL 下载缓存，默认 ~/Downloads/fw-cache
+#   --cache-dir D         URL 下载缓存，默认 ~/Downloads（不另建子目录）
 #   --force-platform-mismatch  兼容旧用法：跳过跨系统提示（芯片一致本来就默认允许；芯片不一致仍拒）
 #   --rk-index N          多台 rockusb 时先 rk_upgrade_tool SD N
 #   -v                    打印工具完整输出（默认也落日志）
+#   --quiet               只留里程碑（下载/进下载模式/刷写结论/验证），不刷进度条；日志仍全量
+#   --dry-run             只预检：解析（含下载）镜像、判平台、比芯片与版本，打印将执行的命令后退出，不进下载模式
+#
+# 验收口径：只比版本号（设备版本与期望一致即通过）；boot_id、systemd 单元状态仅记录，不阻塞。
 #
 # 退出码：0 通过 / 2 用法 / 3 前置不满足 / 4 刷写失败 / 5 验证不通过 / 6 超时
 
@@ -47,7 +52,7 @@ TOOLS_DIR="${FLASH_TOOLS_DIR:-$SELF_DIR/tools}"
 ADB_BIN="${ADB:-adb}"
 HOME_DIR="${HOME:-/root}"
 DL_DIR="${DL_DIR:-$HOME_DIR/Downloads}"
-CACHE_DIR="${FLASH_CACHE_DIR:-$DL_DIR/fw-cache}"
+CACHE_DIR="${FLASH_CACHE_DIR:-$DL_DIR}"
 
 SERIAL=""
 SERIAL_USER=""
@@ -58,6 +63,8 @@ FLASH_TIMEOUT=2700
 BOOT_TIMEOUT=600
 SHA256_EXPECT=""
 VERBOSE=0
+QUIET=0
+DRY_RUN=0
 FORCE_MISMATCH=0
 RK_INDEX=""
 
@@ -104,12 +111,18 @@ trap cleanup EXIT
 
 # ---------------------------------------------------------------- 基础输出
 
-say() { printf '%s\n' "$*"; }
+say() {
+    printf '%s\n' "$*"
+    # 里程碑同时落 $LOG：tail -f 即可看到阶段，不必再 sleep 一轮去 grep
+    if [ -n "${LOG:-}" ] && [ -w "$LOG" ]; then printf '%s\n' "$*" >>"$LOG"; fi
+}
+# 给人看的过程消息一律走 stderr：download_firmware 等函数的 stdout 会被 $(...) 捕获成路径。
+say_err() { printf '%s\n' "$*" >&2; }
 warn() { printf 'WARN: %s\n' "$*" >&2; }
 hr() { printf '%s\n' '----------------------------------------------------------------'; }
 die() { local code="$1"; shift; printf 'ERROR: %s\n' "$*" >&2; exit "$code"; }
 
-usage() { sed -n '2,45p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,49p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
 
 record() { # name state evidence
     RES_NAMES+=("$1")
@@ -173,11 +186,15 @@ pick_serial() {
 }
 
 wait_adb() { # timeout
-    local deadline=$((SECONDS + $1)) devs=() last_hint=$SECONDS
+    local deadline=$((SECONDS + $1)) devs=() last_hint=$SECONDS start=$SECONDS next=$((SECONDS + 15))
     while [ "$SECONDS" -lt "$deadline" ]; do
         if [ $((SECONDS - last_hint)) -ge 120 ]; then
             say "…仍在等 adb；若设备停在 OTG Host（安卓刷完/重启默认），请在设备上切到 DEVICE（见 SKILL §7.3）"
             last_hint=$SECONDS
+        fi
+        if [ "$SECONDS" -ge "$next" ]; then
+            next=$((SECONDS + 15))
+            say "  …等 adb 回线 $((SECONDS - start))s（USB: $(usb_ids)）"
         fi
         if [ -n "$SERIAL" ] && "$ADB_BIN" -s "$SERIAL" get-state 2>/dev/null | grep -q '^device$'; then
             return 0
@@ -269,6 +286,27 @@ rk_present() {
     [ "${RK_COUNT:-0}" -gt 0 ]
 }
 
+usb_ids() { # 当前 USB 上看到的 Rockchip/全志 ID，用于进度行
+    local ids
+    ids=$(lsusb 2>/dev/null | grep -oE 'ID (2207|1f3a):[0-9a-f]{4}' | awk '{print $2}' | paste -sd, -)
+    printf '%s' "${ids:-无}"
+}
+
+# 进下载模式之前先确认沙箱能碰 USB：workspace-write 下 rk_upgrade_tool 只报
+# failed to call context_enter!（设备根本没被访问到）。此时若已 adb reboot loader，
+# 设备会被踢进 loader 却刷不了，只能整轮重跑——宁可在这里 fail-fast，设备不动。
+preflight_usb() { # family
+    local out rc=0
+    if [ "$1" = rk ]; then
+        [ -n "$RK_TOOL" ] || return 0
+        out=$("$RK_TOOL" LD 2>&1) || rc=$?
+        if [ "$rc" -ne 0 ] || printf '%s' "$out" | grep -qi 'context_enter'; then
+            die 3 "沙箱看不到 USB（rk_upgrade_tool LD: $(printf '%s\n' "$out" | head -1)）。线刷必须用 full-access 跑；设备未被重启，可直接重跑。"
+        fi
+    fi
+    return 0
+}
+
 t3_present() {
     [ -n "$OPENIXCLI" ] || return 1
     local out line
@@ -289,7 +327,7 @@ usb_t3_id() {
 }
 
 wait_download_mode() { # family timeout
-    local deadline=$((SECONDS + $2)) a b
+    local deadline=$((SECONDS + $2)) a b start=$SECONDS next=$((SECONDS + 10))
     while [ "$SECONDS" -lt "$deadline" ]; do
         if [ "$1" = rk ]; then
             rk_present && return 0
@@ -303,6 +341,10 @@ wait_download_mode() { # family timeout
                     return 0
                 fi
             fi
+        fi
+        if [ "$SECONDS" -ge "$next" ]; then
+            next=$((SECONDS + 10))
+            say "  …等 $1 下载模式 $((SECONDS - start))s（USB: $(usb_ids)）"
         fi
         sleep 2
     done
@@ -339,6 +381,22 @@ http_size() {
         awk 'tolower($1)=="content-length:"{v=$2} END{if(v)printf "%.0f", v}'
 }
 
+# 下载之前先查下载目录：按 URL basename 查 ~/Downloads 顶层，size 对得上就复用。
+# 只返回路径，不复制、不改名——镜像在下载目录里只留一份。
+precheck_local() { # url
+    local url="$1" b size f
+    b=$(url_basename "$url")
+    size=$(http_size "$url")
+    [ "${size:-0}" -gt 0 ] || return 1
+    for f in "$CACHE_DIR/$b" "$DL_DIR/$b"; do
+        [ -s "$f" ] || continue
+        [ "$(stat -c %s "$f" 2>/dev/null || echo 0)" = "$size" ] || continue
+        printf '%s' "$f"
+        return 0
+    done
+    return 1
+}
+
 download_firmware() { # url
     local url="$1" dest size cur
     dest="$CACHE_DIR/$(url_basename "$url")"
@@ -349,37 +407,46 @@ download_firmware() { # url
             warn "alist 直链在本机代理下常 TLS 失败；优先用 /firmware 给的 OSS 线刷地址" ;;
     esac
 
+    # 注意：本函数 stdout 只允许输出最终路径（会被 resolve_firmware 的 $(...) 捕获），
+    # 过程消息一律 say_err（曾经写成 say，导致 FW 变成「提示行 + 路径」两行 → sha256sum 报错 + 静默退出）。
     if [ -s "$dest" ]; then
         size=$(http_size "$url")
         cur=$(stat -c %s "$dest" 2>/dev/null || echo 0)
         if [ "${size:-0}" -gt 0 ] && [ "$cur" = "$size" ]; then
-            say "复用已下载镜像：$dest"
+            say_err "复用已下载镜像：$dest（$cur B）"
             printf '%s' "$dest"
             return 0
         fi
-        say "续传：$dest（$cur / ${size:-?} B）"
-        curl -L --fail --retry 3 --retry-delay 2 -C - -o "$dest" "$url" ||
+        say_err "续传：$dest（$cur / ${size:-?} B）"
+        curl -sS -L --fail --retry 3 --retry-delay 2 -C - -o "$dest" "$url" ||
             die 3 "下载失败：$url"
     else
-        say "下载：$url"
-        curl -L --fail --retry 3 --retry-delay 2 -o "$dest" "$url" ||
+        say_err "下载中：$url"
+        curl -sS -L --fail --retry 3 --retry-delay 2 -o "$dest" "$url" ||
             die 3 "下载失败：$url"
     fi
     [ -s "$dest" ] || die 3 "下载后文件为空：$dest"
+    say_err "下载完成：$dest（$(stat -c %s "$dest") B）"
     printf '%s' "$dest"
 }
 
 resolve_firmware() { # arg  download(0|1)
-    local arg="$1" do_dl="$2"
+    local arg="$1" do_dl="$2" hit=""
     FW_SOURCE="$arg"
     case "$arg" in
         http://*|https://*)
-            if [ "$do_dl" = 0 ]; then
+            hit=$(precheck_local "$arg" || true)
+            if [ -n "$hit" ]; then
+                FW="$hit"
+                say_err "复用本地镜像：$hit（$(stat -c %s "$hit") B，不重复下载）"
+            elif [ "$do_dl" = 0 ]; then
                 FW=""
                 FW_SIZE=$(http_size "$arg")
                 return 0
+            else
+                FW=$(download_firmware "$arg")
+                [ -f "$FW" ] || die 3 "镜像解析失败（下载函数返回了非路径内容）：$FW"
             fi
-            FW=$(download_firmware "$arg")
             ;;
         *)
             [ -f "$arg" ] || die 3 "镜像不存在：$arg"
@@ -462,13 +529,24 @@ flash_device() { # family
 
     set +e
     if [ "$family" = rk ]; then
-        timeout "$FLASH_TIMEOUT" "$RK_TOOL" UF "$FW" 2>&1 | tee -a "$LOG"
+        if [ "$QUIET" = 1 ]; then
+            # 日志仍写原始输出；终端只留结论行（工具进度条会刷上百行）
+            timeout "$FLASH_TIMEOUT" "$RK_TOOL" UF "$FW" 2>&1 | tee -a "$LOG" |
+                tr '\r' '\n' | grep -v -E 'Download Image\.\.\.|^\s*$' | tail -n 20
+        else
+            timeout "$FLASH_TIMEOUT" "$RK_TOOL" UF "$FW" 2>&1 | tee -a "$LOG"
+        fi
         rc=${PIPESTATUS[0]}
     else
         local args=(-V true -m full_erase -a reboot)
         [ -n "$T3_BUS" ] && args+=(-b "$T3_BUS")
         [ -n "$T3_PORT" ] && args+=(-P "$T3_PORT")
-        timeout "$FLASH_TIMEOUT" "$OPENIXCLI" flash "$FW" "${args[@]}" 2>&1 | tee -a "$LOG"
+        if [ "$QUIET" = 1 ]; then
+            timeout "$FLASH_TIMEOUT" "$OPENIXCLI" flash "$FW" "${args[@]}" 2>&1 | tee -a "$LOG" |
+                tr '\r' '\n' | grep -v -E '^\s*$|[0-9]+%' | tail -n 20
+        else
+            timeout "$FLASH_TIMEOUT" "$OPENIXCLI" flash "$FW" "${args[@]}" 2>&1 | tee -a "$LOG"
+        fi
         rc=${PIPESTATUS[0]}
     fi
     set -e
@@ -548,42 +626,40 @@ run_assertions() { # platform version
         record "版本" SKIP "未检查（--no-version-check）；设备版本=$ver"
     fi
 
-    # 2) 真重启
+    # 2) 真重启（旁证：只记录，不判失败——验收口径只比版本号）
     if [ "$NO_REBOOT_CHECK" = 0 ] && [ -n "$PRE_BOOT_ID" ] && [ -n "$POST_BOOT_ID" ]; then
         if [ "$PRE_BOOT_ID" != "$POST_BOOT_ID" ]; then
             BOOTID_NOTE="已变化（${PRE_BOOT_ID:0:8} → ${POST_BOOT_ID:0:8}）"
-            record "真重启（boot_id）" PASS "$BOOTID_NOTE"
         else
-            BOOTID_NOTE="未变化（${PRE_BOOT_ID:0:8}）"
-            record "真重启（boot_id）" FAIL "boot_id 没变，设备没有真正重启到新系统"
+            BOOTID_NOTE="未变化（${PRE_BOOT_ID:0:8}）——设备可能没真正重启，仅作旁证"
         fi
     else
         BOOTID_NOTE="未检查"
-        record "真重启（boot_id）" SKIP "未检查"
     fi
+    record "真重启（boot_id，旁证）" INFO "$BOOTID_NOTE"
 
-    # 3) 系统可用性（证据；默认 WARN 不判死）
+    # 3) 系统可用性（只记录旁证：不进 PASS/FAIL 判定，验收口径只比版本号）
     case "$pl" in
         *-android)
             out=$(sh_ 'dumpsys activity activities 2>/dev/null | grep mResumedActivity | head -1' 2>/dev/null | tr -d '\r' || true)
-            if [ -n "$(trim "$out")" ]; then record "前台应用" PASS "$(trim "$out")"
-            else record "前台应用" WARN "mResumedActivity 为空（可能是无界面设备）"; fi
+            if [ -n "$(trim "$out")" ]; then record "前台应用（旁证）" INFO "$(trim "$out")"
+            else record "前台应用（旁证）" INFO "mResumedActivity 为空（可能是无界面设备）"; fi
             ;;
         rk-debian)
             out=$(sh_ 'systemctl is-system-running 2>/dev/null' 2>/dev/null | tr -d '\r\n' || true)
             case "$out" in
-                running) record "systemd" PASS "running" ;;
+                running) record "systemd（旁证）" INFO "running" ;;
                 degraded)
                     nf=$(sh_ 'systemctl --failed --no-pager --plain --no-legend 2>/dev/null | wc -l' 2>/dev/null | tr -d '\r\n' || true)
                     units=$(sh_ "systemctl --failed --no-pager --plain --no-legend 2>/dev/null | awk '{print \$1}' | head -4 | tr '\n' ' '" 2>/dev/null | tr -d '\r' || true)
-                    record "systemd" WARN "degraded（failed ${nf:-?} 个：$(trim "$units")）" ;;
-                *) record "systemd" FAIL "is-system-running=$out" ;;
+                    record "systemd（旁证）" INFO "degraded（failed ${nf:-?} 个：$(trim "$units")）" ;;
+                *) record "systemd（旁证）" INFO "is-system-running=$out" ;;
             esac
             ;;
         t3-linux)
             out=$(sh_ 'pidof Launcher 2>/dev/null' 2>/dev/null | tr -d '\r' || true)
-            if [ -n "$(trim "$out")" ]; then record "Launcher" PASS "pid=$out"
-            else record "Launcher" WARN "没有 Launcher（服务模式包可能正常）"; fi
+            if [ -n "$(trim "$out")" ]; then record "Launcher（旁证）" INFO "pid=$out"
+            else record "Launcher（旁证）" INFO "没有 Launcher（服务模式包可能正常）"; fi
             ;;
     esac
 
@@ -651,8 +727,13 @@ write_report() { # verdict
         echo "|---|---|"
         echo "| 设备序列号 | ${SERIAL:-未知} |"
         echo "| 平台（刷前 → 刷后） | ${PRE_PLATFORM:-未知} → ${POST_PLATFORM:-未知} |"
-        echo "| 固件 | $(basename -- "${FW:-$FW_SOURCE}") |"
-        echo "| 固件大小 / sha256 | ${FW_SIZE:-?} B / ${FW_SHA:-?} |"
+        if [ -n "$FW" ]; then
+            echo "| 固件 | $(basename -- "$FW") |"
+            echo "| 固件大小 / sha256 | ${FW_SIZE:-?} B / ${FW_SHA:-?} |"
+        else
+            echo "| 固件 | ${FW_SOURCE:-(未指定)} |"
+            echo "| 固件大小 / sha256 | — |"
+        fi
         echo "| 刷写 | ${FLASH_VERDICT}（${FLASH_SECONDS}s） |"
         echo "| 版本（刷前 → 刷后） | ${PRE_VERSION:-?} → ${POST_VERSION:-?} |"
         echo "| boot_id | ${BOOTID_NOTE} |"
@@ -667,10 +748,11 @@ write_report() { # verdict
                 "$(printf '%s' "${RES_EVID[$i]}" | tr '|' '/' | cut -c1-160)"
         done
         echo
-        echo "## 未验证 / 需人工"
+        echo "## 验收口径"
         echo
-        echo "- 开机 LOGO、桌面/UI 实际显示：只能目视，未包含在本报告结论内。"
-        echo "- 客户业务功能（摄像头、CAN、网络等）：用 --check/--pkg/--unit/--proc 显式加断言，否则不在本报告结论内。"
+        echo '- **只比版本号**：设备版本与期望版本一致即通过；`boot_id`、systemd/Launcher 状态仅记录，不阻塞。'
+        echo "- 不截图、不验 UI / 开机 LOGO / 桌面；不跑客户业务功能（摄像头、CAN、网络等）。"
+        echo '- 需要额外断言时显式加 `--check` / `--pkg` / `--unit` / `--proc` / `--expect`，否则不在本报告结论内。'
         echo
         echo "## 日志"
         echo
@@ -721,6 +803,8 @@ parse_args() {
             --proc) PROCS+=("${2:?}"); shift 2 ;;
             --proc=*) PROCS+=("${1#*=}"); shift ;;
             -v|--verbose) VERBOSE=1; shift ;;
+            --quiet|-q) QUIET=1; shift ;;
+            --dry-run) DRY_RUN=1; shift ;;
             --) shift; POSITIONAL+=("$@"); break ;;
             -*) die 2 "未知参数：$1（flash.sh help 看用法）" ;;
             *) POSITIONAL+=("$1"); shift ;;
@@ -731,7 +815,6 @@ parse_args() {
 setup_paths() { # stem
     STEM="$1"
     if [ -z "$LOG" ]; then LOG="$DL_DIR/${STEM}_flash_$(date +%Y%m%d-%H%M%S).log"; fi
-    if [ -z "$REPORT" ]; then REPORT="$DL_DIR/${STEM}_flash_report_$(date +%Y%m%d-%H%M%S).md"; fi
     mkdir -p "$DL_DIR" 2>/dev/null || die 3 "日志/下载目录不可写：$DL_DIR（用 --log/--cache-dir 指定）"
     : >"$LOG" 2>/dev/null || die 3 "无法创建日志：$LOG（用 --log 指定）"
 }
@@ -820,8 +903,8 @@ cmd_plan() {
         if [ -n "$FW" ]; then
             say "  本地：$FW（$FW_SIZE B, sha256=${FW_SHA:0:16}…）"
         else
-            if [ "${FW_SIZE:-0}" -gt 0 ]; then say "  远端：$FW_SIZE B（flash 时下载到 $CACHE_DIR）"
-            else say "  远端：大小未知（flash 时下载到 $CACHE_DIR）"; fi
+            if [ "${FW_SIZE:-0}" -gt 0 ]; then say "  远端：$FW_SIZE B（下载目录未命中，flash 时下载到 $CACHE_DIR）"
+            else say "  远端：大小未知（下载目录未命中，flash 时下载到 $CACHE_DIR）"; fi
         fi
         say "  期望版本（按文件名）：$(version_from_name "${FW:-$FW_SOURCE}")"
         if [ -n "$(version_token "$(version_from_name "${FW:-$FW_SOURCE}")")" ]; then
@@ -861,6 +944,23 @@ cmd_plan() {
     say "plan: OK（未刷任何东西）"
 }
 
+dry_run_report() { # family
+    local family="$1"
+    hr
+    say "DRY-RUN（不刷写、不进下载模式）"
+    hr
+    say "设备：${SERIAL:-未连接}  平台：${PRE_PLATFORM:-$family}  当前版本：${PRE_VERSION:-?}"
+    say "固件：$FW"
+    say "  $FW_SIZE B  sha256=$FW_SHA"
+    say "期望版本：${EXPECT_VERSION:-$(version_from_name "$FW")}"
+    if [ "$family" = rk ]; then
+        say "将执行：adb reboot loader → rk_upgrade_tool UF $FW"
+    else
+        say "将执行：adb shell reboot efex（或 devmem …）→ openixcli flash $FW -V true -m full_erase -a reboot"
+    fi
+    say "验收：只比版本号（boot_id / systemd 仅记录）"
+}
+
 cmd_flash() {
     local family="" pl="" usb_fam="" rc=0 nf
     parse_args "$@"
@@ -891,12 +991,15 @@ cmd_flash() {
         check_image_platform "$pl"
         need_tools "$family"
         vlog "工具：$([ "$family" = rk ] && echo "$RK_TOOL" || echo "$OPENIXCLI")"
+        if [ "$DRY_RUN" = 1 ]; then dry_run_report "$family"; return 0; fi
+        preflight_usb "$family"
         enter_download_mode "$pl"
     else
         usb_fam=$(usb_family)
         [ "$usb_fam" = unknown ] && die 3 "没有 adb 设备，也没有 loader/FEL 设备"
         family="$usb_fam"
         need_tools "$family"
+        preflight_usb "$family"
         say "设备不在 adb，USB 上是 $family；按已在下载模式处理"
         if [ "$family" = rk ]; then
             rk_present || die 3 "rk_upgrade_tool 看不到 rockusb 设备"
@@ -905,6 +1008,7 @@ cmd_flash() {
             t3_present || die 3 "openixcli 看不到 FEL 设备"
             say "  FEL：$T3_COUNT 台（bus=$T3_BUS port=$T3_PORT）"
         fi
+        if [ "$DRY_RUN" = 1 ]; then dry_run_report "$family"; return 0; fi
     fi
 
     if [ "$family" = rk ] && [ "${RK_COUNT:-0}" -gt 1 ]; then
@@ -955,7 +1059,7 @@ cmd_flash() {
         say "结果：通过"
         say "  版本：${PRE_VERSION:-?} → ${POST_VERSION:-?}"
         say "  日志：$LOG"
-        say "  报告：$REPORT"
+        if [ -n "$REPORT" ]; then say "  报告：$REPORT"; fi
         return 0
     fi
     write_report "不通过（$nf 项失败）"
@@ -963,7 +1067,7 @@ cmd_flash() {
     say "结果：不通过（$nf 项失败）"
     say "  版本：${PRE_VERSION:-?} → ${POST_VERSION:-?}"
     say "  日志：$LOG"
-    say "  报告：$REPORT"
+    if [ -n "$REPORT" ]; then say "  报告：$REPORT"; fi
     return 5
 }
 
@@ -989,12 +1093,12 @@ cmd_verify() {
     if [ "$nf" -eq 0 ]; then
         write_report "通过"
         say "结果：通过"
-        say "  报告：$REPORT"
+        if [ -n "$REPORT" ]; then say "  报告：$REPORT"; fi
         return 0
     fi
     write_report "不通过（$nf 项失败）"
     say "结果：不通过（$nf 项失败）"
-    say "  报告：$REPORT"
+    if [ -n "$REPORT" ]; then say "  报告：$REPORT"; fi
     return 5
 }
 

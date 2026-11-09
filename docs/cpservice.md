@@ -2,7 +2,7 @@
 > 包名已改为 `@local/cp-tools`，入口为 `@local/cp-tools/{docs,firmware,cpservice}`；
 > 源码路径已移到 `src/<子插件>/`，固定流程改用 `scripts/` 下的脚本。安装与总览见根 `README.md`。
 
-# E9631Service / CpService / RK Debian / T3 Linux（U 盘升级包 + 整机线刷 skill，调用命令 `/cpservice`）
+# E9631Service / CpService / RK Debian / T3 Linux（U 盘升级包 skill，调用命令 `/cpservice`）
 
 按需求生成 U 盘升级包（**RK 安卓 `CpService.xml`** / **T3 安卓 `E9631Service.xml`** / **RK Debian `unattended_installation.sh` + `auto_unattended_installation`** / **T3 Linux（Buildroot）盘根 `unattended_installation.sh`**），并在真机上验证。纯 skill，不带工具。
 
@@ -15,8 +15,7 @@
 | `src/cpservice/skills/cpservice/references/t3-android.md` | T3 安卓事实：工具/9 个动作/mksh 约束/假挂载验证/坑/MDM+WiFi |
 | `src/cpservice/skills/cpservice/references/rk-debian.md` | RK Debian 事实：两种安装方式（自动 udev / 手动 GUI）、包结构、`:uisum` 协议、脚本约束、dpkg/落点、验证、坑 |
 | `src/cpservice/skills/cpservice/references/t3-linux.md` | T3 Linux（Buildroot）事实：`/Launcher` 触发链、`/mnt/usb/sda1`、包结构、落点、bash 约束、假挂载验证、坑 |
-| `src/cpservice/skills/cpservice/assets/` | 模板、探针、触发、核验、虚拟盘、Debian 触发脚本、**logo 资源生成驱动**、**整机线刷 `flash.sh` + `tools/` 二进制**（清单见 SKILL 文件索引） |
-| `src/cpservice/skills/cpservice/references/flash.md` | 线刷事实：工具/设备模式/四平台命令/失败模式/验证口径 |
+| `src/cpservice/skills/cpservice/assets/` | 模板、探针、触发、核验、虚拟盘、Debian 触发脚本、**logo 资源生成驱动**（清单见 SKILL 文件索引） |
 | `src/cpservice/skills/cpservice/vendor/` | T3 可复用二进制（`VanCoreT3-260414.apk`、CYW43438 固件）；RK 不复用 WiFi 固件 |
 
 ## 平台判定
@@ -54,11 +53,11 @@ T3 Linux：
 
 模型会：判定 T3 Linux（Buildroot）→ 读 `references/t3-linux.md` → 生成盘根 `unattended_installation.sh`（bash，`+x`，日志 `/data/cp-unattended/`）→ 自检 → 真机验证（假挂载 `/mnt/usb/sda1` + `bash`/stdin 两种触发；GUI 点击人工）→ 报告 → zip。
 
-整机线刷（`src/cpservice/skills/cpservice/references/flash.md`，会清数据）：
+整机线刷（会清数据）已独立成 skill `flash`（命令 `/flash`，源码 `src/flash/`，SOP `src/flash/skills/flash/SKILL.md`）：
 
-> 给这台 SPRING2-PRO 刷成 V1.15，然后验证版本和系统起来。
+> 给这台 SPRING2-PRO 刷成 V1.16，然后确认版本号。
 
-模型会：`/firmware` 查 OSS 线刷直链 → `assets/flash.sh plan`（只看不刷）→ `assets/flash.sh flash`（自动 `adb reboot loader` → `rk_upgrade_tool UF`）→ 回线后比对 `Version=` 与 `boot_id` → 报告。T3 则自动 `reboot efex` / `devmem …` 进 FEL，走 `openixcli flash`。
+模型会：`/firmware` 查 OSS 线刷直链 → `flash.sh plan`（只看不刷）→ `flash.sh flash --quiet`（自动 `adb reboot loader` → `rk_upgrade_tool UF`）→ 回线后**只比 `Version=`** 即判通过（boot_id / systemd 仅记录）。详见 [`docs/flash.md`](flash.md)。
 
 常见更新：
 
@@ -115,9 +114,6 @@ E9631Service/
     │   ├── rk-android.md
     │   ├── t3-android.md
     │   ├── rk-debian.md
-    │   ├── t3-linux.md
-    │   └── flash.md     # 整机线刷事实
+    │   └── t3-linux.md
     └── assets/          # 模板 / 探针 / 触发 / 核验 / 虚拟盘 / Debian / T3 Linux 触发
-        ├── flash.sh     # 线刷 + 验证（doctor/plan/flash/verify）
-        └── tools/       # openixcli 0.2.4 / rk_upgrade_tool v2.22
 ```

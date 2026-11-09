@@ -79,45 +79,6 @@ assert.ok(verifier.includes('ro.board.platform'), 'verify.sh 应能按平台自�
 assert.ok(verifier.includes('/etc/os-release'), 'verify.sh 应能识别 Debian');
 assert.ok(verifier.includes('buildroot') || verifier.includes('Buildroot'), 'verify.sh 应能识别 T3 Linux（Buildroot）');
 
-// 6b) 整机线刷入口：flash.sh + 随插件二进制 + 文档指向
-const FLASHER = path.join(SKILL_DIR, 'assets', 'flash.sh');
-assert.ok(fs.existsSync(FLASHER), '缺少 assets/flash.sh');
-assert.ok(fs.statSync(FLASHER).mode & 0o100, 'assets/flash.sh 需要可执行位');
-assert.equal(execFileSync('bash', ['-n', FLASHER], { encoding: 'utf8' }).trim(), '', 'flash.sh 语法错误');
-const flashHelp = execFileSync(FLASHER, ['help'], { encoding: 'utf8', timeout: 30000 });
-for (const w of ['doctor', 'plan', 'flash', 'verify', 'rk_upgrade_tool', 'openixcli',
-  'adb reboot loader', 'reboot efex', '0x01c20508', 'boot_id']) {
-  assert.ok(flashHelp.includes(w), `flash.sh help 缺 ${w}`);
-}
-const flashBody = fs.readFileSync(FLASHER, 'utf8');
-for (const w of ['Download Firmware Success', 'All partitions flashed successfully',
-  '__PASS__', 'system_info.ini', 'fw-cache', '--force-platform-mismatch']) {
-  assert.ok(flashBody.includes(w), `flash.sh 缺 ${w}`);
-}
-
-const TOOLS = path.join(SKILL_DIR, 'assets', 'tools');
-const toolVersions = [['openixcli', '--version', '0.2.4'], ['rk_upgrade_tool', '-V', 'v2.22']];
-for (const [file, flag, want] of toolVersions) {
-  const p = path.join(TOOLS, file);
-  assert.ok(fs.existsSync(p), `缺少 assets/tools/${file}`);
-  assert.ok(fs.statSync(p).mode & 0o100, `assets/tools/${file} 需要可执行位`);
-  const r = spawnSync(p, [flag], { encoding: 'utf8', timeout: 30000 });
-  assert.ok((r.stdout + r.stderr).includes(want), `${file} 版本不含 ${want}：${r.stdout}${r.stderr}`);
-}
-assert.ok(fs.existsSync(path.join(TOOLS, 'VERSIONS.md')), '缺少 assets/tools/VERSIONS.md（来源/版本/sha256）');
-
-const FLASH_REF = read('references/flash.md');
-for (const w of ['rk_upgrade_tool UF', 'openixcli flash', 'adb reboot loader', 'reboot efex', '0x01c20508',
-  'Download Firmware Success', 'All partitions flashed successfully', 'boot_id']) {
-  assert.ok(FLASH_REF.includes(w), `references/flash.md 缺 ${w}`);
-}
-for (const m of FLASH_REF.matchAll(/assets\/([A-Za-z0-9._-]+)/g)) {
-  assert.ok(fs.existsSync(path.join(SKILL_DIR, 'assets', m[1])), `references/flash.md 引用了不存在的 assets/${m[1]}`);
-}
-assert.ok(skill.content.includes('assets/flash.sh'), 'SKILL.md 未指向 assets/flash.sh');
-assert.ok(skill.content.includes('references/flash.md'), 'SKILL.md 未指向 references/flash.md');
-assert.match(skill.content, /^## 11\. 线刷整机固件/m, 'SKILL.md 缺 §11 线刷整机固件');
-
 // 7) 平台差异表唯一（SKILL §5.2）
 for (const f of refs) {
   const body = read(`references/${f}`);
@@ -157,9 +118,6 @@ for (const f of refs) {
   const body = read(`references/${f}`);
   assert.ok(!/OTG Host/.test(body), `references/${f} 不应复述规则，引用 §7.3 即可`);
 }
-assert.ok(!flashBody.includes('提示：安卓刷完默认 OTG Host'), 'flash.sh 不应在刷完立刻提示（改为超时才提示）');
-assert.ok(/若设备停在 OTG Host[^\n]*切到 DEVICE/.test(flashBody), '等 adb 的提示应说明 OTG Host');
-assert.ok(/没等到 adb 设备[^\n]*切到 DEVICE[^\n]*§7\.3/.test(flashBody), '回线超时信息应指向 §7.3 的切 DEVICE 处置');
 
 // 10) 事实清单（迁移不能丢）
 const facts = {

@@ -50,6 +50,7 @@ if (!fs.existsSync(patchFile)) {
     ['cp-docs', '@local/cp-tools/docs'],
     ['firmware-finder', '@local/cp-tools/firmware'],
     ['e9631service', '@local/cp-tools/cpservice'],
+    ['cp-flash', '@local/cp-tools/flash'],
   ];
   for (const [id, name] of expected) {
     if (!new RegExp(`id:\\s*${id}\\b`).test(patch)) fail(`patch 缺 id: ${id}`);
@@ -78,6 +79,7 @@ const subplugins = [
   { key: 'docs', mod: 'src/docs/index.js', locale: 'locale/docs', icon: 'icons/docs.svg' },
   { key: 'firmware', mod: 'src/firmware/index.js', locale: 'locale/firmware', icon: 'icons/firmware.svg' },
   { key: 'cpservice', mod: 'src/cpservice/index.js', locale: 'locale/cpservice', icon: 'icons/cpservice.svg' },
+  { key: 'flash', mod: 'src/flash/index.js', locale: 'locale/flash', icon: 'icons/flash.svg' },
 ];
 for (const sub of subplugins) {
   if (!fs.existsSync(path.join(ROOT, sub.mod))) fail(`${sub.key}: 缺模块 ${sub.mod}`);
@@ -107,6 +109,7 @@ for (const sub of subplugins) {
 const skills = [
   ['firmware', 'src/firmware/skills/firmware/SKILL.md'],
   ['cpservice', 'src/cpservice/skills/cpservice/SKILL.md'],
+  ['flash', 'src/flash/skills/flash/SKILL.md'],
 ];
 for (const [name, file] of skills) {
   const abs = path.join(ROOT, file);
@@ -118,8 +121,15 @@ for (const [name, file] of skills) {
   if (!new RegExp(`^name:\\s*${name}\\s*$`, 'm').test(text)) fail(`${name}: SKILL.md frontmatter name 不是 ${name}`);
   if (!/^description:\s*\S+/m.test(text)) fail(`${name}: SKILL.md 缺 description`);
 }
-for (const f of ['references/rk-android.md', 'references/t3-android.md', 'references/rk-debian.md', 'references/t3-linux.md', 'assets/verify.sh', 'assets/flash.sh']) {
+for (const f of ['references/rk-android.md', 'references/t3-android.md', 'references/rk-debian.md', 'references/t3-linux.md', 'assets/verify.sh']) {
   if (!fs.existsSync(path.join(ROOT, 'src/cpservice/skills/cpservice', f))) fail(`cpservice: 缺 ${f}`);
+}
+if (fs.existsSync(path.join(ROOT, 'src/cpservice/skills/cpservice/assets/flash.sh'))) {
+  fail('cpservice: assets/flash.sh 应已迁到 src/flash（避免两份脚本漂移）');
+}
+const flashSkillDir = path.join(ROOT, 'src/flash/skills/flash');
+for (const f of ['SKILL.md', 'references/flash.md', 'assets/flash.sh', 'assets/tools/rk_upgrade_tool', 'assets/tools/openixcli', 'assets/tools/VERSIONS.md']) {
+  if (!fs.existsSync(path.join(flashSkillDir, f))) fail(`flash: 缺 ${f}`);
 }
 
 // 6) 数据与可复用二进制

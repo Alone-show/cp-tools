@@ -1,15 +1,16 @@
 # cp-tools（从平定制工具集）
 
-一个 DSH bundle，三个可独立开关的子插件：
+一个 DSH bundle，四个可独立开关的子插件：
 
 | 子插件 | 入口 | 能力 |
 |---|---|---|
 | 产品资料 | `/cp-docs` | 按机型返回本地全部资料（参数 / 接口与线束表 / 图内文字 / 编程节点 / 工作点），由模型定位作答 |
 | 固件与问题 | `/firmware` | 量产固件与线刷/OTA 直链、TB 版本任务/子任务状态、bug 是否修进客户正式版 |
-| U 盘升级与线刷 | `/cpservice` | RK 安卓 / T3 安卓 / RK Debian / T3 Linux 升级包生成与真机验证；整机线刷 |
+| U 盘升级 | `/cpservice` | RK 安卓 / T3 安卓 / RK Debian / T3 Linux 升级包生成与真机验证 |
+| 整机线刷 | `/flash` | 整机镜像覆盖烧写（RK / T3，安卓 / Debian / Buildroot），刷完只比版本号验收 |
 
-三个子插件共用一次安装/升级，但在插件管理器里可以按 id 单独停用：
-`cp-docs`、`firmware-finder`、`e9631service`。
+四个子插件共用一次安装/升级，但在插件管理器里可以按 id 单独停用：
+`cp-docs`、`firmware-finder`、`e9631service`、`cp-flash`。
 
 ## 安装
 
@@ -48,20 +49,19 @@ plugin_manager install_bundle target=/home/my/Documents/deepseek-harness/default
 /firmware sync
 ```
 
-注册 10 个工具：`firmware_find`、`firmware_models`、`firmware_sync`、`firmware_login`、
+默认只返回**量产版**（`DEV-` 构建需点名 `dev:true`）。注册 10 个工具：`firmware_find`、`firmware_models`、`firmware_sync`、`firmware_login`、
 `firmware_issues`、`firmware_fix_check`、`firmware_fix_models`、`firmware_fix_log`、
 `firmware_fix_matrix`、`firmware_fix_sync`。数据在 `.tbfw` 与 `.fixfinder`。
 
 ### `/cpservice`
 
 纯 skill：判定 RK 安卓 / T3 安卓 / RK Debian / T3 Linux（Buildroot），按平台读 reference 出包，
-并在真机上验证；另含整机线刷 `assets/flash.sh`。可复用二进制在
-`src/cpservice/skills/cpservice/vendor/`。
+并在真机上验证。可复用二进制在 `src/cpservice/skills/cpservice/vendor/`。
 
 ## 固定流程脚本
 
 ```bash
-npm test                 # 全部离线测试（docs + firmware + cpservice + shared/contract）
+npm test                 # 全部离线测试（docs + firmware + cpservice + flash + shared/contract）
 npm run check            # 包清单校验：exports / patch / locale / icon / skill / vendor / files
 npm run import:docs      # work/cpdoc/ai-readable → .cpdocs
 npm run login            # Teambition 登录/刷新凭据
@@ -89,9 +89,10 @@ src/shared/       机型归一原语、SKILL frontmatter、数据目录解析
 src/docs/         /cp-docs 子插件 + 运行期数据
 src/firmware/     /firmware 子插件 + 工具 + skill
 src/cpservice/    /cpservice 子插件 + skill + references/assets/vendor
+src/flash/        /flash 子插件 + 线刷 skill（SOP + flash.sh + tools）
 scripts/          固定流程脚本
-test/             docs / firmware / cpservice / shared / contract
-docs/             合并审查与三个子插件的详细说明（不随包发布）
+test/             docs / firmware / cpservice / flash / shared / contract
+docs/             合并审查与各子插件的详细说明（不随包发布）
 ```
 
 合并审查（重复项、依赖、保留决策）见 [`docs/merge-review.md`](docs/merge-review.md)。

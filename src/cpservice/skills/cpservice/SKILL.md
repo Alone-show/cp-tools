@@ -1,6 +1,6 @@
 ---
 name: cpservice
-description: 按需求生成并验证 U 盘升级包：先判定 RK 安卓（CpService.xml / com.cpdevice.cpservice，21 个动作）、T3 安卓（E9631Service.xml / com.android.guard）、RK Debian（unattended_installation.sh / auto_unattended_installation + silentInstaller，udev 或工具窗口触发）还是 T3 Linux（Buildroot，盘根 unattended_installation.sh，/Launcher 设置→U盘查看→开关），再加载对应上下文出包并做真机验证。判定先看 OS；取证优先用 assets/debian-trigger.sh、assets/t3linux-trigger.sh、assets/verify.sh 一条命令，证据落 /var/log、/data 不落 /tmp。E9631Service, E9631Service.xml, CpService, CpService.xml, U盘升级, 升级包, 升级脚本, setup_cpservice.sh, setup_e9631service.sh, 刷机, adb, bootlogo, logo, 生成logo, bootanimation, install, copy, copyout, canuse_ver, runlimit, remount, 静默安装, 生成脚本, 验证, 验证报告, 证据, MDM, VanCoreT3, wifi 固件, cyw43438, RK, rk356x, rk3588, T3, cpservice, 真机验证, Debian, debian, RK Debian, T3 Linux, Buildroot, Launcher, U盘查看, unattended_installation, auto_unattended_installation, silentInstaller, udev, dpkg, /media/usb_disk, /mnt/installUsb, SPRING2-PRO, SPRING2_L, 服务模式, 启动时序, JobMonitor, CFT, VariableMonitor, can0, eglfs, 整机线刷, 线刷, loader, FEL, efex, rk_upgrade_tool, OpenixCLI, flash.sh, 整机镜像, 全量烧写。
+description: 按需求生成并验证 U 盘升级包：先判定 RK 安卓（CpService.xml / com.cpdevice.cpservice，21 个动作）、T3 安卓（E9631Service.xml / com.android.guard）、RK Debian（unattended_installation.sh / auto_unattended_installation + silentInstaller，udev 或工具窗口触发）还是 T3 Linux（Buildroot，盘根 unattended_installation.sh，/Launcher 设置→U盘查看→开关），再加载对应上下文出包并做真机验证。判定先看 OS；取证优先用 assets/debian-trigger.sh、assets/t3linux-trigger.sh、assets/verify.sh 一条命令，证据落 /var/log、/data 不落 /tmp。E9631Service, E9631Service.xml, CpService, CpService.xml, U盘升级, 升级包, 升级脚本, setup_cpservice.sh, setup_e9631service.sh, 刷机, adb, bootlogo, logo, 生成logo, bootanimation, install, copy, copyout, canuse_ver, runlimit, remount, 静默安装, 生成脚本, 验证, 验证报告, 证据, MDM, VanCoreT3, wifi 固件, cyw43438, RK, rk356x, rk3588, T3, cpservice, 真机验证, Debian, debian, RK Debian, T3 Linux, Buildroot, Launcher, U盘查看, unattended_installation, auto_unattended_installation, silentInstaller, udev, dpkg, /media/usb_disk, /mnt/installUsb, SPRING2-PRO, SPRING2_L, 服务模式, 启动时序, JobMonitor, CFT, VariableMonitor, can0, eglfs。
 ---
 
 # E9631Service / CpService / RK Debian / T3 Linux 升级包：生成与验证
@@ -20,9 +20,9 @@ description: 按需求生成并验证 U 盘升级包：先判定 RK 安卓（CpS
 | RK 安卓 | `assets/rk-virtual-disk.sh setup`（无真盘）+ 触发 | `verify.sh --rk <log> <pkg…>` |
 | T3 安卓 | `assets/trigger.sh` | `verify.sh --t3 <log> <pkg…>` |
 | T3 Linux | `assets/t3linux-trigger.sh bootcheck` + `stage <包目录>` + `run`（或 `stdin-run`） | `verify.sh --t3linux /data/cp-unattended/<pkg>.log` |
-| 整机线刷 | `assets/flash.sh flash <img\|url>`（自动进 loader/FEL） | `assets/flash.sh verify`（§11） |
+| 整机线刷 | **不在这里**：走 `flash` skill（`/flash`，会清数据、只比版本号） | — |
 
-**0.2 时间预算**：Android 一轮 ~2 min；Debian 一轮 ~3 min（安装 ~130 s + 重启 ~32 s）；T3 Linux 一轮 ~2 min（脚本 + 取证，含重启 ~3 min）；整机线刷一轮 10–25 min（整盘写入 + 首次开机）。超了就是走弯路。**不要为取证重复跑整包**；日志没留按 §7.8-5 反查。
+**0.2 时间预算**：Android 一轮 ~2 min；Debian 一轮 ~3 min（安装 ~130 s + 重启 ~32 s）；T3 Linux 一轮 ~2 min（脚本 + 取证，含重启 ~3 min）；整机线刷（走 `flash` skill）一轮 10–25 min（整盘写入 + 首次开机）。超了就是走弯路。**不要为取证重复跑整包**；日志没留按 §7.8-5 反查。
 
 **0.3 验证纪律（先定边界，再动手）**
 
@@ -356,8 +356,6 @@ assets/generate-bootlogo.sh --image logo.png --chip RK --system Android --name <
 | `assets/add-icon-device.sh` / `assets/verify-report.md` / `assets/update-mdm-wifi.sh` | 桌面图标 / 报告模板 / T3 MDM+WiFi；skill 目录 `vendor/` 只复用 `VanCoreT3-*.apk` |
 | `assets/generate-bootlogo.sh` | logo 资源生成驱动（§8.4）：`--image`/`--chip`/`--system`/`--rotate`/`--no-video`/`--assets-only`/`--check` |
 | `assets/vendor/generate_bootlogo.sh` | 上游 `CP_Generate_Bootlogo` 原样副本（交互式，输出写在自己目录）；驱动的一致性基准 |
-| `assets/flash.sh` / `references/flash.md` | 整机线刷 + 验证：`doctor` / `plan` / `flash` / `verify`；RK `rk_upgrade_tool UF`、T3 `openixcli flash`（§11） |
-| `assets/tools/openixcli` / `assets/tools/rk_upgrade_tool` / `assets/tools/VERSIONS.md` | 随插件二进制（T3 0.2.4 / RK v2.22）与来源、sha256、重建命令 |
 
 ## 10. 边界与拒绝项
 
@@ -375,37 +373,11 @@ assets/generate-bootlogo.sh --image logo.png --chip RK --system Android --name <
 - **T3 Linux 启动时序**：`rcS` 先 `/etc/autorun.sh &`、后 `mount -t ext4 /dev/mmcblk0p1 /data`；`runqt` 可能抢在 `/data` 挂载前执行 `/data/app.sh`。新包要 wait `/data/app.sh` 或调整顺序；老包进程不齐先查 `/proc/mounts` 和启动链。
 - **T3 Linux 服务模式**：`runqt` 改成 `/data/app.sh` 后，Launcher/MDM 不常驻是设计可能；可用性按包内约定进程判，不套桌面包判据。
 - **T3 Linux UI**：`eglfs/mali` 的 `/dev/fb0` 抓屏不等于实际 UI；只能目视/拍照，否则写「未验证」。
-- **线刷会清数据，但可跨系统**（§11）：同一芯片（RK / T3）内安卓 ↔ Debian ↔ BuildRoot **直接刷，不用二次确认**；`flash.sh` 按镜像头判芯片，字母不一致只打印提示。**芯片必须一致**（RK 镜像刷 T3 会 `invalid tag`），跨芯片一律拒。刷前核对序列号、机型/客户。
-- **线刷不用 OTA zip**：`_OTA.zip` 是差分包，整机要 OSS 的 `.img`；RK 只认 RKFW、T3 只认 IMAGEWTY，工具报 `invalid tag` 就是镜像类型/芯片不对，别反复试。
-- **刷写失败不自动重试**：保留日志，重新进 loader 再刷；刷完 adb 不回线先看 `boot_id`/工具输出，别把掉线判成失败。
+- **整机线刷不在本 skill**：线刷（会清数据、loader/FEL、只比版本号）走独立 skill `flash`（`/flash`）；这里只做 U 盘升级包。
+- **验证不是排障**：不杀业务进程、不反复跑崩溃二进制、不重启应用抓日志；先记录 core/进程/日志再下结论。一项不过即停，报告写「不通过/未验证」。
 
-## 11. 线刷整机固件（flash.sh）
+## 11. 整机线刷（不在这里）
 
-> 与 §3–§8 的 U 盘升级包不是一回事：整机 `.img` 覆盖烧写，**会清数据**。细节（工具命令/失败模式）见 `references/flash.md`。
-
-| 平台 | 进下载模式 | 工具 | 验收字段 |
-|---|---|---|---|
-| RK 安卓 | `adb reboot loader` | `rk_upgrade_tool UF` | `ro.build.cp.version` |
-| RK Debian | `adb reboot loader` | 同上 | `/etc/system_info/system_info.ini` 的 `Version=` |
-| T3 安卓 | `adb shell reboot efex` | `openixcli flash` | `ro.build.cp.version` |
-| T3 Linux | `adb shell "devmem 0x01c20508 32 0x5AA5A55A && sync && reboot"` | 同上 | `/Configs/system_info/system_info.ini` |
-
-固件来源两种：本地 `.img`，或 `/firmware`（firmware_find）查到的 **OSS 线刷直链**（不要用 `_OTA.zip`）。
-
-```bash
-assets/flash.sh doctor                          # 工具/udev/设备/下载模式自检（只读）
-assets/flash.sh plan  <img|url>                 # 预检：平台、刷前版本、期望版本（只读）
-assets/flash.sh flash <img|url> --expect-version V1.15
-assets/flash.sh verify --expect-version V1.15   # 只验证（设备已起系统）
-```
-
-- 判定：`/etc/os-release` 区分 Debian/Buildroot；安卓看 `ro.board.platform` / `pm path`；刷后**重新判平台**（镜像可能换系统）。
-- 版本：CP 文件名前缀 = 设备 `Version=`（Debian/T3 Linux）或 `ro.build.cp.version`（安卓）；缺省从文件名推导，不一致退出 5。
-- 真重启：刷前/刷后 `cat /proc/sys/kernel/random/boot_id` 必须不同；相同不算通过。
-- **跨系统默认允许**：`_A_/_D_/_R_/_L_` 只是系统标记，同一芯片内互刷不再要求确认（`flash.sh` 打一行提示就继续）；**芯片必须一致**——按镜像头判（RK `RKFW`/`RKAF`，T3 `IMAGEWTY`），不一致直接拒；`--force-platform-mismatch` 只剩兼容旧脚本的作用。
-- 会清数据：刷前核对设备序列号、机型/客户；一次只刷一台，失败即停不自动重试。
-- 跨系统刷完按**刷后平台**取验收字段（安卓 `ro.build.cp.version`、Linux `Version=`），别沿用刷前平台。
-- 报告：`~/Downloads/<镜像名>_flash_report_<时间>.md`，日志同目录；开机 LOGO/UI 等只能目视的项写「未验证」。
-- 沙箱：线刷要直接开 USB（`/dev/bus/usb`），workspace-write 下工具报 `context_enter` 失败——用 full-access 跑；`~/Downloads` 只读时 `--log/--report` 指到工作区。
-- 全志 `awusb` 驱动：装过全志工具包时它按 modalias 在 FEL 出现时自动加载并抢 `1f3a:efe8`（`openixcli` 报 `USB transfer failed`）——一次性拉黑：`pkexec sh -c 'echo blacklist awusb > /etc/modprobe.d/blacklist-awusb.conf && rmmod awusb'`；恢复全志工具删该文件 + `modprobe awusb`。
-- 刷完等回线：回线超时才提示切 DEVICE（§7.3）；`flash.sh` 会一直等到超时，别把掉线判成失败。
+整机 `.img` 覆盖烧写（会清 userdata、跨系统重装、救砖）走独立 skill **`flash`**（命令 `/flash`）：
+线刷脚本 `flash.sh`（plan/flash/verify）、线刷事实页、`rk_upgrade_tool`/`openixcli` 二进制都已迁到那边，
+验收口径也简化成「只比版本号」。本 skill 只负责 U 盘升级包（装应用/换 logo/换动画），别再在这里找线刷脚本。

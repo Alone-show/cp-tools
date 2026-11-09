@@ -5,8 +5,8 @@
     "zh": "从平定制工具集"
   },
   "description": {
-    "en": "CP customization suite: product docs, firmware/issues, and USB upgrade/flash sub-plugins in one bundle.",
-    "zh": "从平定制工具集：产品资料、固件与问题、U 盘升级与线刷，一个 bundle 三个子插件。"
+    "en": "CP customization suite: product docs, firmware/issues, USB upgrade packages, and full-device flashing sub-plugins in one bundle.",
+    "zh": "从平定制工具集：产品资料、固件与问题、U 盘升级、整机线刷，一个 bundle 四个子插件。"
   },
   "metadata": {
     "categories": {},
@@ -21,8 +21,8 @@
         "zh": "从平工具集"
       },
       "description": {
-        "en": "One bundle with three independently toggleable sub-plugins: /cp-docs product documentation, /firmware firmware & issue lookup, /cpservice USB upgrade packages and full-device flashing.",
-        "zh": "一个 bundle、三个可独立开关的子插件：/cp-docs 产品资料、/firmware 固件与问题检索、/cpservice U 盘升级包与整机线刷。"
+        "en": "One bundle with four independently toggleable sub-plugins: /cp-docs product documentation, /firmware firmware & issue lookup, /cpservice USB upgrade packages, /flash full-device flashing (version-match acceptance).",
+        "zh": "一个 bundle、四个可独立开关的子插件：/cp-docs 产品资料、/firmware 固件与问题检索、/cpservice U 盘升级包、/flash 整机线刷（只比版本号验收）。"
       },
       "icon": "icons/cp-tools.svg",
       "author": "Alone-show",
@@ -37,7 +37,8 @@
           "cpdevice",
           "product-docs",
           "firmware",
-          "cpservice"
+          "cpservice",
+          "flash"
         ],
         "labels": []
       },

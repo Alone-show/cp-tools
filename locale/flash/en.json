@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Full-device flashing",
+    "description": "Overwrite-flash a full device image (RK rk_upgrade_tool / T3 openixcli): find version, precheck, confirm, flash, wait for reconnect, accept on version match only; invoke with /flash."
+  }
+}

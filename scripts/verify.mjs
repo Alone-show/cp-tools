@@ -4,7 +4,7 @@
  *
  *   node scripts/verify.mjs          # 离线（默认）
  *   node scripts/verify.mjs --live   # 追加在线冒烟（无凭据/断网时 SKIP）
- *   node scripts/verify.mjs --fast   # 跳过 firmware 全量套件，只跑契约 + docs + cpservice
+ *   node scripts/verify.mjs --fast   # 跳过 firmware 全量套件，只跑契约 + docs + cpservice + flash
  *
  * 退出码 0 表示全部通过；任何一步失败都会打印失败命令的尾部输出并返回 1。
  */
@@ -27,6 +27,7 @@ const steps = [
   { name: 'shared + contract', cmd: ['node', '--test', 'test/shared/*.test.mjs', 'test/contract/*.test.mjs'] },
   { name: 'docs', cmd: ['node', '--test', 'test/docs/*.test.mjs'] },
   { name: 'cpservice smoke', cmd: ['node', 'test/cpservice/smoke.mjs'] },
+  { name: 'flash smoke', cmd: ['node', 'test/flash/smoke.mjs'] },
 ];
 
 if (!fast) {

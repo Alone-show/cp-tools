@@ -3,17 +3,20 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "从平（CP）定制工具集：一个 bundle、三个可独立开关的子插件——产品资料 /cp-docs、固件与问题 /firmware、U 盘升级与线刷 /cpservice。",
+  "description": "从平（CP）定制工具集：一个 bundle、四个可独立开关的子插件——产品资料 /cp-docs、固件与问题 /firmware、U 盘升级 /cpservice、整机线刷 /flash。",
   "exports": {
     "./docs": "./src/docs/index.js",
     "./firmware": "./src/firmware/index.js",
     "./cpservice": "./src/cpservice/index.js",
+    "./flash": "./src/flash/index.js",
     "./docs/locale/*.json": "./locale/docs/*.json",
     "./firmware/locale/*.json": "./locale/firmware/*.json",
     "./cpservice/locale/*.json": "./locale/cpservice/*.json",
     "./docs/icon": "./icons/docs.svg",
     "./firmware/icon": "./icons/firmware.svg",
     "./cpservice/icon": "./icons/cpservice.svg",
+    "./flash/locale/*.json": "./locale/flash/*.json",
+    "./flash/icon": "./icons/flash.svg",
     "./package.json": "./package.json"
   },
   "files": [
@@ -55,6 +58,8 @@
     "firmware",
     "teambition",
     "cpservice",
-    "usb-upgrade"
+    "usb-upgrade",
+    "flash",
+    "line-flash"
   ]
 }
