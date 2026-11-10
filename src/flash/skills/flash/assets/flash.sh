@@ -55,7 +55,7 @@ DL_DIR="${DL_DIR:-$HOME_DIR/Downloads}"
 CACHE_DIR="${FLASH_CACHE_DIR:-$DL_DIR}"
 
 SERIAL=""
-SERIAL_USER=""
+PRE_ADB_DEVS=()
 PLATFORM_OVERRIDE=""
 REPORT=""
 LOG=""
@@ -186,7 +186,7 @@ pick_serial() {
 }
 
 wait_adb() { # timeout
-    local deadline=$((SECONDS + $1)) devs=() last_hint=$SECONDS start=$SECONDS next=$((SECONDS + 15))
+    local deadline=$((SECONDS + $1)) devs=() cands=() d last_hint=$SECONDS start=$SECONDS next=$((SECONDS + 15))
     while [ "$SECONDS" -lt "$deadline" ]; do
         if [ $((SECONDS - last_hint)) -ge 120 ]; then
             say "…仍在等 adb；若设备停在 OTG Host（安卓刷完/重启默认），请在设备上切到 DEVICE（见 SKILL §7.3）"
@@ -199,13 +199,31 @@ wait_adb() { # timeout
         if [ -n "$SERIAL" ] && "$ADB_BIN" -s "$SERIAL" get-state 2>/dev/null | grep -q '^device$'; then
             return 0
         fi
-        if [ -z "$SERIAL_USER" ]; then
-            mapfile -t devs < <(adb_devices)
-            if [ "${#devs[@]}" -eq 1 ]; then SERIAL="${devs[0]}"; return 0; fi
-            if [ "${#devs[@]}" -gt 1 ]; then
+        mapfile -t devs < <(adb_devices)
+        case "${#devs[@]}" in
+            1)
+                # 重装系统后 adb 序列号会变（量产机常见），只剩一台就直接接管
+                if [ "$SERIAL" != "${devs[0]}" ]; then
+                    say "  adb 序列号变更：${SERIAL:-无} → ${devs[0]}（重装系统后正常，已接续）"
+                fi
+                SERIAL="${devs[0]}"
+                return 0
+                ;;
+            0) ;;
+            *)
+                # 多台时接管「刷前不在场」的那台，避免等旧序列号等到超时
+                cands=()
+                for d in "${devs[@]}"; do
+                    case " ${PRE_ADB_DEVS[*]-} " in *" $d "*) ;; *) cands+=("$d") ;; esac
+                done
+                if [ "${#cands[@]}" -eq 1 ]; then
+                    say "  adb 序列号变更：${SERIAL:-无} → ${cands[0]}（新回线设备，已接续）"
+                    SERIAL="${cands[0]}"
+                    return 0
+                fi
                 die 3 "有多台 adb 设备（${devs[*]}），用 --serial 指定"
-            fi
-        fi
+                ;;
+        esac
         sleep 2
     done
     return 1
@@ -376,8 +394,29 @@ url_basename() {
     printf '%s' "${b//%20/ }"
 }
 
+# alist 直链在本机全局代理（https_proxy/http_proxy）下会 TLS 握手失败（curl 35，
+# 表现为「下载失败」或 plan 直接静默退出）。统一走这里：alist 域名强制直连；
+# 其他域名先用环境代理，遇到代理/TLS 类失败（5/6/7/35/52/56/60）再改直连重试一次。
+curl_fw() { # <url> [curl 参数...]
+    local url="$1" rc=0
+    shift
+    case "$url" in
+        *alist.cpinnov.run*|*cpinnov.run/p/*)
+            curl --noproxy '*' "$@" "$url" ;;
+        *)
+            curl "$@" "$url" && return 0
+            rc=$?
+            case "$rc" in
+                5|6|7|35|52|56|60)
+                    say_err "经代理访问失败（curl $rc），改直连重试"
+                    curl --noproxy '*' "$@" "$url" ;;
+                *) return "$rc" ;;
+            esac ;;
+    esac
+}
+
 http_size() {
-    curl -sIL --max-time 30 "$1" 2>/dev/null | tr -d '\r' |
+    curl_fw "$1" -sIL --max-time 30 2>/dev/null | tr -d '\r' |
         awk 'tolower($1)=="content-length:"{v=$2} END{if(v)printf "%.0f", v}'
 }
 
@@ -404,7 +443,7 @@ download_firmware() { # url
 
     case "$url" in
         *alist.cpinnov.run*)
-            warn "alist 直链在本机代理下常 TLS 失败；优先用 /firmware 给的 OSS 线刷地址" ;;
+            say_err "alist 直链：本机代理会 TLS 失败，已强制直连下载" ;;
     esac
 
     # 注意：本函数 stdout 只允许输出最终路径（会被 resolve_firmware 的 $(...) 捕获），
@@ -418,11 +457,11 @@ download_firmware() { # url
             return 0
         fi
         say_err "续传：$dest（$cur / ${size:-?} B）"
-        curl -sS -L --fail --retry 3 --retry-delay 2 -C - -o "$dest" "$url" ||
+        curl_fw "$url" -sS -L --fail --retry 3 --retry-delay 2 -C - -o "$dest" ||
             die 3 "下载失败：$url"
     else
         say_err "下载中：$url"
-        curl -sS -L --fail --retry 3 --retry-delay 2 -o "$dest" "$url" ||
+        curl_fw "$url" -sS -L --fail --retry 3 --retry-delay 2 -o "$dest" ||
             die 3 "下载失败：$url"
     fi
     [ -s "$dest" ] || die 3 "下载后文件为空：$dest"
@@ -470,7 +509,7 @@ resolve_firmware() { # arg  download(0|1)
     fi
 }
 
-version_from_name() { basename -- "$1" | sed 's/\.\(img\|bin\|zip\|gz\)$//'; }
+version_from_name() { basename -- "${1%%[?#]*}" | sed 's/\.\(img\|bin\|zip\|gz\)$//'; }
 
 version_token() {
     printf '%s' "$1" | grep -oE 'DEV-[0-9A-Fa-f]+|V[0-9]+(\.[0-9]+)+' | head -1 || true
@@ -768,8 +807,8 @@ parse_args() {
     POSITIONAL=()
     while [ "$#" -gt 0 ]; do
         case "$1" in
-            --serial) SERIAL="${2:?--serial 需要值}"; SERIAL_USER=1; shift 2 ;;
-            --serial=*) SERIAL="${1#*=}"; SERIAL_USER=1; shift ;;
+            --serial) SERIAL="${2:?--serial 需要值}"; shift 2 ;;
+            --serial=*) SERIAL="${1#*=}"; shift ;;
             --platform) PLATFORM_OVERRIDE="${2:?}"; shift 2 ;;
             --platform=*) PLATFORM_OVERRIDE="${1#*=}"; shift ;;
             --report) REPORT="${2:?}"; shift 2 ;;
@@ -986,6 +1025,7 @@ cmd_flash() {
         PRE_PLATFORM="$pl"
         PRE_VERSION=$(current_version "$pl")
         PRE_BOOT_ID=$(device_boot_id)
+        mapfile -t PRE_ADB_DEVS < <(adb_devices)
         family=$(platform_family "$pl")
         say "设备：$SERIAL  平台：$pl  当前版本：$PRE_VERSION"
         check_image_platform "$pl"
@@ -1036,7 +1076,7 @@ cmd_flash() {
     say "等设备回线（最多 ${BOOT_TIMEOUT}s）…"
     if ! wait_adb "$BOOT_TIMEOUT"; then
         write_report "不通过（回线超时）"
-        die 6 "刷完 ${BOOT_TIMEOUT}s 内没等到 adb 设备；若设备停在 OTG Host，切到 DEVICE 后跑 verify（SKILL §7.3）；日志：$LOG"
+        die 6 "刷完 ${BOOT_TIMEOUT}s 内没等到 adb 设备；若设备停在 OTG Host，切到 DEVICE 后跑 verify（SKILL §7.3）；重装系统后 adb 序列号会变，verify 前先 adb devices 取当前序列号；日志：$LOG"
     fi
 
     POST_PLATFORM=$(detect_platform)

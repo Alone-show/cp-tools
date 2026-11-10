@@ -80,7 +80,7 @@ const dlBody = body.slice(body.indexOf('download_firmware() {'), body.indexOf('r
 assert.ok(dlBody.length > 200, '定位 download_firmware 失败');
 assert.ok(!/^\s*say "/m.test(dlBody), 'download_firmware 里不能有裸 say（stdout 会被 $(...) 捕获）');
 assert.ok(dlBody.includes('say_err'), 'download_firmware 的过程消息应走 say_err');
-assert.ok(dlBody.includes('curl -sS'), '下载应静默（-sS），只留错误');
+assert.ok(dlBody.includes('curl_fw "$url" -sS'), '下载应静默（-sS），只留错误');
 assert.ok(body.includes('[ -f "$FW" ] || die 3'), 'resolve_firmware 缺少「解析结果必须是文件」的防御');
 
 // 5) 回归：--dry-run 必须在进下载模式之前返回
@@ -120,6 +120,15 @@ assert.ok(!body.includes('提示：安卓刷完默认 OTG Host'), 'flash.sh 不�
 assert.ok(/若设备停在 OTG Host[^\n]*切到 DEVICE/.test(body), '等 adb 的提示应说明 OTG Host');
 assert.ok(/没等到 adb 设备[^\n]*切到 DEVICE[^\n]*§7\.3/.test(body), '回线超时信息应指向 §7.3');
 assert.ok(skill.content.includes('超时'), 'SOP 应写明超时才提示');
+
+// 10) 回归（20261110）：代理直连 + 回线序列号变更
+const waitBody = body.slice(body.indexOf('wait_adb() {'), body.indexOf('# ---------------------------------------------------------------- 平台判定'));
+assert.ok(waitBody.length > 300, '定位 wait_adb 失败');
+assert.ok(body.includes("--noproxy '*'"), 'flash.sh 应对 alist 强制直连（--noproxy）');
+assert.ok(/alist\.cpinnov\.run/.test(body), 'flash.sh 应识别 alist 域名');
+assert.ok(waitBody.includes('序列号变更'), 'wait_adb 应在序列号变化时自动接管并提示');
+assert.ok(/PRE_ADB_DEVS/.test(body), 'wait_adb 应用刷前设备差集判定新回线设备');
+assert.ok(/序列号/.test(skill.content) && /--noproxy/.test(skill.content), 'SKILL.md 应写明序列号变化与代理直连约束');
 
 // 9) 端到端：URL 直刷的解析路径（离线，不需要设备）
 //    用 --dry-run + ADB=/bin/false，覆盖「下载 → 解析 → 判平台失败退出」，

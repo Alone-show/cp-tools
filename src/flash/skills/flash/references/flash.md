@@ -108,6 +108,8 @@ assets/flash.sh verify --expect-version V1.16   # 只验证（设备已起系统
 | `USB transfer failed`，FEL 设备反复 disconnect | 宿主机 `awusb` 抢设备 | 见 §2 一次性拉黑 |
 | 解析失败 / `invalid tag` | 用了 `_OTA.zip` | 用 OSS 的 `.img` |
 | 刷完 adb 不回来（安卓） | 安卓默认 OTG Host，不是刷坏 | 设备上切 DEVICE 再等回线（SKILL §4） |
+| 刷完 adb 回线但序列号变了 / 等旧序列号到 600s 超时 | 重装系统后 RK adb 序列号重新生成（实测 `hhhhhhhhh123` → `b0a9ef123cd5859f`） | 不要用刷前序列号等；`adb devices` 取新序列号再 verify。`flash.sh` 已自动接管新序列号 |
+| 下载失败 / exit 35 且日志 0 字节 | 本机全局代理（`https_proxy=127.0.0.1:7897`）破坏 alist TLS | `flash.sh` 的 `curl_fw` 对 alist 已强制 `--noproxy '*'`；手工 curl 也加 `--noproxy '*'` |
 | 版本断言失败 | 镜像与设备不匹配 / 缓存里是旧镜像 | 核对 sha256 与文件名；删掉 `~/Downloads/` 里的旧同名镜像重下 |
 
 ## 6.1 沙箱与路径

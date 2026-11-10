@@ -41,8 +41,9 @@ assets/flash.sh flash <img|url> --serial <序列号> --expect-version <V1.xx> --
 # S4 等回线（用 job_output(wait) 收结果，别 sleep 盲等；超时才提示切 DEVICE，见 §4）
 
 # S5 验收（只比版本号，见 §3）
-adb -s <序列号> shell 'cat /etc/system_info/system_info.ini'        # RK Debian
-adb -s <序列号> shell 'getprop ro.build.cp.version'                 # 安卓
+#    注意：重装系统后 adb 序列号会变，先 `adb devices` 取当前序列号再用
+adb -s <当前序列号> shell 'cat /etc/system_info/system_info.ini'      # RK Debian
+adb -s <当前序列号> shell 'getprop ro.build.cp.version'               # 安卓
 
 # S6 记录
 #    版本（前 → 后）、boot_id、耗时、日志/报告路径
@@ -77,6 +78,7 @@ adb -s <序列号> shell 'getprop ro.build.cp.version'                 # 安卓
 - 进下载模式后 **adb 一定掉线**，`lsusb` 看 `2207`（RK）/ `1f3a`（T3）才说明在下载模式；这期间**不提示切换**。
 - 刷完等回线；**超过 `--timeout-boot`（默认 600s）仍未回线**，才提示用户在设备上把 OTG 切到 DEVICE（安卓默认 Host，不是刷坏），然后 `timeout 120 adb wait-for-device`。
 - `adb` 掉线 ≠ 刷写失败：判成败看工具输出（`Download Firmware Success` / `All partitions flashed successfully`）与回线后的版本号。
+- **回线序列号会变**：重装系统后 RK 的 adb 序列号会重新生成（实测刷前 `hhhhhhhhh123` → 刷后 `b0a9ef123cd5859f`）。**禁止用刷前序列号死等回线**。`flash.sh` 已自动接管：旧序列号不在、且只剩一台 adb 设备（或多台中只有一台是刷前没见过的）时，直接切到新序列号并打印「adb 序列号变更：A → B」；手工 verify 前先 `adb devices` 取当前序列号。
 
 ## 5. 失败模式速查（详情见 `references/flash.md` §6）
 
@@ -87,6 +89,8 @@ adb -s <序列号> shell 'getprop ro.build.cp.version'                 # 安卓
 | `openixcli: Device not found` | 没进 FEL（`reboot efex` 没成功） |
 | `USB transfer failed` + disconnect | 宿主机 `awusb` 抢 FEL 设备（一次性拉黑） |
 | 刷完 adb 不回线 | OTG 在 Host，切 DEVICE 再等 |
+| 回线超时但日志里已 `Download Firmware Success` | 十有八九是**序列号变了**（新系统重新生成），`adb devices` 取新序列号再 verify，别重刷 |
+| 下载失败 / 脚本 exit 35 且日志为空 | 本机全局代理破坏 alist TLS；用 `--noproxy '*'` 或让 `flash.sh` 走（已内置直连） |
 | 版本对不上 | 镜像/文件名不匹配，或缓存里是旧镜像 |
 
 ## 6. 省时省 token 跑法
@@ -106,6 +110,15 @@ adb -s <序列号> shell 'getprop ro.build.cp.version'                 # 安卓
 | 镜像缓存 | `~/Downloads/<镜像名>.img`（可复用，注意 sha256） |
 
 **不生成报告**：验收结论只在终端打（版本前 → 后 + 日志路径）。确实要 md 报告时显式加 `--report <路径>`。
+
+## 8. 本机两个必踩坑（脚本已内置，别手搓绕过）
+
+1. **全局代理会打断下载**：本机 `https_proxy=http_proxy=127.0.0.1:7897`，经代理访问 `alist.cpinnov.run` 会 TLS 握手失败（`curl: (35) ... unexpected eof`），表现为「下载失败」或脚本 exit 35、日志 0 字节。
+   `flash.sh` 的 `curl_fw` 已处理：alist 域名**强制 `--noproxy '*'` 直连**；其他域名先走代理，遇到 5/6/7/35/52/56/60 再直连重试一次。
+   **约束**：手工 `curl` / 其他工具下载 alist 镜像时必须带 `--noproxy '*'`；不要为了绕开报错去 `unset` 一大堆环境变量当常规做法（脚本里已封装）。
+2. **刷完回线的 adb 序列号会变**：重装系统后 RK 序列号重新生成（实测 `hhhhhhhhh123` → `b0a9ef123cd5859f`）。旧逻辑等旧序列号会一路等到 `--timeout-boot` 600s 超时，再被判「不通过」——这是误判。
+   `flash.sh` 已处理：回线时若旧序列号不在且只剩一台 adb 设备（或多台里只有一台是刷前没见过的），自动接管新序列号并打印「adb 序列号变更：A → B」。
+   **约束**：不要用刷前序列号做 verify；verify 前先 `adb devices`，或直接跑 `flash.sh verify --serial <当前序列号>`（不带 `--serial` 也会自动选唯一设备）。
 
 ## 附录：`flash.sh` 参数
 
