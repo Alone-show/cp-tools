@@ -58,6 +58,7 @@ description: 查固件、TB 版本任务/子任务（待解决/已解决）、�
 1. 查询类请求直接调工具，不必先 sync；每次调用都会实时核对，只有工具返回 `needs_sync` / `needs_auth` 时才需要 sync 或登录。
 2. `firmware_find`：
    - `ok`：用表格/列表给版本、构建日期、客户、线刷/OTA 链接；转述 `note`、`otherCustomers`、`pending`。
+   - 同版本在 TB 与 alist 都有时，两条线刷直链都要列：`OSS 线刷地址`（minio/next）与 `alist 线刷地址`（alist 优先下载）。
    - 行首标注来源：`[实时]` = 本次实时 TB、`[alist]` = alist `/PROD`、`[tb+alist]` = 两边都有；`stage=生产库归档` 才是量产归档。
    - `liveChecked=false` 时必须转述 note 里的「实时核对失败 + 快照时间」，不要把它当最新结果。
    - `source: alist`：说明来自 alist `/PROD`，Teambition 没有归档链接。
@@ -75,7 +76,7 @@ description: 查固件、TB 版本任务/子任务（待解决/已解决）、�
 
 ## 输出
 
-- 固件：机型、系统、版本、构建日期、客户、线刷/OTA 链接；标注数据源（实时 TB / alist / 两者）。
+- 固件：机型、系统、版本、构建日期、客户、线刷/OTA 链接（alist 优先 + minio 备用，两条都给）；标注数据源（实时 TB / alist / 两者）。
 - 问题：版本任务、阶段、构建日期、子任务状态（已解决/待解决/已拒绝/暂挂起）、完成日期、执行人；明确这是 TB 业务记录。
 - 修复：verdict、依据提交、客户正式版版本；注明「疑似，需研发复核」，并附 TB 证据。
 - 不确定机型时给候选，不要编造版本号、链接或状态。

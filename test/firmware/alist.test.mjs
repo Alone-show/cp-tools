@@ -204,9 +204,39 @@ function makeFakeAlist() {
   const merged = mergeAlistRows(tbRows, alistRows);
   assert.equal(merged.length, 2, '同版本应合并成一行');
   assert.equal(merged[0].source, 'both');
-  assert.equal(merged[0].links['OSS 线刷地址'], 'u');
+  assert.equal(merged[0].links['OSS 线刷地址'], 'u', 'TB 没给链接时才由 alist 填基础键');
   assert.equal(merged[1].source, 'teambition');
-  ok('mergeAlistRows 同版本合并且以 Teambition 行为主');
+  ok('mergeAlistRows 同版本合并，TB 缺链接时由 alist 补');
+
+  // 两边都给线刷直链时要两条都留：基础键给 TB，alist 挪到「alist 线刷地址」
+  const withBoth = mergeAlistRows(
+    [
+      {
+        version: CP_V112,
+        customer: 'CP',
+        links: {
+          固件下载地址: 'https://next/tb',
+          'OSS 线刷地址': 'https://minio/x.img',
+        },
+      },
+    ],
+    [
+      {
+        version: CP_V112,
+        customer: 'CP',
+        links: { 固件下载地址: 'https://alist/dir', 'OSS 线刷地址': 'https://alist/x.img?sign=s' },
+      },
+    ],
+  );
+  assert.equal(withBoth[0].links['OSS 线刷地址'], 'https://minio/x.img', '基础键保留 TB 的 minio 直链');
+  assert.equal(withBoth[0].links['alist 线刷地址'], 'https://alist/x.img?sign=s', 'alist 直链必须同时给出');
+  assert.equal(withBoth[0].links['alist 下载页'], 'https://alist/dir', 'alist 目录页也必须给出');
+  assert.deepEqual(
+    Object.keys(withBoth[0].links),
+    ['固件下载地址', 'OSS 线刷地址', 'alist 下载页', 'alist 线刷地址'],
+    'TB 链接在前、alist 链接在后',
+  );
+  ok('mergeAlistRows 两边都有链接时 alist 与 minio 同时输出');
 }
 
 /* ------------------------------------------------------------------ *

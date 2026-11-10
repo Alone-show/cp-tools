@@ -48,13 +48,15 @@ assert.equal(execFileSyncText('bash', ['-n', FLASHER]), '', 'flash.sh 语法错�
 
 const help = execFileSyncText(FLASHER, ['help']);
 for (const w of ['doctor', 'plan', 'flash', 'verify', 'rk_upgrade_tool', 'openixcli',
-  'adb reboot loader', 'reboot efex', '0x01c20508', '--quiet', '--dry-run', '只比版本号']) {
+  'adb reboot loader', 'reboot efex', '0x01c20508', '--quiet', '--dry-run', '只比版本号',
+  'alist 优先', '回落', 'FLASH_ALIST_HOSTS', '<url2>']) {
   assert.ok(help.includes(w), `flash.sh help 缺 ${w}`);
 }
 
 const body = fs.readFileSync(FLASHER, 'utf8');
 for (const w of ['Download Firmware Success', 'All partitions flashed successfully',
-  '__PASS__', 'system_info.ini', '--force-platform-mismatch']) {
+  '__PASS__', 'system_info.ini', '--force-platform-mismatch',
+  'order_candidates', 'source_kind', 'FW_SOURCE_FELL_BACK', 'firmware_looks_valid']) {
   assert.ok(body.includes(w), `flash.sh 缺 ${w}`);
 }
 
@@ -165,6 +167,51 @@ try {
 } finally {
   server.kill('SIGTERM');
   fs.rmSync(tmp, { recursive: true, force: true });
+}
+
+// 11) 多条候选（20261110）：alist 优先 + 失败回落 minio（离线，不需要设备）
+{
+  const tmp2 = fs.mkdtempSync(path.join(os.tmpdir(), 'cp-flash-multi-'));
+  const portA = 21000 + Math.floor(Math.random() * 4000);
+  const portB = portA + 4000;
+  const dirA = path.join(tmp2, 'a');
+  const dirB = path.join(tmp2, 'b');
+  fs.mkdirSync(dirA);
+  fs.mkdirSync(dirB);
+  fs.writeFileSync(path.join(dirA, 'x.img'), Buffer.concat([Buffer.from('RKFW'), Buffer.alloc(4092, 0)]));
+  // B 是「alist」候选：故意不给文件，让它 404，验证回落
+  const serverA = spawn('python3', ['-m', 'http.server', String(portA), '--bind', '127.0.0.1'], { cwd: dirA, stdio: 'ignore' });
+  const serverB = spawn('python3', ['-m', 'http.server', String(portB), '--bind', '127.0.0.1'], { cwd: dirB, stdio: 'ignore' });
+  const waitUp = (port) =>
+    spawnSync('bash', ['-c', `for i in $(seq 40); do curl -s -o /dev/null "http://127.0.0.1:${port}/" && exit 0; sleep 0.1; done; exit 1`]).status;
+  try {
+    assert.equal(waitUp(portA), 0, '候选 A 的 http server 没起来');
+    assert.equal(waitUp(portB), 0, '候选 B 的 http server 没起来');
+    const urlA = `http://127.0.0.1:${portA}/x.img`;
+    const urlB = `http://127.0.0.1:${portB}/x.img`;
+    const run = spawnSync(FLASHER, ['flash', urlA, urlB, '--dry-run', '--log', path.join(tmp2, 'f.log')], {
+      encoding: 'utf8',
+      timeout: 120000,
+      env: {
+        ...process.env,
+        ADB: '/bin/false',
+        DL_DIR: path.join(tmp2, 'dl'),
+        // 把 B 当 alist 源：即使它在命令行里排第二，也必须最先尝试
+        FLASH_ALIST_HOSTS: `127.0.0.1:${portB}`,
+      },
+    });
+    const out = `${run.stdout}${run.stderr}`;
+    assert.equal(run.status, 3, `无 adb 设备时应以 3 退出：\n${out}`);
+    assert.match(out, /下载源 alist 不可用，换下一个候选/, `alist 候选应先尝试并回落：\n${out}`);
+    assert.match(out, /来源：127\.0\.0\.1:\d+（alist 不可用，已回落）/, `应标明回落后的来源：\n${out}`);
+    assert.ok(out.includes('固件：'), `应打印解析到的镜像：\n${out}`);
+    assert.ok(out.includes(path.join(tmp2, 'dl', 'x.img')), `应回落到第二个候选并解析成功：\n${out}`);
+    console.log('ok  多条 URL：alist 优先 + 失败回落 minio');
+  } finally {
+    serverA.kill('SIGTERM');
+    serverB.kill('SIGTERM');
+    fs.rmSync(tmp2, { recursive: true, force: true });
+  }
 }
 
 function execFileSyncText(cmd, args) {

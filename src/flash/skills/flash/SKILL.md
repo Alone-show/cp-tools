@@ -1,6 +1,6 @@
 ---
 name: flash
-description: 整机线刷（全量覆盖烧写）：把 CP 量产整机镜像 .img 刷进 RK（rk_upgrade_tool UF）或 T3（openixcli flash）设备，用于换版本、救砖、跨系统重装。流程固定为「firmware_find 取 OSS 线刷直链 → flash.sh plan 预检 → 直接 flash.sh flash --quiet（不等确认）→ 等回线 → 只比版本号即判通过」；默认只刷量产版（不带 DEV 标识），不截图、不验 UI。整机线刷, 线刷, 刷机, 全量烧写, 整机镜像, 救砖, 重装系统, 换系统, 降级, loader, rockusb, FEL, efex, rk_upgrade_tool, openixcli, flash.sh, 版本校验, 版本一致, SPRING2PRO, SPRING2-PRO, SP2-10PRO, APOLLO2, RK, T3, Debian, Android, Buildroot, 跨系统刷机。
+description: 整机线刷（全量覆盖烧写）：把 CP 量产整机镜像 .img 刷进 RK（rk_upgrade_tool UF）或 T3（openixcli flash）设备，用于换版本、救砖、跨系统重装。流程固定为「firmware_find 取 alist + minio 两条线刷直链 → flash.sh plan 预检 → 直接 flash.sh flash --quiet（不等确认，优先下 alist、失败回落 minio）→ 等回线 → 只比版本号即判通过」；默认只刷量产版（不带 DEV 标识），不截图、不验 UI。整机线刷, 线刷, 刷机, 全量烧写, 整机镜像, 救砖, 重装系统, 换系统, 降级, loader, rockusb, FEL, efex, rk_upgrade_tool, openixcli, flash.sh, 版本校验, 版本一致, SPRING2PRO, SPRING2-PRO, SP2-10PRO, APOLLO2, RK, T3, Debian, Android, Buildroot, 跨系统刷机。
 ---
 
 # 整机线刷：从查版本到验收（一条主线，少走弯路）
@@ -18,7 +18,8 @@ description: 整机线刷（全量覆盖烧写）：把 CP 量产整机镜像 .i
 
 ## 1. 刷前必须核对的 5 件事（缺一件就停，但不问用户）
 
-1. **目标版本**：来自 `firmware_find`（`model`+`system`+`customer`，用户说「最新」用 `limit:1`），取 **OSS 线刷地址 `.img`**，不要 `_OTA.zip`。
+1. **目标版本**：来自 `firmware_find`（`model`+`system`+`customer`，用户说「最新」用 `limit:1`），取**线刷直链 `.img`**，不要 `_OTA.zip`。
+   同一版本会给两条链接：**`alist 线刷地址`（下载优先）** 和 **`OSS 线刷地址`（minio，备用）**；**汇报时两条都写出来**（alist 在前）。alist 上没有该版本时只给 minio，并说明一句。
    **默认只取量产版（不带 `DEV-` 标识）**；只有用户明确说「要 DEV / 刷 DEV 构建」时才传 `dev:true`。
 2. **会清数据**：userdata 全没；DEV↔量产、跨系统都算降级/重装。**刷机前不等待确认**（已获授权），只在下发前用一行说明「要刷的版本 + 会清数据」；若目标版本是 DEV 而用户没点名 DEV，停下说明并换量产版。
 3. **单台设备**：`adb devices` 只有一台，或命令显式带 `--serial`；序列号写进命令。
@@ -28,15 +29,16 @@ description: 整机线刷（全量覆盖烧写）：把 CP 量产整机镜像 .i
 ## 2. 标准流程（S1–S6，命令可直接复制；全程不等确认）
 
 ```bash
-# S1 取最新量产版本 + OSS 线刷直链
+# S1 取最新量产版本 + 两条线刷直链
 #    工具：firmware_find(model="SPRING2PRO", system="Debian", limit=5)
-#    记录：版本串、构建日期、.img 直链（不是 _OTA）
+#    记录：版本串、构建日期、alist 线刷地址（优先）与 OSS 线刷地址（minio 备）
 
-# S2 预检（只读：报平台、当前版本、期望版本、将执行的命令）
-assets/flash.sh plan <img|url> --serial <序列号>
+# S2 预检（只读：报平台、当前版本、期望版本、候选顺序、将执行的命令）
+assets/flash.sh plan <alist-url> <minio-url> --serial <序列号>
 
 # S3 刷写（不等确认；必须 full-access；后台 job 跑，日志默认落 ~/Downloads）
-assets/flash.sh flash <img|url> --serial <序列号> --expect-version <V1.xx> --quiet
+#    两条 URL 都传：alist 在前、minio 兜底（脚本也会自动把 alist 提到最前）
+assets/flash.sh flash <alist-url> <minio-url> --serial <序列号> --expect-version <V1.xx> --quiet
 
 # S4 等回线（用 job_output(wait) 收结果，别 sleep 盲等；超时才提示切 DEVICE，见 §4）
 
@@ -91,6 +93,8 @@ adb -s <当前序列号> shell 'getprop ro.build.cp.version'               # 安
 | 刷完 adb 不回线 | OTG 在 Host，切 DEVICE 再等 |
 | 回线超时但日志里已 `Download Firmware Success` | 十有八九是**序列号变了**（新系统重新生成），`adb devices` 取新序列号再 verify，别重刷 |
 | 下载失败 / 脚本 exit 35 且日志为空 | 本机全局代理破坏 alist TLS；用 `--noproxy '*'` 或让 `flash.sh` 走（已内置直连） |
+| alist 直链 403 / 下回来是几百字节 JSON | 链接过期或 alist 密钥轮换；`flash.sh` 会自动回落 minio（日志里有「换下一个候选」），不必手工重试 |
+| 两个源都失败 | 看日志里每条候选的错误；先确认网络/权限，再重新 `firmware_find` 取新链接，别复用旧 `sign` |
 | 版本对不上 | 镜像/文件名不匹配，或缓存里是旧镜像 |
 
 ## 6. 省时省 token 跑法

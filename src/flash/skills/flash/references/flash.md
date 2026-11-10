@@ -54,14 +54,15 @@ openixcli inspect <img>            # 看 IMAGEWTY 头，不连设备
 
 ```bash
 assets/flash.sh doctor                          # 环境自检：adb/工具/udev/空间/设备/下载模式
-assets/flash.sh plan   <img|url>                # 只读预检：平台、刷前版本、期望版本、将执行的命令
-assets/flash.sh flash  <img|url> --quiet        # 刷 + 验证（--quiet 只留里程碑）
+assets/flash.sh plan   <img|url> [<url2> …]     # 只读预检：平台、刷前版本、期望版本、候选顺序、将执行的命令
+assets/flash.sh flash  <alist-url> <minio-url> --quiet   # 刷 + 验证（alist 优先，失败自动回落 minio）
 assets/flash.sh flash  <img|url> --dry-run      # 只预检（含下载），不进下载模式、不刷写
 assets/flash.sh verify --expect-version V1.16   # 只验证（设备已起系统）
 ```
 
 | 参数 | 说明 |
 |---|---|
+| `<img\|url> [<url2> …]` | 位置参数：本地镜像一个，或 N 条 URL；多条时**alist 自动排最前**，失败换下一条；本地镜像与 URL 不能混用 |
 | `--serial S` | 多台 adb 时指定；单台自动选 |
 | `--platform rk\|t3` | 判不出平台时强制 |
 | `--expect-version V` | 期望版本；缺省从镜像文件名推导（整串优先，退回 `V1.16` / `DEV-XXXXXXXX` 片段） |
@@ -77,6 +78,10 @@ assets/flash.sh verify --expect-version V1.16   # 只验证（设备已起系统
 | `--rk-index N` | 多台 rockusb 时 `rk_upgrade_tool SD N` |
 
 - URL 下载：**先查下载目录再下**——`precheck_local` 按 URL basename 查 `~/Downloads/` 顶层，size 与远端 `Content-Length` 一致就复用（打印 `复用本地镜像：<path>`），只返回路径、**不复制不另存**；没命中才下载到 `~/Downloads/`（不建子目录），断点续传，过程只打两行（`下载中` / `下载完成 … B`）。
+- **多条候选（alist 优先）**：`order_candidates` 按 `source_kind`（alist / minio / next / host）把 alist 稳定提到最前，其余保持给定顺序；域名表用 `FLASH_ALIST_HOSTS`（默认 `alist.cpinnov.run`，逗号分隔，私有镜像可覆盖）。
+  - 逐个试：同一个源内保留 `-C -` 续传与 3 次重试；失败且后面还有候选时**删半包**（不同源的字节不拼接），再换下一个；全部失败才 `exit 3`，错误里列出每条候选。
+  - **落地校验**：大小必须等于 `Content-Length`；开头不是 `RKFW`/`RKAF`/`IMAGEWTY` 时，小于 1 MiB 直接判失败（alist 失效常见「200 + JSON 错误体」），体积正常则打 WARN 继续。
+  - 实际使用的源写进 `FW_SOURCE_KIND`，回落时 `FW_SOURCE_FELL_BACK=1`，plan/FLASH/dry-run/报告都会打「来源：alist（优先）」或「minio（alist 不可用，已回落）」。
 - 进度可观测：`wait_download_mode` / `wait_adb` 每 10–20s 打一行 `…等 loader Ns（USB: 2207:350a）`、`…等 adb 回线 Ns`；里程碑同时写进 `$LOG`，`tail -f` 即可跟进度。
 - `download_firmware` 的 stdout 只输出最终路径（过程消息走 stderr）——20261109 修：曾因 `say` 写 stdout 被 `$(...)` 捕获，`set -Eeuo pipefail` 下 sha256sum 报错后**静默 exit 1**，表现为「下载完就退」。
 
@@ -110,6 +115,8 @@ assets/flash.sh verify --expect-version V1.16   # 只验证（设备已起系统
 | 刷完 adb 不回来（安卓） | 安卓默认 OTG Host，不是刷坏 | 设备上切 DEVICE 再等回线（SKILL §4） |
 | 刷完 adb 回线但序列号变了 / 等旧序列号到 600s 超时 | 重装系统后 RK adb 序列号重新生成（实测 `hhhhhhhhh123` → `b0a9ef123cd5859f`） | 不要用刷前序列号等；`adb devices` 取新序列号再 verify。`flash.sh` 已自动接管新序列号 |
 | 下载失败 / exit 35 且日志 0 字节 | 本机全局代理（`https_proxy=127.0.0.1:7897`）破坏 alist TLS | `flash.sh` 的 `curl_fw` 对 alist 已强制 `--noproxy '*'`；手工 curl 也加 `--noproxy '*'` |
+| 日志出现「下载源 alist 不可用，换下一个候选」 | alist 直链 403 / 过期 / 返回 JSON 错误体 | 正常回落 minio，不用手工干预；换版本时重新 `firmware_find` 取新 `sign`，别复用旧链接 |
+| `所有下载源都失败`（exit 3） | 两个 URL 都不通或都不可用 | 按日志里每条候选的错误排查（网络/权限），再重取链接 |
 | 版本断言失败 | 镜像与设备不匹配 / 缓存里是旧镜像 | 核对 sha256 与文件名；删掉 `~/Downloads/` 里的旧同名镜像重下 |
 
 ## 6.1 沙箱与路径
@@ -127,3 +134,4 @@ assets/flash.sh verify --expect-version V1.16   # 只验证（设备已起系统
 5. 刷完只比版本号即算完成；`boot_id`/systemd 记为旁证，不额外验证 UI。
 6. 报告落 `~/Downloads/`，别塞进升级包目录。
 7. 镜像**只留一份**：先用下载目录里已有的（先查再下），别另存副本；日志/报告同样只落 `~/Downloads`。
+8. **链接口径**：汇报固件时 alist 与 minio 两条线刷直链都输出（alist 在前）；刷写把两条都传给 `flash.sh`，下载优先 alist、失败回落 minio。

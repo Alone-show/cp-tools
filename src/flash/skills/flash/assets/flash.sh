@@ -2,9 +2,14 @@
 # 整机线刷 + 验证（一条命令）
 #
 #   flash.sh doctor                                   环境自检（只读）
-#   flash.sh plan   [<img|url>] [参数]                只读：设备状态 / 镜像预检 / 将执行的命令
-#   flash.sh flash  <img|url> [验证参数]              进下载模式 → 线刷 → 等回线 → 验证（结论只打终端）
+#   flash.sh plan   [<img|url> …] [参数]              只读：设备状态 / 镜像预检 / 将执行的命令
+#   flash.sh flash  <img|url> [<url2> …] [验证参数]   进下载模式 → 线刷 → 等回线 → 验证（结论只打终端）
 #   flash.sh verify [验证参数]                        只验证（设备已起系统，不刷）
+#
+# 下载源（可以给多条 URL：alist 优先，失败自动回落）：
+#   flash.sh flash <alist直链> <minio直链>   先下 alist；403/超时/内容不是整机镜像就换下一条
+#   本地镜像         直接给一个路径（不与 URL 混用）
+#   FLASH_ALIST_HOSTS  判定 alist 的域名（默认 alist.cpinnov.run，逗号分隔）
 #
 # 平台与工具：
 #   RK 安卓 / RK Debian   → rk_upgrade_tool UF <img>
@@ -53,6 +58,8 @@ ADB_BIN="${ADB:-adb}"
 HOME_DIR="${HOME:-/root}"
 DL_DIR="${DL_DIR:-$HOME_DIR/Downloads}"
 CACHE_DIR="${FLASH_CACHE_DIR:-$DL_DIR}"
+# alist 域名（可用 FLASH_ALIST_HOSTS 覆盖，逗号分隔）：多条候选里 alist 排最前，下载优先用它
+ALIST_HOSTS="${FLASH_ALIST_HOSTS:-alist.cpinnov.run}"
 
 SERIAL=""
 PRE_ADB_DEVS=()
@@ -81,8 +88,11 @@ POSITIONAL=()
 
 FW=""
 FW_SOURCE=""
+FW_SOURCE_KIND=""
+FW_SOURCE_FELL_BACK=0
 FW_SIZE=0
 FW_SHA=""
+CANDIDATES=()
 STEM=""
 T3_BUS=""
 T3_PORT=""
@@ -122,7 +132,7 @@ warn() { printf 'WARN: %s\n' "$*" >&2; }
 hr() { printf '%s\n' '----------------------------------------------------------------'; }
 die() { local code="$1"; shift; printf 'ERROR: %s\n' "$*" >&2; exit "$code"; }
 
-usage() { sed -n '2,49p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,/^$/p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
 
 record() { # name state evidence
     RES_NAMES+=("$1")
@@ -420,6 +430,35 @@ http_size() {
         awk 'tolower($1)=="content-length:"{v=$2} END{if(v)printf "%.0f", v}'
 }
 
+# 下载源分类：alist / minio / next / 其它（回 host）
+source_kind() { # url
+    local url="$1" host h hit=0
+    host=$(printf '%s' "$url" | sed -E 's#^[a-zA-Z]+://([^/]+).*#\1#')
+    local IFS=','
+    for h in $ALIST_HOSTS; do
+        [ -n "$h" ] || continue
+        case "$host" in *"$h"*) hit=1 ;; esac
+    done
+    if [ "$hit" = 1 ]; then printf 'alist'; return 0; fi
+    case "$host" in
+        minio.cpuniverse.cn) printf 'minio' ;;
+        next.cpinnov.run) printf 'next' ;;
+        *) printf '%s' "$host" ;;
+    esac
+}
+
+# 候选排序：alist 优先（同组保持给定顺序），结果写全局 CANDIDATES
+order_candidates() {
+    local u
+    CANDIDATES=()
+    for u in "$@"; do
+        if [ "$(source_kind "$u")" = alist ]; then CANDIDATES+=("$u"); fi
+    done
+    for u in "$@"; do
+        if [ "$(source_kind "$u")" != alist ]; then CANDIDATES+=("$u"); fi
+    done
+}
+
 # 下载之前先查下载目录：按 URL basename 查 ~/Downloads 顶层，size 对得上就复用。
 # 只返回路径，不复制、不改名——镜像在下载目录里只留一份。
 precheck_local() { # url
@@ -436,20 +475,41 @@ precheck_local() { # url
     return 1
 }
 
-download_firmware() { # url
-    local url="$1" dest size cur
+# 落地校验：alist 直链失效时可能返回 200 + 几百字节 JSON，体积和镜像头都要对得上
+firmware_looks_valid() { # file [expect_size]
+    local f="$1" want="${2:-0}" cur chip
+    [ -f "$f" ] || return 1
+    cur=$(stat -c %s "$f" 2>/dev/null || echo 0)
+    [ "$cur" -gt 0 ] || return 1
+    if [ "${want:-0}" -gt 0 ] && [ "$cur" != "$want" ]; then
+        say_err "大小不符：$cur / $want B"
+        return 1
+    fi
+    chip=$(image_chip "$f")
+    if [ -n "$chip" ]; then return 0; fi
+    if [ "$cur" -lt 1048576 ]; then
+        say_err "内容不像整机镜像（$(head -c 8 -- "$f" 2>/dev/null | tr -d '\0' | tr -cd '[:print:]')，$cur B）"
+        return 1
+    fi
+    warn "镜像头不是 RKFW/RKAF/IMAGEWTY，体积正常（$cur B），继续"
+    return 0
+}
+
+# 下载单个候选。成功时 stdout 只输出本地路径；失败 return 3（由 resolve_firmware 决定是否换下一个源）。
+# 第 2 参数 purge=1：失败时删掉半包，避免两个源的内容拼在一起。
+download_firmware() { # url [purge_on_fail]
+    local url="$1" purge="${2:-0}" dest size cur
     dest="$CACHE_DIR/$(url_basename "$url")"
     mkdir -p "$CACHE_DIR"
 
-    case "$url" in
-        *alist.cpinnov.run*)
-            say_err "alist 直链：本机代理会 TLS 失败，已强制直连下载" ;;
-    esac
+    if [ "$(source_kind "$url")" = alist ]; then
+        say_err "alist 直链：本机代理会 TLS 失败，已强制直连下载"
+    fi
 
     # 注意：本函数 stdout 只允许输出最终路径（会被 resolve_firmware 的 $(...) 捕获），
     # 过程消息一律 say_err（曾经写成 say，导致 FW 变成「提示行 + 路径」两行 → sha256sum 报错 + 静默退出）。
+    size=$(http_size "$url")
     if [ -s "$dest" ]; then
-        size=$(http_size "$url")
         cur=$(stat -c %s "$dest" 2>/dev/null || echo 0)
         if [ "${size:-0}" -gt 0 ] && [ "$cur" = "$size" ]; then
             say_err "复用已下载镜像：$dest（$cur B）"
@@ -457,42 +517,105 @@ download_firmware() { # url
             return 0
         fi
         say_err "续传：$dest（$cur / ${size:-?} B）"
-        curl_fw "$url" -sS -L --fail --retry 3 --retry-delay 2 -C - -o "$dest" ||
-            die 3 "下载失败：$url"
+        if ! curl_fw "$url" -sS -L --fail --retry 3 --retry-delay 2 -C - -o "$dest"; then
+            say_err "下载失败：$url"
+            if [ "$purge" = 1 ]; then rm -f "$dest"; fi
+            return 3
+        fi
     else
         say_err "下载中：$url"
-        curl_fw "$url" -sS -L --fail --retry 3 --retry-delay 2 -o "$dest" ||
-            die 3 "下载失败：$url"
+        if ! curl_fw "$url" -sS -L --fail --retry 3 --retry-delay 2 -o "$dest"; then
+            say_err "下载失败：$url"
+            if [ "$purge" = 1 ]; then rm -f "$dest"; fi
+            return 3
+        fi
     fi
-    [ -s "$dest" ] || die 3 "下载后文件为空：$dest"
+    if ! firmware_looks_valid "$dest" "${size:-0}"; then
+        say_err "下载结果不可用：$url"
+        if [ "$purge" = 1 ]; then rm -f "$dest"; fi
+        return 3
+    fi
     say_err "下载完成：$dest（$(stat -c %s "$dest") B）"
     printf '%s' "$dest"
 }
 
-resolve_firmware() { # arg  download(0|1)
-    local arg="$1" do_dl="$2" hit=""
-    FW_SOURCE="$arg"
-    case "$arg" in
-        http://*|https://*)
-            hit=$(precheck_local "$arg" || true)
+# 解析镜像：<download(0|1)> <候选 URL 或本地镜像...>
+# 多条 URL 时 alist 自动排最前；主源失败自动换下一条（不同源的半包不拼接）。
+resolve_firmware() {
+    local do_dl="$1" hit="" arg cand i purge=0
+    local urls=() locals_=() failed=()
+    shift
+    for arg in "$@"; do
+        case "$arg" in
+            http://*|https://*) urls+=("$arg") ;;
+            *) locals_+=("$arg") ;;
+        esac
+    done
+    FW=""
+    FW_SOURCE=""
+    FW_SOURCE_KIND=""
+    FW_SOURCE_FELL_BACK=0
+    CANDIDATES=()
+
+    if [ "${#locals_[@]}" -gt 0 ] && [ "${#urls[@]}" -gt 0 ]; then
+        die 2 "本地镜像与 URL 不能混用（本地：${locals_[*]}）"
+    fi
+    if [ "${#locals_[@]}" -gt 1 ]; then
+        die 2 "只能指定一个本地镜像（收到 ${#locals_[@]} 个）"
+    fi
+
+    if [ "${#locals_[@]}" -eq 1 ]; then
+        arg="${locals_[0]}"
+        [ -f "$arg" ] || die 3 "镜像不存在：$arg"
+        FW="$arg"
+        FW_SOURCE="$arg"
+        FW_SOURCE_KIND="local"
+    else
+        [ "${#urls[@]}" -gt 0 ] || return 0
+        order_candidates "${urls[@]}"
+        # 1) 下载目录里已有同 size 的同一份文件就直接用（不重复下载）
+        for cand in "${CANDIDATES[@]}"; do
+            hit=$(precheck_local "$cand" || true)
             if [ -n "$hit" ]; then
                 FW="$hit"
+                FW_SOURCE="$cand"
+                FW_SOURCE_KIND=$(source_kind "$cand")
                 say_err "复用本地镜像：$hit（$(stat -c %s "$hit") B，不重复下载）"
-            elif [ "$do_dl" = 0 ]; then
-                FW=""
-                FW_SIZE=$(http_size "$arg")
-                return 0
-            else
-                FW=$(download_firmware "$arg")
-                [ -f "$FW" ] || die 3 "镜像解析失败（下载函数返回了非路径内容）：$FW"
+                break
             fi
-            ;;
-        *)
-            [ -f "$arg" ] || die 3 "镜像不存在：$arg"
-            FW="$arg"
-            ;;
-    esac
-    [ -n "$FW" ] || return 0
+        done
+        if [ -z "$FW" ] && [ "$do_dl" = 0 ]; then
+            # 只预检：按候选顺序取第一个能拿到 Content-Length 的
+            for cand in "${CANDIDATES[@]}"; do
+                FW_SOURCE="$cand"
+                FW_SOURCE_KIND=$(source_kind "$cand")
+                FW_SIZE=$(http_size "$cand")
+                if [ "${FW_SIZE:-0}" -gt 0 ]; then break; fi
+                FW_SIZE=0
+            done
+            return 0
+        fi
+        if [ -z "$FW" ]; then
+            for i in "${!CANDIDATES[@]}"; do
+                cand="${CANDIDATES[$i]}"
+                purge=0
+                if [ "$((i + 1))" -lt "${#CANDIDATES[@]}" ]; then purge=1; fi
+                if FW=$(download_firmware "$cand" "$purge"); then
+                    FW_SOURCE="$cand"
+                    FW_SOURCE_KIND=$(source_kind "$cand")
+                    if [ "$i" -gt 0 ]; then FW_SOURCE_FELL_BACK=1; fi
+                    break
+                fi
+                FW=""
+                failed+=("$(source_kind "$cand")=$cand")
+                if [ "$((i + 1))" -lt "${#CANDIDATES[@]}" ]; then
+                    say "下载源 $(source_kind "$cand") 不可用，换下一个候选"
+                fi
+            done
+            [ -n "$FW" ] || die 3 "所有下载源都失败：${failed[*]:-（无候选）}"
+            [ -f "$FW" ] || die 3 "镜像解析失败（下载函数返回了非路径内容）：$FW"
+        fi
+    fi
 
     if [ "${FW##*.}" = zip ]; then
         unzip -o -j -q "$FW" '*.img' -d "$TMPDIR_RUN" || die 3 "zip 里没有 .img：$FW"
@@ -752,9 +875,10 @@ run_assertions() { # platform version
 }
 
 write_report() { # verdict
-    local verdict="$1" f i
+    local verdict="$1" f i fw_kind="${FW_SOURCE_KIND:-?}"
     [ -n "$REPORT" ] || return 0
     f="$REPORT"
+    if [ "$FW_SOURCE_FELL_BACK" = 1 ]; then fw_kind="$fw_kind（alist 失败，已回落）"; fi
     mkdir -p "$(dirname -- "$f")"
     {
         echo "# 线刷验证报告"
@@ -769,6 +893,7 @@ write_report() { # verdict
         if [ -n "$FW" ]; then
             echo "| 固件 | $(basename -- "$FW") |"
             echo "| 固件大小 / sha256 | ${FW_SIZE:-?} B / ${FW_SHA:-?} |"
+            echo "| 固件来源 | $fw_kind |"
         else
             echo "| 固件 | ${FW_SOURCE:-(未指定)} |"
             echo "| 固件大小 / sha256 | — |"
@@ -924,13 +1049,12 @@ cmd_doctor() {
 cmd_plan() {
     local pl family
     parse_args "$@"
-    [ "${#POSITIONAL[@]}" -le 1 ] || die 2 "plan 只接受一个镜像参数"
 
     RK_TOOL=$(resolve_tool "${RK_UPGRADE_TOOL:-}" rk_upgrade_tool) || RK_TOOL=""
     OPENIXCLI=$(resolve_tool "${OPENIXCLI:-}" openixcli) || OPENIXCLI=""
 
-    if [ "${#POSITIONAL[@]}" -eq 1 ]; then
-        resolve_firmware "${POSITIONAL[0]}" 0
+    if [ "${#POSITIONAL[@]}" -ge 1 ]; then
+        resolve_firmware 0 "${POSITIONAL[@]}"
     fi
     STEM=$(basename -- "${FW:-${FW_SOURCE:-plan}}"); STEM="${STEM%.*}"
 
@@ -939,6 +1063,15 @@ cmd_plan() {
     hr
     if [ -n "$FW_SOURCE" ]; then
         say "固件：$FW_SOURCE"
+        if [ "${#CANDIDATES[@]}" -gt 1 ]; then
+            say "  下载源（alist 优先，失败自动回落）："
+            local ci
+            for ci in "${!CANDIDATES[@]}"; do
+                say "    $((ci + 1)). $(source_kind "${CANDIDATES[$ci]}")  ${CANDIDATES[$ci]}"
+            done
+        elif [ -n "$FW_SOURCE_KIND" ]; then
+            say "  下载源：$FW_SOURCE_KIND"
+        fi
         if [ -n "$FW" ]; then
             say "  本地：$FW（$FW_SIZE B, sha256=${FW_SHA:0:16}…）"
         else
@@ -991,6 +1124,11 @@ dry_run_report() { # family
     say "设备：${SERIAL:-未连接}  平台：${PRE_PLATFORM:-$family}  当前版本：${PRE_VERSION:-?}"
     say "固件：$FW"
     say "  $FW_SIZE B  sha256=$FW_SHA"
+    if [ "$FW_SOURCE_FELL_BACK" = 1 ]; then
+        say "下载源：${FW_SOURCE_KIND:-?}（alist 不可用，已回落）"
+    else
+        say "下载源：${FW_SOURCE_KIND:-local}"
+    fi
     say "期望版本：${EXPECT_VERSION:-$(version_from_name "$FW")}"
     if [ "$family" = rk ]; then
         say "将执行：adb reboot loader → rk_upgrade_tool UF $FW"
@@ -1003,9 +1141,9 @@ dry_run_report() { # family
 cmd_flash() {
     local family="" pl="" usb_fam="" rc=0 nf
     parse_args "$@"
-    [ "${#POSITIONAL[@]}" -eq 1 ] || die 2 "用法：flash.sh flash <img|url> [验证参数]"
+    [ "${#POSITIONAL[@]}" -ge 1 ] || die 2 "用法：flash.sh flash <img|url> [<url2> …] [验证参数]"
 
-    resolve_firmware "${POSITIONAL[0]}" 1
+    resolve_firmware 1 "${POSITIONAL[@]}"
     [ -n "$FW" ] || die 2 "镜像解析失败"
     setup_paths "$(version_from_name "$FW")"
 
@@ -1014,6 +1152,11 @@ cmd_flash() {
     hr
     say "固件：$FW"
     say "  $FW_SIZE B  sha256=$FW_SHA"
+    if [ "$FW_SOURCE_FELL_BACK" = 1 ]; then
+        say "  来源：${FW_SOURCE_KIND:-?}（alist 不可用，已回落）"
+    else
+        say "  来源：${FW_SOURCE_KIND:-local}"
+    fi
     say "  期望版本：${EXPECT_VERSION:-$(version_from_name "$FW")}"
 
     if pick_serial; then

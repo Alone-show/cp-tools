@@ -714,7 +714,33 @@ async function collectAlistRows(alist, options) {
   };
 }
 
-/** 把 alist 兜底行并进 Teambition 行：同版本以 Teambition 为准，alist 只补空链接 */
+/**
+ * alist 与 Teambition 同时给同一条直链时的标签：基础键留给 Teambition，
+ * alist 那条换成明确名字并存 —— 两个源都要输出，刷写优先用 alist。
+ */
+const ALIST_LINK_LABEL = {
+  '固件下载地址': 'alist 下载页',
+  'OSS 线刷地址': 'alist 线刷地址',
+  'OSS OTA地址': 'alist OTA地址',
+};
+
+/** 合并两边的链接：TB 缺的键由 alist 填，冲突的键把 alist 挪到带 alist 前缀的标签上 */
+function mergeAlistLinks(tbLinks, alistLinks) {
+  const out = { ...(tbLinks ?? {}) };
+  for (const [key, url] of Object.entries(alistLinks ?? {})) {
+    const value = String(url ?? '');
+    if (!value) continue;
+    if (!out[key]) {
+      out[key] = value;
+      continue;
+    }
+    if (out[key] === value) continue;
+    out[ALIST_LINK_LABEL[key] ?? `alist ${key}`] = value;
+  }
+  return out;
+}
+
+/** 把 alist 兜底行并进 Teambition 行：同版本以 Teambition 为准，alist 补空链接并单独保留自己的直链 */
 function mergeAlistRows(tbRows, alistRows) {
   const keyOf = (row) => `${String(row.customer ?? '').toUpperCase()}|${nz(row.version)}`;
   const out = tbRows.map((row) => ({ ...row, source: row.source ?? 'teambition' }));
@@ -729,7 +755,7 @@ function mergeAlistRows(tbRows, alistRows) {
     }
     const existing = out[at];
     existing.source = 'both';
-    existing.links = { ...(row.links ?? {}), ...(existing.links ?? {}) };
+    existing.links = mergeAlistLinks(existing.links, row.links);
     existing.artifacts = { ...(row.artifacts ?? {}), ...(existing.artifacts ?? {}) };
     if (!existing.size) existing.size = row.size;
     if (!existing.lcd) existing.lcd = row.lcd;
@@ -1718,7 +1744,7 @@ function findToolFor(ctx) {
   return {
     name: 'firmware_find',
     description:
-      '按机型和操作系统定位量产固件，返回固件版本、构建日期、客户、以及 OSS 线刷/OTA 直链。默认只返回量产版（不带 DEV 标识）：DEV-xxxx 构建默认被过滤，需要时传 dev:true 或在需求里点名 DEV；过滤数量会写在 note 里。每次调用都会实时核对 Teambition（补拉版本父任务详情，索引快照只作兜底）并实时扫描 alist /PROD 目录（不复用旧缓存），因此刚归档的版本也能立刻查到；单次约 3–8 秒。结果来源标注：source=tb-live 为实时 TB、alist 为 alist /PROD、both 为两边都有。liveChecked=false 表示实时核对失败（如未登录），此时 note 会说明快照时间，回答时应转述。机型支持自由写法（如 apollo 12 pro、SP2-10PRO），7/7A、12/12A 等价写法会合并命中。机型存在歧义时返回 status=needs_confirmation 和候选列表，必须先向用户确认再继续。未指定客户时默认按 CP 过滤，并在 note/otherCustomers 里列出其他客户，不要忽略这部分信息。',
+      '按机型和操作系统定位量产固件，返回固件版本、构建日期、客户，以及线刷/OTA 直链（同版本两边都有时给两条：alist 优先 + minio/next 备用）。默认只返回量产版（不带 DEV 标识）：DEV-xxxx 构建默认被过滤，需要时传 dev:true 或在需求里点名 DEV；过滤数量会写在 note 里。每次调用都会实时核对 Teambition（补拉版本父任务详情，索引快照只作兜底）并实时扫描 alist /PROD 目录（不复用旧缓存），因此刚归档的版本也能立刻查到；单次约 3–8 秒。结果来源标注：source=tb-live 为实时 TB、alist 为 alist /PROD、both 为两边都有。liveChecked=false 表示实时核对失败（如未登录），此时 note 会说明快照时间，回答时应转述。机型支持自由写法（如 apollo 12 pro、SP2-10PRO），7/7A、12/12A 等价写法会合并命中。机型存在歧义时返回 status=needs_confirmation 和候选列表，必须先向用户确认再继续。未指定客户时默认按 CP 过滤，并在 note/otherCustomers 里列出其他客户，不要忽略这部分信息。',
     parameters: {
       type: 'object',
       properties: {
