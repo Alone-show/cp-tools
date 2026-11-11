@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+	<item action="logo" params="logo.img"/>
+	<item action="bootanimation" params="bootanimation.zip"/>
+	<item action="cmd" params="sync"/>
+	<item action="cmd" params="sleep 5"/>
+	<item action="cmd" params="reboot"/>
+</root>

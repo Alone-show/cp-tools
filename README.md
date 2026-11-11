@@ -56,7 +56,8 @@ plugin_manager install_bundle target=/home/my/Documents/deepseek-harness/default
 ### `/cpservice`
 
 纯 skill：判定 RK 安卓 / T3 安卓 / RK Debian / T3 Linux（Buildroot），按平台读 reference 出包，
-并在真机上验证。可复用二进制在 `src/cpservice/skills/cpservice/vendor/`。
+并在真机上验证。可复用二进制在 `src/cpservice/skills/cpservice/vendor/`；预置「中性」开机 logo/动画包在
+`src/cpservice/skills/cpservice/assets/presets/rk-android-neutral/`（RK 安卓，**仅当需求明确要中性时**才用）。
 
 ## 固定流程脚本
 

@@ -81,10 +81,13 @@
 adb exec-out 'dd if=/dev/block/by-name/logo 2>/dev/null' | head -c "$(stat -c %s logo.img)" | md5sum
 ```
 
+- 现成中性图：`assets/presets/rk-android-neutral/logo.img`（1024x600，3,686,966 B，md5 `a3e60d60…`）——**仅当需求明确要中性**时才用（`../SKILL.md` §8.4）。
+
 ### 3.3 `bootanimation`
 
 - 落 `/data/media/bootanimation.zip`（**不是 `/system/media`**）；本机 `/system/etc/init.bootanimation.sh` 读它，缺失时用 `/system/media/` 兜底 → RK 原生支持。
 - **文件名必须叫 `bootanimation.zip`**（`chmod` 硬编码）；不写系统属性。
+- 现成中性动画：`assets/presets/rk-android-neutral/bootanimation.zip`（全 stored，`desc.txt` = `1024 600 10` + 单帧 `part0`）。
 
 ### 3.4 `copy` / `copyout`
 
@@ -148,6 +151,8 @@ adb exec-out 'dd if=/dev/block/by-name/logo 2>/dev/null' | head -c "$(stat -c %s
 	<item action="cmd" params="reboot"/>
 </root>
 ```
+
+中性 logo/动画整套现成（`assets/presets/rk-android-neutral/`，同样 5 条动作）：**仅当需求明确要中性**时直接用，否则按需生成（`../SKILL.md` §8.4）。
 
 ### 5.2 薄壳 + 脚本（多步骤/要日志/要判定时首选）
 

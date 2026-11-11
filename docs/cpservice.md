@@ -17,7 +17,7 @@
 | `src/cpservice/skills/cpservice/references/t3-android.md` | T3 安卓事实：工具/9 个动作/mksh 约束/假挂载验证/坑/MDM+WiFi |
 | `src/cpservice/skills/cpservice/references/rk-debian.md` | RK Debian 事实：两种安装方式（自动 udev / 手动 GUI）、包结构、`:uisum` 协议、脚本约束、dpkg/落点、验证、坑 |
 | `src/cpservice/skills/cpservice/references/t3-linux.md` | T3 Linux（Buildroot）事实：`/Launcher` 触发链、`/mnt/usb/sda1`、包结构、落点、bash 约束、假挂载验证、坑 |
-| `src/cpservice/skills/cpservice/assets/` | 模板、探针、触发、核验、虚拟盘、Debian 触发脚本、**logo 资源生成驱动**（清单见 SKILL 文件索引） |
+| `src/cpservice/skills/cpservice/assets/` | 模板、探针、触发、核验、虚拟盘、Debian 触发脚本、**logo 资源生成驱动**、**预置「中性」logo/动画包**（`assets/presets/rk-android-neutral/`，仅明确要求中性时用）；清单见 SKILL 文件索引 |
 | `src/cpservice/skills/cpservice/vendor/` | T3 可复用二进制（`VanCoreT3-260414.apk`、CYW43438 固件）；RK 不复用 WiFi 固件 |
 
 ## 平台判定
@@ -69,6 +69,8 @@ T3 Linux：
 
 > 用这张图给 RK 安卓出一套开机 logo —— 模型调 `assets/generate-bootlogo.sh`（SKILL §8.4），按 芯片×系统 出 `logo.img`/`bootlogo.bmp`/`logo`/`video_demo.yuv` + 对应 xml 或安装脚本，产物落 `~/Downloads/<CHIP>_<SYSTEM>_<name>_<日期>/` 并自检。
 
+只要通用/无品牌的开机 logo 和动画、且**明确说了要「中性」**，直接取预置包 `assets/presets/rk-android-neutral/`（RK 安卓 1024×600，3 个文件平铺到 U 盘根即插即换）；没说「中性」（包括「客户没给图」「随便弄一个」）仍按上面生成。
+
 验证现成包：
 
 > 验证 /home/my/Downloads/20260717/ 这个包
@@ -118,4 +120,5 @@ E9631Service/
     │   ├── rk-debian.md
     │   └── t3-linux.md
     └── assets/          # 模板 / 探针 / 触发 / 核验 / 虚拟盘 / Debian / T3 Linux 触发
+        └── presets/rk-android-neutral/   # 预置「中性」logo/动画包（RK 安卓，仅明确要求中性时用）
 ```

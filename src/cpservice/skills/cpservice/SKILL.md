@@ -76,7 +76,7 @@ adb shell 'getprop ro.board.platform; getprop ro.hardware; getprop ro.build.vers
 | `CpService.xml` / `E9631Service.xml` | U 盘根目录 | 动作清单，插盘按序执行 |
 | `auto_unattended_installation/` + 根 `unattended_installation.sh` | U 盘根目录 | Debian：udev 载荷目录（bash 启动脚本）/ 手动入口（POSIX sh，`$1`=盘根） |
 | 根 `unattended_installation.sh` + 资源 | U 盘根目录 | T3 Linux：Launcher 写死 `/mnt/usb/sda1/unattended_installation.sh`；脚本要有 `+x` |
-| 资源（apk / deb / `logo.img` / `bootlogo.bmp` / `logo` / `video_demo.yuv` / `bootanimation.zip` / bin / tar） | U 盘根目录 | xml 里只写文件名；logo 资源用 §8.4 生成 |
+| 资源（apk / deb / `logo.img` / `bootlogo.bmp` / `logo` / `video_demo.yuv` / `bootanimation.zip` / bin / tar） | U 盘根目录 | xml 里只写文件名；logo 资源用 §8.4 生成；仅当需求明确要「中性」时用 §8.4 预置包 |
 | 交付 zip | `~/Downloads/` | `…_YYYYMMDD.zip`（同日多次 `_YYYYMMDD-2`），**平铺不套目录** |
 
 Debian 盘根必须直接有 `unattended_installation.sh`：套一层目录 = 工具找不到入口 = 插盘无反应。
@@ -338,6 +338,11 @@ assets/generate-bootlogo.sh --image logo.png --chip RK --system Android --name <
 | T3_Android | `bootlogo.bmp` + `E9631Service.xml` | `bootlogo` 动作，`params` 必须是 `bootlogo.bmp` |
 | T3_Linux | `bootlogo.bmp` + `logo` + `video_demo.yuv` + `unattended_installation.sh` | `/logo`、`/Configs/bootlogo.bmp` + `/dev/mmcblk0p2`（§8.3） |
 
+- **预置「中性」包（RK 安卓）**：`assets/presets/rk-android-neutral/` = `logo.img`（1024x600，3,686,966 B）+ `bootanimation.zip`（单帧）+ `CpService.xml`（`logo → bootanimation → sync → sleep 5 → reboot`）。
+  - **只在需求原话明确要「中性」**（中性 logo/动画/开机图）时用；「客户没给图」「随便/默认/通用一点」都不算中性 → 走上面的生成器，或先问。
+  - 还需 RK 安卓（`com.cpdevice.cpservice`）+ 屏幕 1024x600（`adb shell wm size`）。1280x800 / 客户品牌图 / T3 或 Debian / 要真多帧动画 / 调试轮免重启（`NO_REBOOT=1`）一律不用。
+  - 组合需求（如装 apk + 中性 logo）只借 `logo.img` + `bootanimation.zip`，xml 按需求重写；用了就在交付说明里点明用的是预置包。
+  - 设备侧触发：插盘 → `ACTION_MEDIA_MOUNTED` → 工具枚举真实卷 → 读卷根 `CpService.xml` → 顺序执行；`reboot` 后 adb 掉线按 §7.3 等回线。
 - 图片只接受 **1024x600 / 1280x800**（ffprobe 判，与上游一致）。产物尺寸：`bootlogo.bmp` = 54+w×h×3、`logo.img` = BMP+458B 0+BMP、`logo` = w×h×4、`video_demo.yuv` = 234 帧。脚本末尾自检不通过就不会让你直接进包。
 - 生成的安装脚本是**最小版**：RK Linux 按 `/mnt/installUsb` 硬编码（工具窗口方式；要手动入口 `$1` 形式按 §4 C 改写）；T3 Linux 无日志、无 `NO_REBOOT`，正式包用 `assets/t3linux-setup-template.sh` 补齐。
 - 输出目录 `<out>/<CHIP>_<SYSTEM>_<name>_<YYYYMMDD>`，产物平铺进包根。
@@ -355,6 +360,7 @@ assets/generate-bootlogo.sh --image logo.png --chip RK --system Android --name <
 | `assets/probe-cpservice.xml` / `assets/probe-collect.sh` / `assets/probe.xml` / `assets/trigger.sh` / `assets/rk-virtual-disk.sh` | 探针与触发（RK 虚拟盘 / T3 假挂载） |
 | `assets/add-icon-device.sh` / `assets/verify-report.md` / `assets/update-mdm-wifi.sh` | 桌面图标 / 报告模板 / T3 MDM+WiFi；skill 目录 `vendor/` 只复用 `VanCoreT3-*.apk` |
 | `assets/generate-bootlogo.sh` | logo 资源生成驱动（§8.4）：`--image`/`--chip`/`--system`/`--rotate`/`--no-video`/`--assets-only`/`--check` |
+| `assets/presets/rk-android-neutral/` | 预置「中性」logo/动画包（RK 安卓，**仅在明确要求中性时用**）：`logo.img` + `bootanimation.zip` + `CpService.xml` + `README.md` |
 | `assets/vendor/generate_bootlogo.sh` | 上游 `CP_Generate_Bootlogo` 原样副本（交互式，输出写在自己目录）；驱动的一致性基准 |
 
 ## 10. 边界与拒绝项

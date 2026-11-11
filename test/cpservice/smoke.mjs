@@ -149,6 +149,7 @@ const facts = {
   'SKILL.md': [
     '--xml---action---', 'PATH', 'NO_REBOOT', 'YYYYMMDD', 'verify-report.md',
     '§7.3', '§5.2', '只跑一轮', '超时才提示', 'Buildroot', '/Launcher',
+    'assets/presets',
   ],
 };
 for (const [file, needles] of Object.entries(facts)) {
@@ -293,6 +294,79 @@ if (!hasFfmpeg) {
     fs.rmSync(tmp, { recursive: true, force: true });
   }
 }
+
+// 15) 预置「中性」logo/动画包（RK 安卓，仅当需求明确要中性时才用）
+const PRESET = path.join(SKILL_DIR, 'assets', 'presets', 'rk-android-neutral');
+const PRESET_REL = 'assets/presets/rk-android-neutral';
+for (const f of ['logo.img', 'bootanimation.zip', 'CpService.xml', 'README.md']) {
+  assert.ok(fs.existsSync(path.join(PRESET, f)), `缺少 ${PRESET_REL}/${f}`);
+}
+assert.ok(skill.content.includes('assets/presets'), 'SKILL.md 文件索引应列出 assets/presets');
+assert.ok(/明确要「中性」/.test(skill.content), 'SKILL.md 应写明显式触发：仅明确要「中性」时才用');
+assert.ok(/生成器|generate-bootlogo/.test(skill.content.split('预置「中性」包')[1] ?? ''), 'SKILL.md 应把非中性需求指回生成器');
+
+// logo.img = BMP + 458B 0 + 同一 BMP
+const presetImg = fs.readFileSync(path.join(PRESET, 'logo.img'));
+assert.equal(presetImg.subarray(0, 2).toString('latin1'), 'BM', 'logo.img 应以 BM 开头');
+const imgW = presetImg.readInt32LE(18); const imgH = presetImg.readInt32LE(22); const imgBpp = presetImg.readInt16LE(28);
+assert.deepEqual([imgW, imgH, imgBpp], [1024, 600, 24], 'logo.img 应为 1024x600x24bpp');
+const bmpBytes = 54 + imgW * imgH * 3;
+assert.equal(presetImg.length, bmpBytes * 2 + 458, 'logo.img 长度应 = (54+w*h*3)*2+458');
+assert.ok(presetImg.subarray(0, bmpBytes).equals(presetImg.subarray(bmpBytes + 458)), 'logo.img 两半应逐字节相同');
+
+// CpService.xml：动作逐条固定，且不带会「静默全跳」的 canuse_ver / runlimit
+const presetXml = fs.readFileSync(path.join(PRESET, 'CpService.xml'), 'utf8');
+const presetItems = [...presetXml.matchAll(/<item\s+action="([^"]+)"\s+params="([^"]*)"\s*\/>/g)].map((m) => [m[1], m[2]]);
+assert.deepEqual(presetItems, [
+  ['logo', 'logo.img'],
+  ['bootanimation', 'bootanimation.zip'],
+  ['cmd', 'sync'],
+  ['cmd', 'sleep 5'],
+  ['cmd', 'reboot'],
+], '预置包动作顺序应为 logo → bootanimation → sync → sleep 5 → reboot');
+assert.equal(presetItems.filter(([, p]) => p === 'reboot').length, 1, 'reboot 只能一条');
+assert.equal(presetItems.at(-1)[1], 'reboot', 'reboot 必须在末位');
+assert.ok(!/canuse_ver|runlimit/.test(presetXml), '预置包不应带 canuse_ver / runlimit（不匹配会静默跳过后续）');
+assert.ok(!presetXml.includes('&'), 'xml 不应有裸 &（须转义）');
+assert.ok(presetXml.trimStart().startsWith('<?xml') && presetXml.trimEnd().endsWith('</root>'), 'xml 头尾不完整');
+for (const [, p] of presetItems) {
+  if (/\.(img|zip|apk|bin|tar|gz)$/.test(p)) {
+    assert.ok(fs.existsSync(path.join(PRESET, p)), `xml 引用的 ${p} 不在预置目录里`);
+  }
+}
+
+// bootanimation.zip：Android 只认不压缩（stored）的条目
+const presetZip = fs.readFileSync(path.join(PRESET, 'bootanimation.zip'));
+assert.equal(presetZip.subarray(0, 4).toString('latin1'), 'PK\x03\x04', 'bootanimation.zip 魔数不对');
+const eocd = presetZip.lastIndexOf(Buffer.from('PK\x05\x06', 'latin1'));
+assert.ok(eocd > 0, 'bootanimation.zip 缺 EOCD');
+const entryCount = presetZip.readUInt16LE(eocd + 10);
+const cdOffset = presetZip.readUInt32LE(eocd + 16);
+const zipEntries = [];
+for (let i = 0, p = cdOffset; i < entryCount; i += 1) {
+  assert.equal(presetZip.readUInt32LE(p), 0x02014b50, '中央目录签名不对');
+  const nameLen = presetZip.readUInt16LE(p + 28);
+  const extraLen = presetZip.readUInt16LE(p + 30);
+  const commentLen = presetZip.readUInt16LE(p + 32);
+  zipEntries.push({
+    name: presetZip.subarray(p + 46, p + 46 + nameLen).toString('utf8'),
+    method: presetZip.readUInt16LE(p + 10),
+    size: presetZip.readUInt32LE(p + 20),
+    localOff: presetZip.readUInt32LE(p + 42),
+  });
+  p += 46 + nameLen + extraLen + commentLen;
+}
+assert.deepEqual(zipEntries.map((e) => e.name).sort(), ['part0/', 'part0/0000.png', 'desc.txt'].sort(), '动画条目不符');
+for (const e of zipEntries) assert.equal(e.method, 0, `${e.name} 必须 stored（不压缩）`);
+const descEntry = zipEntries.find((e) => e.name === 'desc.txt');
+const descStart = descEntry.localOff + 30 + presetZip.readUInt16LE(descEntry.localOff + 26) + presetZip.readUInt16LE(descEntry.localOff + 28);
+assert.equal(presetZip.subarray(descStart, descStart + descEntry.size).toString('utf8'), '1024 600 10\np 0 0 part0\n',
+  'desc.txt 应为 1024x600 10fps 单帧循环');
+
+// 复用 §8.4 驱动自检（尺寸公式 + xml <root>/action + 清单引用媒体）
+const presetCheck = spawnSync(DRIVER, ['--check', PRESET], { encoding: 'utf8' });
+assert.equal(presetCheck.status, 0, `预置包 --check 应通过：${presetCheck.stderr}`);
+console.log('  预置中性包: logo.img/bootanimation.zip/CpService.xml 结构与动作顺序 OK');
 
 // 10) 职责边界：整机线刷已拆到 skill `flash`（20261109），这里只留指针
 assert.ok(skill.content.includes('`flash`'), 'SKILL.md 应指明整机线刷走 skill flash');
