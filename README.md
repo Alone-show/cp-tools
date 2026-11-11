@@ -96,4 +96,4 @@ test/             docs / firmware / cpservice / flash / shared / contract
 docs/             合并审查与各子插件的详细说明（不随包发布）
 ```
 
-合并审查（重复项、依赖、保留决策）见 [`docs/merge-review.md`](docs/merge-review.md)。
+合并审查（重复项、依赖、保留决策）见仓库内 [`docs/merge-review.md`](https://github.com/Alone-show/cp-tools/blob/main/docs/merge-review.md)（`docs/` 不随包发布，所以这里用仓库链接）。
