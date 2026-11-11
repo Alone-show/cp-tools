@@ -8,16 +8,20 @@
 #   原样副本：assets/vendor/generate_bootlogo.sh（交互式，输出写在自己所在目录）
 #
 # 与上游的关系：
-#   * 媒体产物（bootlogo.bmp / logo / logo.img）与两个 xml 与上游逐字节一致，
+#   * 媒体产物（bootlogo.bmp / logo / logo.img）与两个 xml 默认与上游逐字节一致，
 #     由 test/smoke.mjs 的一致性断言守护；上游一改，测试立刻红。
+#     （唯一例外：--logo-frames 2 时 logo 为上游单帧的两倍，对齐现场原机格式）
 #   * 两个安装脚本行为一致、缩进整理过（上游是 tab/空格混排），断言按去缩进比对。
-#   * 修正上游一处 bug：--rotate 时上游的 video_demo.yuv 不跟随旋转
-#     （generate_t3_linux_yuv 的 -vf 漏了 $ROTATE_FILTER），这里补上了。
+#   * 方向语义（现场实测，勿"顺手修"）：--rotate（hflip,vflip）只作用于
+#     bootlogo.bmp / logo；video_demo.yuv 恒不旋转 —— 视频层由 CPVideoPlayDemo
+#     播在 fb1，方向与 logo 层不同，上游脚本的 yuv 本来就不带翻转。
+#   * T3 Linux 的 logo 帧数：原机 /logo 可能是 2 帧（SPRING2_L：4,915,200 B），
+#     用 --logo-frames 2 出双帧；禁止手工 cat 拼帧。
 #
 # 用法：
 #   generate-bootlogo.sh --image <png> --chip <RK|T3> --system <Android|Linux>
 #                        [--name <tag>] [--out <父目录>] [--rotate]
-#                        [--no-video] [--assets-only] [--dry-run]
+#                        [--logo-frames 1|2] [--model <机型>] [--no-video] [--assets-only] [--dry-run]
 #   generate-bootlogo.sh --check <已生成目录>
 #   generate-bootlogo.sh --help
 #
@@ -28,6 +32,10 @@
 #   T3_Linux    bootlogo.bmp + logo + video_demo.yuv    unattended_installation.sh（/mnt/usb/sda1）
 #
 # 尺寸约束：图片必须是 1024x600 或 1280x800（与上游一致，ffprobe 判定）。
+# --rotate      180°（hflip,vflip）：只转 bootlogo.bmp / logo；yuv 恒不旋转
+# --logo-frames T3 Linux 的 logo 帧数，默认 1；原机是 2 帧时用 2
+# --model       机型（如 SPRING2/SPRING2PRO）：SPRING1/SPRING2/SPRING2PRO 必须加 --rotate，
+#               漏了会直接退出 2（这三款屏幕 180°）
 #
 # 退出码：0 成功 / 2 用法错误 / 3 缺 ffmpeg|ffprobe / 4 图片尺寸不符
 #         5 生成失败 / 6 自检失败
@@ -37,13 +45,13 @@ set -Eeuo pipefail
 TODAY="$(date +%Y%m%d)"
 readonly TODAY
 
-IMAGE='' CHIP='' SYSTEM='' NAME='logo' OUT_DIR='' CHECK_DIR=''
-ROTATE=0 NO_VIDEO=0 ASSETS_ONLY=0 DRY_RUN=0
+IMAGE='' CHIP='' SYSTEM='' NAME='logo' OUT_DIR='' CHECK_DIR='' MODEL=''
+ROTATE=0 NO_VIDEO=0 ASSETS_ONLY=0 DRY_RUN=0 LOGO_FRAMES=1
 
 die() { local code="$1"; shift; printf 'generate-bootlogo: %s\n' "$*" >&2; exit "$code"; }
 
 usage() {
-  sed -n '3,40p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+  awk 'NR>=3 { if ($0 !~ /^#/) exit; sub(/^# ?/,""); print }' "${BASH_SOURCE[0]}"
   exit 0
 }
 
@@ -57,7 +65,9 @@ while [[ $# -gt 0 ]]; do
     --name)   need_value "$@"; NAME="$2"; shift 2 ;;
     --out)    need_value "$@"; OUT_DIR="$2"; shift 2 ;;
     --check)  need_value "$@"; CHECK_DIR="$2"; shift 2 ;;
+    --model)  need_value "$@"; MODEL="$2"; shift 2 ;;
     --rotate) ROTATE=1; shift ;;
+    --logo-frames) need_value "$@"; LOGO_FRAMES="$2"; shift 2 ;;
     --no-video) NO_VIDEO=1; shift ;;
     --assets-only) ASSETS_ONLY=1; shift ;;
     --dry-run) DRY_RUN=1; shift ;;
@@ -103,6 +113,17 @@ resolve_plan() {
   esac
   ROTATE_FILTER=''
   (( ROTATE )) && ROTATE_FILTER='hflip,vflip,'
+  [[ "$LOGO_FRAMES" == "1" || "$LOGO_FRAMES" == "2" ]] \
+    || die 2 "--logo-frames 只接受 1 或 2（收到 ${LOGO_FRAMES}）"
+  if [[ -n "$MODEL" ]]; then
+    local m="${MODEL^^}"
+    m="${m//[^A-Z0-9]/}"
+    case "$m" in
+      SPRING1*|SPRING2*)
+        (( ROTATE )) || die 2 "机型 ${MODEL} 的屏幕是 180°，必须加 --rotate（漏了会上下颠倒）"
+        printf '机型 %s：已启用 --rotate（屏幕 180°）\n' "$MODEL" >&2 ;;
+    esac
+  fi
   NAME="$(normalize_name "$NAME")"
   OUT_DIR="${OUT_DIR:-$HOME/Downloads}"
   TARGET="$OUT_DIR/${COMBO}_${NAME}_${TODAY}"
@@ -117,15 +138,23 @@ gen_bmp() {
 }
 
 gen_yuv() {
-  ffmpeg -nostdin -v error -y -loop 1 -i "$IMAGE" -vf "${ROTATE_FILTER}scale=${W}:${H},format=yuv420p" \
+  # yuv 恒不旋转：视频层（CPVideoPlayDemo / fb1）方向与 logo 层不同（现场实测）
+  ffmpeg -nostdin -v error -y -loop 1 -i "$IMAGE" -vf "scale=${W}:${H},format=yuv420p" \
     -frames:v 234 -pix_fmt yuv420p -f rawvideo "$TARGET/video_demo.yuv" \
     || die 5 'video_demo.yuv 转换失败'
 }
 
 gen_logo_raw() {
+  local one="$TARGET/.logo.1f"
   ffmpeg -nostdin -v error -y -i "$IMAGE" -vf "${ROTATE_FILTER}scale=${W}:${H},format=bgra" \
-    -frames:v 1 -f rawvideo "$TARGET/logo" \
+    -frames:v 1 -f rawvideo "$one" \
     || die 5 'logo 转换失败'
+  if [[ "$LOGO_FRAMES" == "2" ]]; then
+    cat "$one" "$one" >"$TARGET/logo"
+    rm -f "$one"
+  else
+    mv "$one" "$TARGET/logo"
+  fi
 }
 
 # logo.img = BMP + 458 字节 0 + BMP（上游格式，现场包实测 3,686,966 / 6,144,566 B）
@@ -278,9 +307,11 @@ check_dir() {
     local px
     px="$(stat -c %s "$logo")"
     case "$px" in
-      2457600)  printf '  ok  %-24s %s 字节（1024x600 bgra）\n' logo "$px" ;;
-      4096000)  printf '  ok  %-24s %s 字节（1280x800 bgra）\n' logo "$px" ;;
-      *) printf '  自检失败：logo 期望 2457600 或 4096000 字节，实际 %s\n' "$px" >&2; rc=1 ;;
+      2457600)  printf '  ok  %-24s %s 字节（1024x600 bgra，1 帧）\n' logo "$px" ;;
+      4915200)  printf '  ok  %-24s %s 字节（1024x600 bgra，2 帧）\n' logo "$px" ;;
+      4096000)  printf '  ok  %-24s %s 字节（1280x800 bgra，1 帧）\n' logo "$px" ;;
+      8192000)  printf '  ok  %-24s %s 字节（1280x800 bgra，2 帧）\n' logo "$px" ;;
+      *) printf '  自检失败：logo 期望 2457600/4915200/4096000/8192000 字节，实际 %s\n' "$px" >&2; rc=1 ;;
     esac
   fi
 

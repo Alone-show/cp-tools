@@ -168,6 +168,7 @@ assets/generate-bootlogo.sh --check <输出目录>   # logo 资源自检：尺�
 - **保持来源形态**：合入外部包（xml 动作清单、脚本、配置）时原样搬——动作/顺序/参数不改写、不搬进另一层（如把 `cmd` 改写成脚本）、不自造回读/重试/汇总；确需增删动作，单列差异 + 理由并先征得同意。
 - **路径引号**：带空格/括号的路径（`(id=XXXX)`、`Program Files`）整条加引号，见 §5.1-4。
 - **只跑一轮整包**：形态（动作清单/脚本/平铺或套目录）定下来之前不打包；整包一轮为主，返工要能说清为什么。
+- **LOGO 只能脚本直出**：`logo` / `bootlogo.bmp` / `video_demo.yuv` 必须来自 `generate-bootlogo.sh`（§8.4）；`--check` 通过、帧数与原机一致、按 R180 回读目视；T3 Linux 缺 `video_demo.yuv` 不算完成。
 
 ### 6.2 只读核查存量包（别解整包：180 MB 解一次 = 秒级 I/O + 数百 MB 工作区）
 
@@ -319,17 +320,38 @@ adb shell 'rm -rf /mnt/usb/sda1; rm -f /data/cp-unattended/probe*'   # T3 Linux 
 | 只跑一次 | `ONLY_ONCE=1`（`/data/cp-unattended/<pkg>.done`）+ `flock` |
 | 大载荷 | 放 U 盘根，脚本运行时从 `$USB` 读，别整包拷进 `/data` |
 
-### 8.4 生成 LOGO 资源（四平台，一条命令）
+### 8.4 生成 LOGO 资源（四平台，必须用脚本）
 
-要做新开机 logo 时用 `assets/generate-bootlogo.sh`（非交互）。上游 `assets/vendor/generate_bootlogo.sh` 原样保留（交互式、输出写在脚本自己目录），只在手动用旧流程时才用。
+**红线：开机 logo / bootlogo / 开机动画资源只准由 `assets/generate-bootlogo.sh` 生成。**
+- 禁止手绘、PS/PIL 拼字、手工 `ffmpeg`、手工 `cat` 拼帧、手工改尺寸/颜色/字节数。
+- 客户已有字标图，先要图（问一句），不要自己"参照样式"造字。
+- 生成后原样进包；与设备原文件不一致（帧数/尺寸）时先停下确认，不许自己改产物。
+- 上游 `assets/vendor/generate_bootlogo.sh` 原样保留（交互式），只作对照，不直接改。
 
 ```bash
-assets/generate-bootlogo.sh --image logo.png --chip RK --system Android --name <客户> --out ~/Downloads
-#   --rotate        屏幕装反时旋转 180°
-#   --no-video      跳过 video_demo.yuv（215 MB；T3 Linux 只换静态图时）
-#   --assets-only   只出媒体，不出 xml / 安装脚本（往已有包里塞）
-#   --check <dir>   校验已生成目录（尺寸公式 + 可执行位）
+assets/generate-bootlogo.sh --image logo.png --chip T3 --system Linux --model <机型> --name <客户> --out ~/Downloads --rotate
+#   --rotate       180°（hflip,vflip）：只转 bootlogo.bmp / logo；屏幕装反（SPRING2_L 等）必须加
+#   --logo-frames  T3 Linux 的 logo 帧数：原机 /logo 是 2 帧（4,915,200 B）时传 2，默认 1
+#   --no-video     跳过 video_demo.yuv（仅明确不换开机动画时用）
+#   --assets-only  只出媒体，不出 xml / 安装脚本（往已有包里塞）
+#   --model <机型>  SPRING1 / SPRING2 / SPRING2PRO 必须带：脚本强制要求同时加 --rotate
+#   --check <dir>  校验已生成目录（尺寸 + 帧数 + 可执行位）
 ```
+
+**机型强制旋转（硬规则）**：`SPRING1` / `SPRING2` / `SPRING2PRO`（含 `SPRING2_L`、`SPRING2_PRO` 等变体）的屏幕是 180°，生成 logo 必须加 `--rotate`，并把机型传给 `--model`；脚本发现这三款缺 `--rotate` 会**直接退出 2**，不产出资源。
+
+**方向（现场实测，别再判错）**
+
+- T3 Linux 的 `/logo`、`bootlogo.bmp`：**存储方向 = 显示图旋转 180°**（脚本 `--rotate`），屏上看到的才是正的。
+- `video_demo.yuv` **不旋转**：视频层（`CPVideoPlayDemo` / fb1）方向与 logo 层不同；脚本 yuv 分支本身不带翻转，别"顺手修"。
+- 判方向用**非对称字形**核对（大写 V 必须朝下、P 的点在上），不能只凭"看着像能读"。
+
+**出包前必须做（T3 Linux）**
+
+1. `--check <输出目录>` 通过（`logo` 尺寸/帧数、`bootlogo.bmp`、yuv 234 帧）。
+2. 与原机比对：`adb shell 'md5sum /logo /video_demo.yuv /Configs/bootlogo.bmp'`；原机 `/logo` 是 2 帧就用 `--logo-frames 2`。
+3. 回读目视：包内 `logo` 按 bgra 1024x600 解码后旋转 180°，确认文字是正的。
+4. 包里必须有 `video_demo.yuv`（除明确不换动画）；缺它不算完成。
 
 | 芯片_系统 | 产物 | 装包动作 |
 |---|---|---|
@@ -343,7 +365,12 @@ assets/generate-bootlogo.sh --image logo.png --chip RK --system Android --name <
   - 还需 RK 安卓（`com.cpdevice.cpservice`）+ 屏幕 1024x600（`adb shell wm size`）。1280x800 / 客户品牌图 / T3 或 Debian / 要真多帧动画 / 调试轮免重启（`NO_REBOOT=1`）一律不用。
   - 组合需求（如装 apk + 中性 logo）只借 `logo.img` + `bootanimation.zip`，xml 按需求重写；用了就在交付说明里点明用的是预置包。
   - 设备侧触发：插盘 → `ACTION_MEDIA_MOUNTED` → 工具枚举真实卷 → 读卷根 `CpService.xml` → 顺序执行；`reboot` 后 adb 掉线按 §7.3 等回线。
-- 图片只接受 **1024x600 / 1280x800**（ffprobe 判，与上游一致）。产物尺寸：`bootlogo.bmp` = 54+w×h×3、`logo.img` = BMP+458B 0+BMP、`logo` = w×h×4、`video_demo.yuv` = 234 帧。脚本末尾自检不通过就不会让你直接进包。
+- **预置「中性」Linux logo**：`assets/presets/linux-neutral/` = `logo.png`（1024x600 源图）+ `logo`（bgra 2 帧，R180）+ `bootlogo.bmp`（R180），三件套已按现场方向出好。
+  - 只在需求明确要「中性 / Linux 通用 logo」且客户没给品牌图时用；给了品牌图一律用客户的图走生成器。
+  - 只适用 Linux：T3 Linux 直接平铺进包根；RK Linux / RK Debian 用 `logo.png` 重出 `logo.img`。安卓用 `rk-android-neutral`。
+  - 不含 `video_demo.yuv`（215 MB）：要换开机动画从 `logo.png` 现出，yuv 不旋转。
+  - 用了就在交付说明里点明「中性 Linux logo」。
+- 图片只接受 **1024x600 / 1280x800**（ffprobe 判，与上游一致）。产物尺寸：`bootlogo.bmp` = 54+w×h×3、`logo.img` = BMP+458B 0+BMP、`logo` = w×h×4（1 帧）/ w×h×8（`--logo-frames 2`）、`video_demo.yuv` = 234 帧（不旋转）。脚本末尾自检不通过就不会让你直接进包。
 - 生成的安装脚本是**最小版**：RK Linux 按 `/mnt/installUsb` 硬编码（工具窗口方式；要手动入口 `$1` 形式按 §4 C 改写）；T3 Linux 无日志、无 `NO_REBOOT`，正式包用 `assets/t3linux-setup-template.sh` 补齐。
 - 输出目录 `<out>/<CHIP>_<SYSTEM>_<name>_<YYYYMMDD>`，产物平铺进包根。
 
@@ -361,6 +388,7 @@ assets/generate-bootlogo.sh --image logo.png --chip RK --system Android --name <
 | `assets/add-icon-device.sh` / `assets/verify-report.md` / `assets/update-mdm-wifi.sh` | 桌面图标 / 报告模板 / T3 MDM+WiFi；skill 目录 `vendor/` 只复用 `VanCoreT3-*.apk` |
 | `assets/generate-bootlogo.sh` | logo 资源生成驱动（§8.4）：`--image`/`--chip`/`--system`/`--rotate`/`--no-video`/`--assets-only`/`--check` |
 | `assets/presets/rk-android-neutral/` | 预置「中性」logo/动画包（RK 安卓，**仅在明确要求中性时用**）：`logo.img` + `bootanimation.zip` + `CpService.xml` + `README.md` |
+| `assets/presets/linux-neutral/` | 预置「中性」Linux 开机 logo（**仅明确要求中性时用**）：`logo.png`（源图）+ `logo`（2 帧 R180）+ `bootlogo.bmp`（R180）+ `README.md` |
 | `assets/vendor/generate_bootlogo.sh` | 上游 `CP_Generate_Bootlogo` 原样副本（交互式，输出写在自己目录）；驱动的一致性基准 |
 
 ## 10. 边界与拒绝项

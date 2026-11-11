@@ -105,8 +105,8 @@ adb shell 'getprop ro.board.platform'                            # 报 command n
 
 | 落点 | 内容 | 说明 |
 |---|---|---|
-| `/logo` | 5 MB raw LOGO | 直接覆盖；属主 root、权限 644；1024x600 → 2,457,600 B，1280x800 → 4,096,000 B |
-| `/CPVideoPlayDemo` + `/video_demo.yuv` | 开机动画 | `rcS` 里 `FRAMEBUFFER=/dev/fb1 /CPVideoPlayDemo -t 9`；视频文件约 150 MB（234 帧；1024x600 → 215,654,400 B） |
+| `/logo` | raw LOGO（bgra） | 直接覆盖；root、644。**帧数看原机**：SPRING2_L 是 2 帧 4,915,200 B（`--logo-frames 2`）；1 帧 2,457,600 B；1280x800 翻倍 |
+| `/CPVideoPlayDemo` + `/video_demo.yuv` | 开机动画 | `rcS` 里 `FRAMEBUFFER=/dev/fb1 /CPVideoPlayDemo -t 9`；1024x600 234 帧 → 215,654,400 B；**yuv 不旋转** |
 | `/Configs/bootlogo.bmp` | 开机图 | 与 boot-resource 分区里的同名文件一起换 |
 | `/dev/mmcblk0p2` → `/mnt/bootlogo.bmp` | boot-resource（vfat） | `mount -rw -t vfat /dev/mmcblk0p2 /mnt`，替换后 `sync` + `umount` |
 | `/etc/init.d/rcS` | 启动主脚本 | 改错会起不来；先备份 |
@@ -118,6 +118,21 @@ adb shell 'getprop ro.board.platform'                            # 报 command n
 - `/` 和 `/data` 都可写；boot-resource 只有 7 MB，写前确认镜像尺寸，别塞大文件。
 - `/data/Log/log.log` 是 Launcher 的 qDebug 日志，GUI 触发痕迹在这里看。
 - **服务模式进程**：`runqt` 被改成 `/data/app.sh` 时，`JobMonitor.out`、`CFT.out`、`VariableMonitor` 是常用三件套；CFT 依赖 `can0`，其余依赖 `/data` 已挂载和 `servicemanager`。`/data/app.sh` 必须等 `/data` 挂好再启动。
+
+### 3.1 LOGO / 动画方向（现场实测，别再判错）
+
+- `/logo`、`bootlogo.bmp`：**存储 = 显示图旋转 180°**（生成器 `--rotate` = `hflip,vflip`），屏上才是正的；`/video_demo.yuv` **不旋转**（fb1 视频层方向不同）。
+- 只能由 `assets/generate-bootlogo.sh` 出这三个文件；禁止手绘/手工 ffmpeg/手工拼帧（SKILL §8.4）。原机 `/logo` 2 帧就用 `--logo-frames 2`，不许自己 `cat` 拼。
+- 判方向用非对称字形（V 朝下、P 的点在上），不要只凭"看着能读"。
+- **SPRING1 / SPRING2 / SPRING2PRO（含 SPRING2_L 等变体）屏幕 180°：生成时必须 `--model <机型> --rotate`**；脚本见这三款没加 `--rotate` 直接退出 2。
+
+```bash
+adb pull /logo /tmp/l.raw   # 回读：R180 后应读作正常文字
+ffmpeg -f rawvideo -pixel_format bgra -s 1024x600 -i /tmp/l.raw -vf hflip,vflip -frames:v 1 /tmp/l.png
+md5sum logo; adb shell 'md5sum /logo /video_demo.yuv /Configs/bootlogo.bmp'   # 同帧数、同 md5 才算过
+```
+
+- T3 Linux 正包必须带 `video_demo.yuv`（除明确不换动画），否则留着旧 CPDEVICE 动画。
 
 ---
 
@@ -259,6 +274,9 @@ adb shell 'rm -rf /mnt/usb/sda1; rm -f /data/cp-unattended/probe*'   # 客户包
 | 假挂载在「U盘查看」里看不到 | 页面只认真实挂载/真盘 | 用真盘验证 GUI；脚本级用 §6.2 假挂载 |
 | 重启后 adb 不回来 | U 盘占 Host 角色 / 重启重新枚举（SKILL §7.3） | 超时仍不回线才提示切 DEVICE（不写报告）；`timeout 120 adb wait-for-device`；不判失败 |
 | bootlogo 换了没生效 | 只改了 `/Configs`，没改 boot-resource 分区 | 两个都换：`/Configs/bootlogo.bmp` + `/dev/mmcblk0p2` 里的 `bootlogo.bmp` |
+| logo 屏上颠倒/镜像 | 存储方向错（不是 180°） | 用生成器 `--rotate`（hflip,vflip）重出；`video_demo.yuv` 不转；用 V/P 字形核对 |
+| 开机动画还是旧 CPDEVICE | 包里没带 `video_demo.yuv` | 生成器默认出；正包必须带，别只换静态图 |
+| `/logo` 尺寸/帧数与原机不一致 | 原机 2 帧，脚本默认 1 帧 | `--logo-frames 2` 出双帧；禁止手工 `cat` 拼帧 |
 | 复制失败 / 日志只有一句 `app目录不存在` | 前面的 `mount /dev/mmcblk0p2 /mnt` 把 `/mnt/usb/sda1` 遮住了 | 挂载点改独立目录 + `sync`/`umount`；复制失败先看 `/proc/mounts`（SKILL §7.8-13） |
 | `tar: not in gzip format` | 名为 `.tar.gz` 的其实是未压缩 tar | 用 `tar xf`；交付前 `tar tf` 自检 |
 | 日志重启后为空 | 写到 `/tmp`（tmpfs） | 一律 `/data/cp-unattended/` |

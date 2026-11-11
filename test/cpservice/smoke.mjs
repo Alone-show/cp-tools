@@ -145,11 +145,12 @@ const facts = {
     'Buildroot', '/Launcher', '/mnt/usb/sda1', 'unattended_installation.sh',
     '/dev/mmcblk0p2', 'bootlogo.bmp', '/data/cp-unattended', 'udisk_setting.cpp',
     '静默安装', 'Permission denied', 'tar xf', 'bash 4.3', 'cwd',
+    '--logo-frames', '不旋转', 'hflip,vflip',
   ],
   'SKILL.md': [
     '--xml---action---', 'PATH', 'NO_REBOOT', 'YYYYMMDD', 'verify-report.md',
     '§7.3', '§5.2', '只跑一轮', '超时才提示', 'Buildroot', '/Launcher',
-    'assets/presets',
+    'assets/presets', '--logo-frames', '不旋转', '--model', 'SPRING2PRO',
   ],
 };
 for (const [file, needles] of Object.entries(facts)) {
@@ -186,7 +187,8 @@ for (const file of ['SKILL.md', ...refs.map((f) => `references/${f}`)]) {
 
 // 12) 行数预算（软提醒）
 // 20261106：加 §8.4 logo 生成，SKILL 预算 340 → 380
-const budgets = { 'SKILL.md': 430, 'references/rk-android.md': 310, 'references/t3-android.md': 240, 'references/rk-debian.md': 380, 'references/t3-linux.md': 285 };
+// 20261111：加 §3.1 logo 方向（R180 / yuv 不旋转）与坑表，t3-linux 预算 285 → 300
+const budgets = { 'SKILL.md': 430, 'references/rk-android.md': 310, 'references/t3-android.md': 240, 'references/rk-debian.md': 380, 'references/t3-linux.md': 300 };
 for (const [file, max] of Object.entries(budgets)) {
   const n = read(file).split('\n').length;
   if (n > max) console.warn(`⚠ ${file} 现有 ${n} 行，超出预算 ${max}`);
@@ -215,10 +217,18 @@ assert.equal(createHash('sha256').update(fs.readFileSync(VENDOR)).digest('hex'),
 
 const driver = (...args) => spawnSync(DRIVER, args, { encoding: 'utf8', timeout: 120000 });
 assert.equal(driver('--help').status, 0, '--help 应退出 0');
-for (const word of ['RK_Android', 'RK_Linux', 'T3_Android', 'T3_Linux', '--rotate', '--no-video', '--assets-only', '--check']) {
+for (const word of ['RK_Android', 'RK_Linux', 'T3_Android', 'T3_Linux', '--rotate', '--logo-frames', '--model', '--no-video', '--assets-only', '--check']) {
   assert.ok(driver('--help').stdout.includes(word), `--help 缺 ${word}`);
 }
 assert.equal(driver('--chip', 'RK').status, 2, '缺 --image 应退出 2');
+
+// yuv 恒不旋转：gen_yuv 的 ffmpeg 不能带 ROTATE_FILTER（现场：fb1 视频层方向与 logo 层不同）
+{
+  const src = fs.readFileSync(DRIVER, 'utf8');
+  const genYuv = src.slice(src.indexOf('gen_yuv()'), src.indexOf('gen_logo_raw()'));
+  assert.ok(genYuv.length > 0, '驱动里找不到 gen_yuv');
+  assert.ok(!genYuv.includes('ROTATE_FILTER'), 'gen_yuv 不应使用 ROTATE_FILTER（yuv 不旋转）');
+}
 
 const hasFfmpeg = spawnSync('bash', ['-c', 'command -v ffmpeg && command -v ffprobe'], { encoding: 'utf8' }).status === 0;
 if (!hasFfmpeg) {
@@ -255,6 +265,25 @@ if (!hasFfmpeg) {
       assert.equal(fs.statSync(main).size, spec.size(1024, 600), `${combo} ${spec.main} 尺寸不符`);
       assert.equal(driver('--check', path.join(outRoot, dir)).status, 0, `${combo} --check 应通过`);
     }
+
+    // SPRING1/SPRING2/SPRING2PRO 屏幕 180°：--model 命中且缺 --rotate 必须退出 2
+    for (const m of ['SPRING1', 'SPRING2', 'SPRING2PRO', 'spring 2 pro', 'SPRING2_L']) {
+      assert.equal(driver('--image', png, '--chip', 'T3', '--system', 'Linux', '--model', m, '--dry-run', '--out', outRoot).status, 2,
+        `--model ${m} 缺 --rotate 应退出 2`);
+      assert.equal(driver('--image', png, '--chip', 'T3', '--system', 'Linux', '--model', m, '--rotate', '--dry-run', '--out', outRoot).status, 0,
+        `--model ${m} 带 --rotate 应通过`);
+    }
+    assert.equal(driver('--image', png, '--chip', 'T3', '--system', 'Linux', '--model', 'APOLLO2', '--dry-run', '--out', outRoot).status, 0,
+      '非 SPRING 机型不应被强制 --rotate');
+
+    // T3 Linux 双帧 logo（SPRING2_L 原机 /logo 4,915,200 B）：--logo-frames 2
+    const r2 = driver('--image', png, '--chip', 'T3', '--system', 'Linux', '--name', 'twice', '--out', outRoot, '--no-video', '--logo-frames', '2');
+    assert.equal(r2.status, 0, `T3_Linux 双帧生成失败：${r2.stderr}`);
+    const dir2 = fs.readdirSync(outRoot).find((d) => d.startsWith('T3_Linux_twice_'));
+    assert.ok(dir2, '双帧输出目录缺失');
+    assert.equal(fs.statSync(path.join(outRoot, dir2, 'logo')).size, 1024 * 600 * 4 * 2, '双帧 logo 应为 4,915,200 B');
+    assert.equal(driver('--check', path.join(outRoot, dir2)).status, 0, '双帧 --check 应通过');
+    assert.equal(driver('--image', png, '--chip', 'T3', '--system', 'Linux', '--out', outRoot, '--logo-frames', '3').status, 2, '--logo-frames 3 应退出 2');
 
     // 1280x800 → logo.img 6,144,566（与现场包 shantui 一致）
     driver('--image', pngBig, '--chip', 'RK', '--system', 'Android', '--name', 'big', '--out', outRoot);
@@ -367,6 +396,25 @@ assert.equal(presetZip.subarray(descStart, descStart + descEntry.size).toString(
 const presetCheck = spawnSync(DRIVER, ['--check', PRESET], { encoding: 'utf8' });
 assert.equal(presetCheck.status, 0, `预置包 --check 应通过：${presetCheck.stderr}`);
 console.log('  预置中性包: logo.img/bootanimation.zip/CpService.xml 结构与动作顺序 OK');
+
+// 15b) 预置「中性」Linux logo（源图 + T3 Linux 直用媒体，方向已是 R180）
+const LINUX_PRESET = path.join(SKILL_DIR, 'assets', 'presets', 'linux-neutral');
+const LINUX_PRESET_REL = 'assets/presets/linux-neutral';
+for (const f of ['logo.png', 'logo', 'bootlogo.bmp', 'README.md']) {
+  assert.ok(fs.existsSync(path.join(LINUX_PRESET, f)), `缺少 ${LINUX_PRESET_REL}/${f}`);
+}
+{
+  const png = fs.readFileSync(path.join(LINUX_PRESET, 'logo.png'));
+  assert.equal(png.subarray(1, 4).toString('latin1'), 'PNG', 'logo.png 不是 PNG');
+  assert.deepEqual([png.readUInt32BE(16), png.readUInt32BE(20)], [1024, 600], 'logo.png 应为 1024x600');
+}
+assert.equal(fs.statSync(path.join(LINUX_PRESET, 'logo')).size, 1024 * 600 * 4 * 2, '预置 logo 应为 2 帧 4,915,200 B');
+assert.equal(fs.statSync(path.join(LINUX_PRESET, 'bootlogo.bmp')).size, 54 + 1024 * 600 * 3, '预置 bootlogo.bmp 尺寸不对');
+const linuxPresetCheck = spawnSync(DRIVER, ['--check', LINUX_PRESET], { encoding: 'utf8' });
+assert.equal(linuxPresetCheck.status, 0, `Linux 中性预置 --check 应通过：${linuxPresetCheck.stderr}`);
+assert.ok(skill.content.includes(LINUX_PRESET_REL), 'SKILL.md 应列出 linux-neutral 预置');
+assert.ok(/中性/.test(fs.readFileSync(path.join(LINUX_PRESET, 'README.md'), 'utf8')), '预置 README 应写清中性用途');
+console.log('  预置 Linux 中性 logo: 源图 + 2 帧 logo + bootlogo.bmp OK');
 
 // 10) 职责边界：整机线刷已拆到 skill `flash`（20261109），这里只留指针
 assert.ok(skill.content.includes('`flash`'), 'SKILL.md 应指明整机线刷走 skill flash');
