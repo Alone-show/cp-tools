@@ -24,8 +24,8 @@
 | `logo` | **T3 Linux 直用**：bgra 1024×600，2 帧，已 R180 | 4,915,200 B | `3e9b85b53cca1eba050c2efc1ae46a9f` |
 | `bootlogo.bmp` | **T3 Linux 直用**：1024×600×24bpp，已 R180 | 1,843,254 B | `0ab3d5d9d3b52cc00a093f0a048c7b46` |
 
-- 方向与现场一致：`logo`、`bootlogo.bmp` **存储 = 显示图 R180**（脚本 `--rotate` = `hflip,vflip`）。
-- 未内置 `video_demo.yuv`（215 MB）：要换开机动画就从 `logo.png` 现出，**yuv 不旋转**。
+- 方向已按现场出好（`logo`、`bootlogo.bmp` 存储为 R180），生成规则见 SKILL §8.4。
+- 未内置 `video_demo.yuv`（215 MB）：要换开机动画就从 `logo.png` 现出。
 
 ## 怎么用
 
@@ -34,24 +34,17 @@
 **重出 / 换平台**（图片只用 `logo.png`，不要手工裁/拼）：
 
 ```bash
-# T3 Linux（SPRING2_L 原机 /logo 是 2 帧 → --logo-frames 2；SPRING1/SPRING2/SPRING2PRO 必须 --rotate）
+# T3 Linux（SPRING2_L 原机 /logo 是 2 帧 → --logo-frames 2；SPRING 系列加 --rotate）
 assets/generate-bootlogo.sh --image assets/presets/linux-neutral/logo.png \
-  --chip T3 --system Linux --model SPRING2 --rotate --logo-frames 2 --name linux-neutral --out ~/Downloads
+  --chip T3 --system Linux --rotate --logo-frames 2 --name linux-neutral --out ~/Downloads
 
 # RK Linux / RK Debian（产物 logo.img，dd 到 logo 分区）
 assets/generate-bootlogo.sh --image assets/presets/linux-neutral/logo.png \
   --chip RK --system Linux --rotate --name linux-neutral --out ~/Downloads
 ```
 
-## 自检
-
-```bash
-assets/generate-bootlogo.sh --check assets/presets/linux-neutral   # logo 2 帧也在白名单内
-md5sum assets/presets/linux-neutral/*
-```
-
 ## 风险
 
-- 只换 `logo` / `bootlogo.bmp` 不换 `video_demo.yuv` → 开机动画仍是旧的 CPDEVICE（参考 §3.1）。
+- 只换 `logo` / `bootlogo.bmp` 不换 `video_demo.yuv` → 开机动画仍是旧的 CPDEVICE（SKILL §8.4）。
 - RK Debian 用 `dd` 写 logo 分区；T3 Linux 是直接覆盖 `/logo`，别把两套动作混用。
 - 本图是通用标识，客户品牌图优先；用了就在交付说明里点明「中性 Linux logo」。

@@ -145,12 +145,12 @@ const facts = {
     'Buildroot', '/Launcher', '/mnt/usb/sda1', 'unattended_installation.sh',
     '/dev/mmcblk0p2', 'bootlogo.bmp', '/data/cp-unattended', 'udisk_setting.cpp',
     '静默安装', 'Permission denied', 'tar xf', 'bash 4.3', 'cwd',
-    '--logo-frames', '不旋转', 'hflip,vflip',
+    '--logo-frames', 'hflip,vflip',
   ],
   'SKILL.md': [
     '--xml---action---', 'PATH', 'NO_REBOOT', 'YYYYMMDD', 'verify-report.md',
     '§7.3', '§5.2', '只跑一轮', '超时才提示', 'Buildroot', '/Launcher',
-    'assets/presets', '--logo-frames', '不旋转', '--model', 'SPRING2PRO',
+    'assets/presets', '--logo-frames', '不旋转', 'SPRING1', 'SPRING2PRO',
   ],
 };
 for (const [file, needles] of Object.entries(facts)) {
@@ -187,8 +187,8 @@ for (const file of ['SKILL.md', ...refs.map((f) => `references/${f}`)]) {
 
 // 12) 行数预算（软提醒）
 // 20261106：加 §8.4 logo 生成，SKILL 预算 340 → 380
-// 20261111：加 §3.1 logo 方向（R180 / yuv 不旋转）与坑表，t3-linux 预算 285 → 300
-const budgets = { 'SKILL.md': 430, 'references/rk-android.md': 310, 'references/t3-android.md': 240, 'references/rk-debian.md': 380, 'references/t3-linux.md': 300 };
+// 20261111：§3.1 logo 方向并入 §8.4（脚本是权威，不再重复校验步骤），预算收紧
+const budgets = { 'SKILL.md': 410, 'references/rk-android.md': 310, 'references/t3-android.md': 240, 'references/rk-debian.md': 380, 'references/t3-linux.md': 295 };
 for (const [file, max] of Object.entries(budgets)) {
   const n = read(file).split('\n').length;
   if (n > max) console.warn(`⚠ ${file} 现有 ${n} 行，超出预算 ${max}`);
@@ -217,9 +217,10 @@ assert.equal(createHash('sha256').update(fs.readFileSync(VENDOR)).digest('hex'),
 
 const driver = (...args) => spawnSync(DRIVER, args, { encoding: 'utf8', timeout: 120000 });
 assert.equal(driver('--help').status, 0, '--help 应退出 0');
-for (const word of ['RK_Android', 'RK_Linux', 'T3_Android', 'T3_Linux', '--rotate', '--logo-frames', '--model', '--no-video', '--assets-only', '--check']) {
+for (const word of ['RK_Android', 'RK_Linux', 'T3_Android', 'T3_Linux', '--rotate', '--logo-frames', '--no-video', '--assets-only', '--check']) {
   assert.ok(driver('--help').stdout.includes(word), `--help 缺 ${word}`);
 }
+assert.ok(!driver('--help').stdout.includes('--model'), '脚本不硬判机型：SPRING 系列由 SKILL §8.4 决定是否传 --rotate');
 assert.equal(driver('--chip', 'RK').status, 2, '缺 --image 应退出 2');
 
 // yuv 恒不旋转：gen_yuv 的 ffmpeg 不能带 ROTATE_FILTER（现场：fb1 视频层方向与 logo 层不同）
@@ -266,15 +267,9 @@ if (!hasFfmpeg) {
       assert.equal(driver('--check', path.join(outRoot, dir)).status, 0, `${combo} --check 应通过`);
     }
 
-    // SPRING1/SPRING2/SPRING2PRO 屏幕 180°：--model 命中且缺 --rotate 必须退出 2
-    for (const m of ['SPRING1', 'SPRING2', 'SPRING2PRO', 'spring 2 pro', 'SPRING2_L']) {
-      assert.equal(driver('--image', png, '--chip', 'T3', '--system', 'Linux', '--model', m, '--dry-run', '--out', outRoot).status, 2,
-        `--model ${m} 缺 --rotate 应退出 2`);
-      assert.equal(driver('--image', png, '--chip', 'T3', '--system', 'Linux', '--model', m, '--rotate', '--dry-run', '--out', outRoot).status, 0,
-        `--model ${m} 带 --rotate 应通过`);
-    }
-    assert.equal(driver('--image', png, '--chip', 'T3', '--system', 'Linux', '--model', 'APOLLO2', '--dry-run', '--out', outRoot).status, 0,
-      '非 SPRING 机型不应被强制 --rotate');
+    // 机型旋转不写进脚本（回退 20261111 的 --model 硬判）：SKILL §8.4 识别到 SPRING 系列再传 --rotate
+    assert.equal(driver('--image', png, '--chip', 'T3', '--system', 'Linux', '--dry-run', '--out', outRoot).status, 0,
+      '脚本不应按机型强制 --rotate');
 
     // T3 Linux 双帧 logo（SPRING2_L 原机 /logo 4,915,200 B）：--logo-frames 2
     const r2 = driver('--image', png, '--chip', 'T3', '--system', 'Linux', '--name', 'twice', '--out', outRoot, '--no-video', '--logo-frames', '2');

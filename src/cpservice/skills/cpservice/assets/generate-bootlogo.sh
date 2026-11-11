@@ -21,7 +21,7 @@
 # 用法：
 #   generate-bootlogo.sh --image <png> --chip <RK|T3> --system <Android|Linux>
 #                        [--name <tag>] [--out <父目录>] [--rotate]
-#                        [--logo-frames 1|2] [--model <机型>] [--no-video] [--assets-only] [--dry-run]
+#                        [--logo-frames 1|2] [--no-video] [--assets-only] [--dry-run]
 #   generate-bootlogo.sh --check <已生成目录>
 #   generate-bootlogo.sh --help
 #
@@ -34,8 +34,6 @@
 # 尺寸约束：图片必须是 1024x600 或 1280x800（与上游一致，ffprobe 判定）。
 # --rotate      180°（hflip,vflip）：只转 bootlogo.bmp / logo；yuv 恒不旋转
 # --logo-frames T3 Linux 的 logo 帧数，默认 1；原机是 2 帧时用 2
-# --model       机型（如 SPRING2/SPRING2PRO）：SPRING1/SPRING2/SPRING2PRO 必须加 --rotate，
-#               漏了会直接退出 2（这三款屏幕 180°）
 #
 # 退出码：0 成功 / 2 用法错误 / 3 缺 ffmpeg|ffprobe / 4 图片尺寸不符
 #         5 生成失败 / 6 自检失败
@@ -45,7 +43,7 @@ set -Eeuo pipefail
 TODAY="$(date +%Y%m%d)"
 readonly TODAY
 
-IMAGE='' CHIP='' SYSTEM='' NAME='logo' OUT_DIR='' CHECK_DIR='' MODEL=''
+IMAGE='' CHIP='' SYSTEM='' NAME='logo' OUT_DIR='' CHECK_DIR=''
 ROTATE=0 NO_VIDEO=0 ASSETS_ONLY=0 DRY_RUN=0 LOGO_FRAMES=1
 
 die() { local code="$1"; shift; printf 'generate-bootlogo: %s\n' "$*" >&2; exit "$code"; }
@@ -65,7 +63,6 @@ while [[ $# -gt 0 ]]; do
     --name)   need_value "$@"; NAME="$2"; shift 2 ;;
     --out)    need_value "$@"; OUT_DIR="$2"; shift 2 ;;
     --check)  need_value "$@"; CHECK_DIR="$2"; shift 2 ;;
-    --model)  need_value "$@"; MODEL="$2"; shift 2 ;;
     --rotate) ROTATE=1; shift ;;
     --logo-frames) need_value "$@"; LOGO_FRAMES="$2"; shift 2 ;;
     --no-video) NO_VIDEO=1; shift ;;
@@ -115,15 +112,6 @@ resolve_plan() {
   (( ROTATE )) && ROTATE_FILTER='hflip,vflip,'
   [[ "$LOGO_FRAMES" == "1" || "$LOGO_FRAMES" == "2" ]] \
     || die 2 "--logo-frames 只接受 1 或 2（收到 ${LOGO_FRAMES}）"
-  if [[ -n "$MODEL" ]]; then
-    local m="${MODEL^^}"
-    m="${m//[^A-Z0-9]/}"
-    case "$m" in
-      SPRING1*|SPRING2*)
-        (( ROTATE )) || die 2 "机型 ${MODEL} 的屏幕是 180°，必须加 --rotate（漏了会上下颠倒）"
-        printf '机型 %s：已启用 --rotate（屏幕 180°）\n' "$MODEL" >&2 ;;
-    esac
-  fi
   NAME="$(normalize_name "$NAME")"
   OUT_DIR="${OUT_DIR:-$HOME/Downloads}"
   TARGET="$OUT_DIR/${COMBO}_${NAME}_${TODAY}"
