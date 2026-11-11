@@ -2196,7 +2196,7 @@ function loginToolFor(ctx) {
     async execute(args, exec) {
       const dir = await tokenDir(ctx, exec);
       const options = args ?? {};
-      if (options.cookie) return jsonSafe(loginWithCookie(dir, options.cookie));
+      if (options.cookie) return jsonSafe(await loginWithCookie(dir, options.cookie));
       if (process.env.TBFW_NO_DISPLAY === '1') {
         return jsonSafe({ status: 'no_display', reason: '测试钩子 TBFW_NO_DISPLAY=1', hint: '把 cookie 粘给 firmware_login(cookie="...")' });
       }
