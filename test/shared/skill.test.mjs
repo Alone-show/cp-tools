@@ -51,3 +51,48 @@ test('readBundledSkill：缺 name/description 直接报错', () => {
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('readBundledSkill：块标量 description 必须报错，不能静默变成 ">"', () => {
+  const { dir, file } = tmpSkill('---\nname: demo\ndescription: >\n  第一行\n  第二行\n---\n正文\n');
+  try {
+    assert.throws(() => readBundledSkill(file), /块标量/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('readBundledSkill：未知 frontmatter 键必须报错', () => {
+  const { dir, file } = tmpSkill('---\nname: demo\ndescription: ok\nunknownField: x\n---\n正文\n');
+  try {
+    assert.throws(() => readBundledSkill(file), /未支持的键 "unknownField"/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('readBundledSkill：非法布尔值必须报错，不能静默按默认值启用', () => {
+  const { dir, file } = tmpSkill('---\nname: demo\ndescription: ok\ndisable-model-invocation: true # 注释\n---\n正文\n');
+  try {
+    assert.throws(() => readBundledSkill(file), /不是布尔值/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('readBundledSkill：name 必须是 kebab-case', () => {
+  const { dir, file } = tmpSkill('---\nname: Demo Skill\ndescription: ok\n---\n正文\n');
+  try {
+    assert.throws(() => readBundledSkill(file), /不是合法 skill 名/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('readBundledSkill：带引号的 description 去掉引号', () => {
+  const { dir, file } = tmpSkill('---\nname: demo\ndescription: "含: 冒号 # 井号"\n---\n正文\n');
+  try {
+    assert.equal(readBundledSkill(file).description, '含: 冒号 # 井号');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
