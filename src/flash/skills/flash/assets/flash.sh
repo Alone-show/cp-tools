@@ -1259,6 +1259,9 @@ cmd_verify() {
     parse_args "$@"
     [ "${#POSITIONAL[@]}" -eq 0 ] || die 2 "verify 不接受位置参数"
     setup_paths "verify"
+    # verify 只是「看看现在是什么版本」：这里若保留 STEM=verify，期望版本会被推导成字面量
+    # "verify"，不带 --expect-version 时版本项必然 FAIL（误报刷机失败）。清空后走「没得比就 WARN」。
+    STEM=""
 
     pick_serial || die 3 "没有 adb 设备"
     pl=$(detect_platform)
