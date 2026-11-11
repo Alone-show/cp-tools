@@ -201,7 +201,7 @@ export function importData({ src, out, log = () => {} } = {}) {
   // 6) 汇总
   const dataset = {
     builtAt: new Date().toISOString(),
-    source: SRC,
+    source: path.isAbsolute(SRC) ? path.relative(process.cwd(), SRC) || '.' : SRC,
     note: '由 lib/import.js 从 work/cpdoc/ai-readable 生成；run: node lib/import.js',
     models,
     programming_pages: progPages.map((p) => ({ slug: p.slug, title: p.title, url: p.url, sections: p.sections })),
