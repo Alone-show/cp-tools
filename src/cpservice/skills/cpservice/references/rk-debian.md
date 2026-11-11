@@ -8,6 +8,19 @@
 
 ---
 
+## 目录
+
+- [0. Runbook（例行验证只读这一节；细节在 §1 之后）](#0-runbook例行验证只读这一节细节在-1-之后)
+- [1. 判定与两种安装方式](#1-判定与两种安装方式)
+- [2. 包结构与两种方式](#2-包结构与两种方式)
+- [3. `silentInstaller` 的 UI 协议](#3-silentinstaller-的-ui-协议)
+- [4. 脚本约束（Debian 与安卓完全不同）](#4-脚本约束debian-与安卓完全不同)
+- [5. 落点与系统操作](#5-落点与系统操作)
+- [6. 出包模板](#6-出包模板)
+- [7. 验证命令（Debian）](#7-验证命令debian)
+- [8. 坑表](#8-坑表)
+- [9. 参考](#9-参考)
+
 ## 0. Runbook（例行验证只读这一节；细节在 §1 之后）
 
 ```bash
@@ -374,6 +387,6 @@ adb shell 'rm -rf /var/lib/cp-unattended /usr/local/share/verify-demo; rm -f /ru
 ## 9. 参考
 
 - 工具：`unattendedinstallationtools` 1.0.4（`dpkg -L` 可列全部文件）；`silentInstaller` / `Unattended_Installation_Tools` 的行为来自二进制反查。
-- 现网包：`/home/my/customizationData/archive/雷沃/20260303-SPRING2 10PRO-雷沃U盘静默安装包（…）.zip`（手动方式，根 `unattended_installation.sh` + `customization.tar`，末尾 `reboot`）；`/home/my/other/customizationData/patches/debian_auto_openssh_drop.zip`（自动方式，`:uisum`）。
+- 现网包：`~/customizationData/archive/雷沃/20260303-SPRING2 10PRO-雷沃U盘静默安装包（…）.zip`（手动方式，根 `unattended_installation.sh` + `customization.tar`，末尾 `reboot`）；`~/other/customizationData/patches/debian_auto_openssh_drop.zip`（自动方式，`:uisum`）。
 - 老包盘根还见过 `/mnt/usb/sda1`；脚本兜底扫描，不要照抄硬编码。
 - 平台差异与 OTG 处置：`../SKILL.md` §5.2、§7.3。

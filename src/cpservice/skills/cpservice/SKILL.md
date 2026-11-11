@@ -393,8 +393,6 @@ assets/generate-bootlogo.sh --image logo.png --chip T3 --system Linux --name <�
 - **T3 Linux 启动时序**：`rcS` 先 `/etc/autorun.sh &`、后 `mount -t ext4 /dev/mmcblk0p1 /data`；`runqt` 可能抢在 `/data` 挂载前执行 `/data/app.sh`。新包要 wait `/data/app.sh` 或调整顺序；老包进程不齐先查 `/proc/mounts` 和启动链。
 - **T3 Linux 服务模式**：`runqt` 改成 `/data/app.sh` 后，Launcher/MDM 不常驻是设计可能；可用性按包内约定进程判，不套桌面包判据。
 - **T3 Linux UI**：`eglfs/mali` 的 `/dev/fb0` 抓屏不等于实际 UI；只能目视/拍照，否则写「未验证」。
-- **整机线刷不在本 skill**：线刷（会清数据、loader/FEL、只比版本号）走独立 skill `flash`（`/flash`）；这里只做 U 盘升级包。
-- **验证不是排障**：不杀业务进程、不反复跑崩溃二进制、不重启应用抓日志；先记录 core/进程/日志再下结论。一项不过即停，报告写「不通过/未验证」。
 
 ## 11. 整机线刷（不在这里）
 

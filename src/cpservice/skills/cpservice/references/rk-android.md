@@ -3,10 +3,22 @@
 > **适用**：Rockchip RK356x / RK3588 的 Android 11+。
 > **实测机**：`SPRING2_MIX` / `ro.board.platform=rk356x` / Android 11（SDK 30）/ `userdebug` / 固件 `CP_SP2-10MIX_A_V1.17_LCD10_B0_MDM_20260923`。
 > **工具**：`com.cpdevice.cpservice` 7.5.4（`/system/priv-app/CpService/CpService.apk`），**21 个动作**；xml 固定 `CpService.xml`。
-> **依据**：`android-cpservice-develop`（`_Command.java` 为准 + `doc/操作说明.md`）与示例包 `/home/my/Downloads/20260717/`。
+> **依据**：`android-cpservice-develop`（`_Command.java` 为准 + `doc/操作说明.md`）与示例包 `~/Downloads/20260717/`。
 > **先读** `../SKILL.md`（判定、共享硬约束、验证主线）；T3 用 `t3-android.md`。
 
 ---
+
+## 目录
+
+- [1. 工具与触发](#1-工具与触发)
+- [2. 动作表（21 个）](#2-动作表21-个)
+- [3. 有坑的动作](#3-有坑的动作)
+- [4. 落点与写权限（本机实测）](#4-落点与写权限本机实测)
+- [5. 出包模板](#5-出包模板)
+- [6. 设备端脚本（RK 增量）](#6-设备端脚本rk-增量)
+- [7. 验证命令（RK）](#7-验证命令rk)
+- [8. MDM / WiFi 边界](#8-mdm--wifi-边界)
+- [9. 参考](#9-参考)
 
 ## 1. 工具与触发
 
@@ -165,7 +177,7 @@ adb exec-out 'dd if=/dev/block/by-name/logo 2>/dev/null' | head -c "$(stat -c %s
 
 模板 `assets/cpservice-setup-template.sh`：改顶部 `APK_LIST`/`COPY_DIRS`/`COPY_FILES`/`LOGO_IMG`/`BOOTANIMATION`/`DO_REBOOT`。
 
-### 5.3 示例包 `/home/my/Downloads/20260717/`
+### 5.3 示例包 `~/Downloads/20260717/`
 
 `CpService.xml`（一条 `cmd` 调脚本）+ `setup_cpservice.sh`（装 2 APK、`dd` logo、`/data/media/bootanimation.zip`、拷 `fcw/data`、`fcw/model`、`tts`、`setprop logd`、`sync`、`reboot`）。
 
@@ -296,7 +308,7 @@ adb shell 'setprop persist.cps.xml.run.time 0'
 
 ## 9. 参考
 
-- 工具源码：`/home/my/Downloads/android-cpservice-develop/`（以 `app/src/main/java/com/cpdevice/cpservice/_Command.java` 为准；`doc/操作说明.md` 逐条说明）。
-- 示例包：`/home/my/Downloads/20260717/`。
+- 工具源码：`~/Downloads/android-cpservice-develop/`（以 `app/src/main/java/com/cpdevice/cpservice/_Command.java` 为准；`doc/操作说明.md` 逐条说明）。
+- 示例包：`~/Downloads/20260717/`。
 - 本机固件：`CP_SP2-10MIX_A_V1.17_LCD10_B0_MDM_20260923`。
 - 固件升级后行为变化，以现场 `logcat -s _Command` 为准，并回写本文件坑表。

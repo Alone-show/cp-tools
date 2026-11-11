@@ -284,6 +284,6 @@ adb shell 'rm -rf /mnt/usb/sda1; rm -f /data/cp-unattended/probe*'   # 客户包
 
 ## 8. 参考
 
-- 示例包：`/home/my/customizationData/archive/雷沃/lovol_install_服务模式(JK01101020000a)_20250423.zip`（`unattended_installation.sh` + `data.tar.gz` + logo/bootlogo/动画/rcS/runqt/qt5.9/touchscreen.rules，末尾 `reboot`，无日志、无 md5）。
+- 示例包：`~/customizationData/archive/雷沃/lovol_install_服务模式(JK01101020000a)_20250423.zip`（`unattended_installation.sh` + `data.tar.gz` + logo/bootlogo/动画/rcS/runqt/qt5.9/touchscreen.rules，末尾 `reboot`，无日志、无 md5）。
 - 示例里的 `data.tar.gz` 实际是未压缩 tar（首字节 `./`；`tar tzf` 报 not in gzip，`tar tvf` 可读），脚本里 `cp` 到 `/data` 后 `tar xvf`。
 - 平台差异与 OTG 处置：`../SKILL.md` §5.2、§7.3；T3 安卓见 `t3-android.md`；RK Debian 见 `rk-debian.md`。
