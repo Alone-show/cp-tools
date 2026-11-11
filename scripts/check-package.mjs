@@ -105,7 +105,21 @@ for (const sub of subplugins) {
   }
 }
 
-// 5) skill 与资源
+// 5) skill：Anthropic Agent Skills 规范（skill-creator/quick_validate.py）+ DSH 契约
+//    规范里这些是硬约束，写错了不会报错，只会让 skill 静默不触发，所以放进包里必须拦。
+const SKILL_KEYS = new Set([
+  'name',
+  'description',
+  'license',
+  'allowed-tools',
+  'metadata',
+  'compatibility',
+  'whenToUse',
+  'disable-model-invocation',
+  'user-invocable',
+]);
+const SKILL_MAX_LINES = 500;
+const DESC_MAX = 1024;
 const skills = [
   ['firmware', 'src/firmware/skills/firmware/SKILL.md'],
   ['cpservice', 'src/cpservice/skills/cpservice/SKILL.md'],
@@ -118,8 +132,47 @@ for (const [name, file] of skills) {
     continue;
   }
   const text = fs.readFileSync(abs, 'utf8');
-  if (!new RegExp(`^name:\\s*${name}\\s*$`, 'm').test(text)) fail(`${name}: SKILL.md frontmatter name 不是 ${name}`);
-  if (!/^description:\s*\S+/m.test(text)) fail(`${name}: SKILL.md 缺 description`);
+  const fm = /^---\r?\n([\s\S]*?)\r?\n---/.exec(text);
+  if (!fm) {
+    fail(`${name}: SKILL.md 缺 YAML frontmatter`);
+    continue;
+  }
+  for (const line of fm[1].split(/\r?\n/)) {
+    if (!line.trim() || /^\s/.test(line) || line.trim().startsWith('#')) continue;
+    const key = (line.match(/^([A-Za-z0-9_-]+):/) || [])[1];
+    if (!key) {
+      fail(`${name}: frontmatter 无法解析：${line}`);
+      continue;
+    }
+    if (!SKILL_KEYS.has(key)) fail(`${name}: frontmatter 键 ${key} 不在规范允许列表内`);
+  }
+  const nameLine = /^name:\s*(.+)$/m.exec(fm[1]);
+  if (!nameLine) fail(`${name}: SKILL.md 缺 name`);
+  else if (nameLine[1].trim() !== name) fail(`${name}: SKILL.md frontmatter name 不是 ${name}`);
+  const descLine = /^description:\s*(.+)$/m.exec(fm[1]);
+  if (!descLine) fail(`${name}: SKILL.md 缺 description`);
+  else {
+    const description = descLine[1].trim();
+    if (/^[>|][+-]?$/.test(description)) fail(`${name}: description 是 YAML 块标量，运行时只支持单行`);
+    else {
+      const len = description.replace(/^(["'])(.*)\1$/, '$2').length;
+      if (len > DESC_MAX) fail(`${name}: description ${len} 字符，超出规范上限 ${DESC_MAX}`);
+      if (/[<>]/.test(description)) fail(`${name}: description 不能含尖括号（规范要求）`);
+    }
+  }
+  const lines = text.split(/\r?\n/).length;
+  if (lines > SKILL_MAX_LINES) fail(`${name}: SKILL.md ${lines} 行，超出 ${SKILL_MAX_LINES} 行预算`);
+  const skillDir = path.dirname(abs);
+  const refs = new Set(
+    [...text.matchAll(/`((?:references|assets|scripts)\/[^`\s]+)`/g)].map((m) => m[1].replace(/\/+$/, '')),
+  );
+  for (const ref of refs) {
+    if (ref.includes('*')) continue; // `references/*.md` 是说明用的通配写法，不是具体路径
+    if (!fs.existsSync(path.join(skillDir, ref))) fail(`${name}: SKILL.md 引用了不存在的 ${ref}`);
+  }
+  for (const sh of walk(skillDir).filter((p) => p.endsWith('.sh'))) {
+    if (!(fs.statSync(sh).mode & 0o111)) fail(`${name}: ${rel(sh)} 缺可执行位（SKILL 里按一条命令跑）`);
+  }
 }
 for (const f of ['references/rk-android.md', 'references/t3-android.md', 'references/rk-debian.md', 'references/t3-linux.md', 'assets/verify.sh']) {
   if (!fs.existsSync(path.join(ROOT, 'src/cpservice/skills/cpservice', f))) fail(`cpservice: 缺 ${f}`);
@@ -139,6 +192,27 @@ else {
   const models = readJson(path.join(dataDir, 'models.json')).models ?? [];
   note(`docs 数据：${models.length} 款机型`);
   if (models.length === 0) fail('docs: models.json 没有机型');
+  // 运行期 data 只在用户第一次 /cp-docs 时才读，缺文件要等到现场才炸，所以这里逐个核。
+  const ids = new Set();
+  for (const entry of models) {
+    if (!entry?.id) fail('docs: models.json 有缺 id 的机型');
+    else if (ids.has(entry.id)) fail(`docs: models.json 机型 id 重复：${entry.id}`);
+    else ids.add(entry.id);
+    for (const key of ['spec', 'programming', 'workpoints']) {
+      const refPath = entry?.[key];
+      if (!refPath) continue;
+      const abs = path.join(dataDir, refPath);
+      if (!abs.startsWith(dataDir)) fail(`docs: ${entry.id}.${key} 指向数据目录之外（${refPath}）`);
+      else if (!fs.existsSync(abs)) fail(`docs: 缺 ${refPath}（${entry.id}.${key}）`);
+      else {
+        try {
+          readJson(abs);
+        } catch {
+          fail(`docs: ${refPath} 不是合法 JSON`);
+        }
+      }
+    }
+  }
 }
 const vendorDir = path.join(ROOT, 'src/cpservice/skills/cpservice/vendor');
 for (const f of ['README.md', 'fw_cyw43438.bin', 'nvram_cyw43438.txt']) {
@@ -164,10 +238,13 @@ const forbidden = walk(ROOT).filter((p) => {
 });
 for (const p of forbidden) fail(`包内不应出现：${rel(p)}`);
 
-// 9) 运行期 JS 不应写死本机绝对路径
-for (const file of walk(path.join(ROOT, 'src')).filter((p) => p.endsWith('.js'))) {
+// 9) 随包文本不应写死本机绝对路径
+//    之前只扫 *.js，结果 src/docs/data/models.json（会真的发给用户）里带着构建机路径也放行；
+//    这里按「会随包发布的文本」整体扫，二进制（vendor/、tools/）跳过。
+const HOME_PATH_RE = /\/home\/[A-Za-z0-9._-]+\/|\/Users\/[A-Za-z0-9._-]+\//;
+for (const file of walk(path.join(ROOT, 'src')).filter((p) => /\.(js|mjs|json|md|sh|txt)$/.test(p))) {
   const text = fs.readFileSync(file, 'utf8');
-  if (text.includes('/home/my/')) fail(`${rel(file)} 写死了本机绝对路径`);
+  if (HOME_PATH_RE.test(text)) fail(`${rel(file)} 写死了本机绝对路径`);
 }
 
 // 10) 体积报告
