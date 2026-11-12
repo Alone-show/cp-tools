@@ -1,5 +1,5 @@
 /**
- * firmware 子插件的共享常量：归档字段、TB 看板、UA、字段归一。
+ * firmware / tickets 共享的常量：归档字段、TB 看板、UA、字段归一。
  */
 
 export const PROJECT_ID = '65a8da81950780b816d12bd9'; // 【研发部】CI/CD 发版流程

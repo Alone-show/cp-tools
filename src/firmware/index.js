@@ -443,7 +443,7 @@ async function searchFromAlist(ctx, exec, args) {
     return {
       status: 'needs_setup',
       query,
-      hint: 'alist 不可达；请检查网络或先 /firmware sync。',
+      hint: 'alist 不可达；请检查网络或先 /tickets sync。',
       rows: [],
     };
   }
@@ -507,7 +507,7 @@ async function searchFromAlist(ctx, exec, args) {
     rows,
     note:
       '本地没有 TB 看板索引，本次直接查 alist /PROD（只扫匹配的机型/客户/系统目录）。' +
-      '要 TB 阶段/任务链接/子任务状态请 /firmware sync。' +
+      '要 TB 阶段/任务链接/子任务状态请 /tickets sync。' +
       devNote,
     alist: { ok: true, rows: rows.length },
   };
@@ -944,7 +944,7 @@ async function search(ctx, exec, args) {
     noteParts.push(
       `实时核对失败（${probeError}），以下为本地索引快照${
         indexAgeHours != null ? `（${indexAgeHours.toFixed(1)} 小时前）` : ''
-      }，可能漏掉新归档；可 /firmware login 后重试`,
+      }，可能漏掉新归档；可 /tickets login 后重试`,
     );
   }
   if (alistUsed) noteParts.push('已实时核对 alist /PROD，并用其补齐版本与直链');

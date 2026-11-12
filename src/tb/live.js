@@ -41,7 +41,7 @@ export function createTbClient({ cookie, fetchImpl = globalThis.fetch, timeoutMs
 
   async function get(url) {
     const res = await fetchImpl(url, { headers, signal: AbortSignal.timeout ? AbortSignal.timeout(timeoutMs) : undefined });
-    if (res.status === 401) throw new Error('Teambition 登录态失效，需要重新登录（/firmware login）');
+    if (res.status === 401) throw new Error('Teambition 登录态失效，需要重新登录（/tickets login）');
     if (!res.ok) throw new Error(`${url} -> ${res.status}`);
     return res.json();
   }
