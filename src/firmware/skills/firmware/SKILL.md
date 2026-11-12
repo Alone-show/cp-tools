@@ -22,7 +22,7 @@ description: 查 CP 量产固件：按机型 + 系统 + 客户返回版本、构
 
 - 机型：自由写法均可（`spring2pro`、`SP2-10PRO`、`apollo 12 pro`、`瑞芯微 / APOLLO 12 PRO`、`T3 / SPRING2`）。
 - 系统：安卓 / Android、Debian、BuildRoot；`linux` = Debian + BuildRoot。
-- 客户：缺省 **CP**；`*` 或「所有客户」不限。同一机型的不同客户固件不能混刷。
+- 客户：缺省 **CP**；`*` 或「所有客户」不限。同一机型的不同客户固件不能混刷。**未点名客户就按 CP 出结果，不要弹确认**（设备/记录上出现别家客户也一样，只在 `otherCustomers` 里提一句）。
 - 其它：`version`、`mainline`、`stage`、`limit`（默认 5，最大 20）、`verify`、`all`、`source(auto|tb|alist)`。
 - **DEV 构建默认不返回**：只给量产版（不带 `DEV-`/`DEV_`）。用户明确说要 DEV 时才传 `dev: true`，被过滤条数写在 `note` 里。
 - 用户说「最新的」→ `limit: 1`。
