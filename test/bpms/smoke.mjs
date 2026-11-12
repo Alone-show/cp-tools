@@ -26,7 +26,7 @@ const { indexFields, resolveField, diffPaths, onlyInside, buildUpdateBody, summa
   '../../src/bpms/records.js'
 );
 const { TOOL_FACTORIES, compact, rowsOf } = await import('../../src/bpms/tools.js');
-const { configView, applyConfigUpdate, normalizeValues } = await import('../../src/bpms/http.js');
+const { configView, applyConfigUpdate, normalizeValues, testLogin } = await import('../../src/bpms/http.js');
 const bpms = await import('../../src/bpms/index.js');
 
 let failed = 0;
@@ -278,6 +278,33 @@ step('Web 配置接口：非法值拒绝，清空密码会被拦', () => {
     (error) => error.code === 'invalid',
   );
   assert.throws(() => normalizeValues({ timeout_seconds: 1000 }), (error) => error.code === 'invalid');
+});
+
+step('试登录：未保存配置也能用页面上的账号验证', async () => {
+  const calls = [];
+  const fetchImpl = async (url, init) => {
+    calls.push({ url, body: init.body });
+    if (url.includes('get-id-by-name')) return new Response(JSON.stringify({ code: 0, data: 1 }), { status: 200 });
+    if (url.includes('/auth/login')) {
+      return new Response(
+        JSON.stringify({ code: 0, data: { accessToken: 'tk', refreshToken: 'rf', userId: 155, expiresTime: Date.now() + 3600_000 } }),
+        { status: 200 },
+      );
+    }
+    return new Response('{}', { status: 404 });
+  };
+  const ok = await testLogin({ username: 'u', password: 'p' }, { fetchImpl, env: {} });
+  assert.equal(ok.ok, true);
+  assert.equal(ok.userId, 155);
+  assert.equal(calls.length, 2);
+
+  const failImpl = async (url) => {
+    if (url.includes('get-id-by-name')) return new Response(JSON.stringify({ code: 0, data: 1 }), { status: 200 });
+    return new Response(JSON.stringify({ code: 1, msg: '密码错误' }), { status: 200 });
+  };
+  const bad = await testLogin({ username: 'u', password: 'x' }, { fetchImpl: failImpl });
+  assert.equal(bad.ok, false);
+  assert.match(bad.message, /密码错误/);
 });
 
 step('浏览器 bundle 能加载并注册插件页', () => {

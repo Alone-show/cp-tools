@@ -67,7 +67,8 @@ plugin_manager install_bundle target=/home/my/Documents/deepseek-harness/default
 
 BPMS（CPSales）登录与订单需求表编辑：登录、读记录、按字段改记录、备份与回滚。
 
-**账号密码填这里**（按优先级找第一个存在的文件）：
+只需要填**用户名 + 密码**；服务地址与租户名有内置默认值（`https://bpms.cpuniverse.cn` / `从平`），
+页面不要求填写。配置按优先级找第一个存在的文件：
 
 1. `BPMS_CONFIG` 环境变量指向的文件
 2. `~/.dsh/cp-tools/bpms.json`（推荐，插件升级不丢）
@@ -86,7 +87,8 @@ BPMS（CPSales）登录与订单需求表编辑：登录、读记录、按字段
 仓库里只有占位模板 `bpms_config.example.json`，**不要把真实口令提交进 git**；建议 `chmod 600`。
 
 也可以直接在 **DSH Web → 插件 → 从平工具集 → 「BPMS 账号」** 里填（写 `~/.dsh/cp-tools/bpms.json`；
-密码只写不回显，保存带 revision 防并发覆盖）。页面会提示当前是否有环境变量/插件目录配置覆盖它。
+密码只写不回显，保存带 revision 防并发覆盖）。页面上有 **测试登录**，用当前填写值（含还没保存的）直接验一次能不能登进去，
+不写 token、不改文件。
 
 ```text
 /bpms 登录

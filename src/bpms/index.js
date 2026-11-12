@@ -2,7 +2,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readBundledSkill as readSkillFile } from '../shared/skill.js';
 import { TOOL_FACTORIES } from './tools.js';
-import { createConfigRoute } from './http.js';
+import { createConfigRoute, createTestRoute } from './http.js';
 
 /**
  * BPMS（CPSales）订单需求表 — 登录与编辑。
@@ -30,6 +30,7 @@ export function apply(ctx) {
     ctx.inject(['connection'], (child) => {
       if (typeof child?.connection?.fetch?.register !== 'function') return;
       child.effect(() => child.connection.fetch.register(createConfigRoute()), 'cp-bpms: Web 配置路由');
+      child.effect(() => child.connection.fetch.register(createTestRoute()), 'cp-bpms: Web 试登录路由');
     });
   }
   try {

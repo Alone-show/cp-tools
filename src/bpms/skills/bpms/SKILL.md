@@ -40,7 +40,8 @@ description: 登录 BPMS（CPSales）并读写订单需求表：查记录、按�
 ```
 
 - `tenant_name` 是登录页顶部那个租户名（从平）；名字错会直接报「租户名不存在」。
-- 也可以在 **DSH Web → 插件 → 从平工具集 → 「BPMS 账号」** 里直接改这几项（写的就是 `~/.dsh/cp-tools/bpms.json`，密码只写不回显）。页面里若提示「当前生效的是另一份配置」，说明环境变量或插件目录的配置优先，改页面不会生效。
+- 页面只需要用户名和密码：地址与租户名有默认值（`https://bpms.cpuniverse.cn` / `从平`），一般不用改；改也只改配置文件。
+- 也可以在 **DSH Web → 插件 → 从平工具集 → 「BPMS 账号」** 里直接改（写的就是 `~/.dsh/cp-tools/bpms.json`，密码只写不回显），页面的 **测试登录** 用当前填写值验一次，不写 token、不改文件。页面里若提示「当前生效的是另一份配置」，说明环境变量或插件目录的配置优先，改页面不会生效。
 - 文件建议 `chmod 600`；权限过宽工具会给 warning，但不阻断。
 - 仓库里只有 `bpms_config.example.json` 占位，**不要把真实口令提交进 git**。
 - 也可用 `BPMS_USERNAME` / `BPMS_PASSWORD` / `BPMS_BASE_URL` / `BPMS_TENANT` 临时覆盖，仅排障用。

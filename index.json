@@ -45,6 +45,15 @@
       },
       "versions": [
         {
+          "version": "1.2.0",
+          "publishTimestamp": 1794456000,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/Alone-show/cp-tools"
+          },
+          "engines": {}
+        },
+        {
           "version": "1.1.0",
           "publishTimestamp": 1794395000,
           "source": {

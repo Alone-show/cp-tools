@@ -40,8 +40,12 @@ window.__ModuleLoader__.load({
       reload: '重新载入',
       missingNotice: '配置文件尚不存在；保存后会创建。',
       overriddenNotice: '当前生效的是另一份配置（环境变量或插件目录），这里保存不会立即生效。',
-      baseUrl: '服务地址',
-      baseUrlHint: '一般不用改：https://bpms.cpuniverse.cn',
+      defaultsHint: '地址与租户固定为默认值（https://bpms.cpuniverse.cn / 从平），无需填写。',
+      test: '测试登录',
+      testing: '测试中…',
+      testOk: '登录成功',
+      testFailed: '登录失败：',
+      testNeedPassword: '请先填写密码',
       username: '用户名',
       usernameHint: 'BPMS 登录页的账号。',
       password: '密码',
@@ -80,8 +84,11 @@ window.__ModuleLoader__.load({
       reload: 'Reload',
       missingNotice: 'Config file does not exist yet; it will be created on save.',
       overriddenNotice: 'Another config is active (environment or plugin folder); saving here will not take effect immediately.',
-      baseUrl: 'Base URL',
-      baseUrlHint: 'Usually unchanged: https://bpms.cpuniverse.cn',
+      defaultsHint: 'Base URL and tenant are fixed defaults (https://bpms.cpuniverse.cn / 从平); nothing to fill in.',
+      test: 'Test sign-in',
+      testing: 'Testing…',
+      testOk: 'Signed in',
+      testFailed: 'Sign-in failed: ',
       username: 'Username',
       usernameHint: 'The BPMS sign-in account.',
       password: 'Password',
@@ -142,10 +149,10 @@ window.__ModuleLoader__.load({
       document.head.appendChild(tag);
     }
 
-    async function request(method, body) {
+    async function request(method, body, route) {
       const headers = { accept: 'application/json' };
       if (body !== undefined) headers['content-type'] = 'application/json';
-      const response = await fetch(ROUTE, {
+      const response = await fetch(route || ROUTE, {
         method,
         credentials: 'same-origin',
         cache: 'no-store',
@@ -239,6 +246,8 @@ window.__ModuleLoader__.load({
       const [error, setError] = React.useState(null);
       const [conflict, setConflict] = React.useState(false);
       const [saved, setSaved] = React.useState(false);
+      const [testing, setTesting] = React.useState(false);
+      const [testResult, setTestResult] = React.useState(null);
 
       const load = React.useCallback(async () => {
         setPhase('loading');
@@ -283,6 +292,27 @@ window.__ModuleLoader__.load({
         setPasswordText('');
         setClearPassword(false);
         setSaved(false);
+      };
+
+      const runTest = async () => {
+        if (!draft) return;
+        setTesting(true);
+        setTestResult(null);
+        try {
+          const payload = { username: draft.username.trim() };
+          if (clearPassword) payload.clearPassword = true;
+          else if (passwordText !== '') payload.password = passwordText;
+          const result = await request('POST', payload, 'api/cp-tools/bpms/test');
+          setTestResult(
+            result.ok
+              ? { ok: true, text: `${t('testOk')}${result.userId ? `（userId=${result.userId}）` : ''}` }
+              : { ok: false, text: `${t('testFailed')}${result.message || ''}` },
+          );
+        } catch (err) {
+          setTestResult({ ok: false, text: `${t('testFailed')}${err.message || ''}` });
+        } finally {
+          setTesting(false);
+        }
       };
 
       const save = async () => {
@@ -338,17 +368,6 @@ window.__ModuleLoader__.load({
 
       const fields = [
         h(TextField, {
-          key: 'base_url',
-          t,
-          id: 'cp-bpms-base-url',
-          labelKey: 'baseUrl',
-          hintKey: 'baseUrlHint',
-          value: draft.base_url,
-          onChange: (value) => edit('base_url', value),
-          disabled,
-          invalid: draft.base_url.trim() === '',
-        }),
-        h(TextField, {
           key: 'username',
           t,
           id: 'cp-bpms-username',
@@ -395,17 +414,6 @@ window.__ModuleLoader__.load({
             : null,
         ]),
         h(TextField, {
-          key: 'tenant_name',
-          t,
-          id: 'cp-bpms-tenant',
-          labelKey: 'tenant',
-          hintKey: 'tenantHint',
-          value: draft.tenant_name,
-          onChange: (value) => edit('tenant_name', value),
-          disabled,
-          invalid: draft.tenant_name.trim() === '',
-        }),
-        h(TextField, {
           key: 'timeout',
           t,
           id: 'cp-bpms-timeout',
@@ -424,6 +432,7 @@ window.__ModuleLoader__.load({
         h('h3', { key: 'title', className: 'cp-bpms-title' }, t('title')),
         h('p', { key: 'desc', className: 'cp-bpms-desc' }, t('description')),
         h('p', { key: 'path', className: 'cp-bpms-path' }, `${t('configPath')}: `, h('code', {}, view.path)),
+        h('p', { key: 'defaults', className: 'cp-bpms-hint' }, t('defaultsHint')),
         view.overridden
           ? h('p', { key: 'overridden', className: 'cp-bpms-notice', role: 'status' }, [
               t('overriddenNotice'),
@@ -432,6 +441,17 @@ window.__ModuleLoader__.load({
           : null,
         view.exists ? null : h('p', { key: 'missing', className: 'cp-bpms-notice', role: 'status' }, t('missingNotice')),
         saved ? h('p', { key: 'saved', className: 'cp-bpms-saved', role: 'status' }, t('saved')) : null,
+        testResult
+          ? h(
+              'p',
+              {
+                key: 'testResult',
+                className: testResult.ok ? 'cp-bpms-saved' : 'cp-bpms-error',
+                role: 'status',
+              },
+              testResult.text,
+            )
+          : null,
         conflict
           ? h('div', { key: 'conflict', className: 'cp-bpms-error', role: 'alert' }, [
               h('p', { key: 'message' }, t('conflict')),
@@ -448,6 +468,16 @@ window.__ModuleLoader__.load({
         h('div', { key: 'form', className: 'cp-bpms-form' }, [
           h('div', { key: 'fields', className: 'cp-bpms-fields' }, fields),
           h('div', { key: 'actions', className: 'cp-bpms-actions' }, [
+            h(
+              ui.Button,
+              {
+                key: 'test',
+                variant: 'outline',
+                disabled: testing || saving || !draft.username.trim() || (!secretSet && passwordText === ''),
+                onClick: () => void runTest(),
+              },
+              testing ? t('testing') : t('test'),
+            ),
             h(
               ui.Button,
               {

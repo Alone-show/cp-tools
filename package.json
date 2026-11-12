@@ -1,6 +1,6 @@
 {
   "name": "@local/cp-tools",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "private": true,
   "type": "module",
   "description": "从平（CP）定制工具集：一个 bundle、五个可独立开关的子插件——产品资料 /cp-docs、固件与问题 /firmware、U 盘升级 /cpservice、整机线刷 /flash、BPMS 订单需求 /bpms。",

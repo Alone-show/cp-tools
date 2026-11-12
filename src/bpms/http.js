@@ -8,8 +8,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { DEFAULT_BASE_URL, DEFAULT_TENANT_NAME, STATE_DIR, loadConfig } from './config.js';
+import { BpmsError, createClient } from './client.js';
 
 export const CONFIG_ROUTE_PATH = '/api/cp-tools/bpms/config';
+export const TEST_ROUTE_PATH = '/api/cp-tools/bpms/test';
 export const MANAGED_CONFIG_PATH = path.join(STATE_DIR, 'bpms.json');
 
 const MAX_BODY_BYTES = 16 * 1024;
@@ -235,6 +237,76 @@ export function createConfigRoute() {
         }
         console.warn(`[cp-bpms] 配置接口失败：${error?.name || 'Error'}`);
         return jsonResponse({ error: { code: 'internal', message: '配置操作失败' } }, 500);
+      }
+    },
+  };
+}
+
+/**
+ * 用「当前保存的配置 + 页面上还没保存的值」试登录一次。
+ * 不写 token、不改配置文件；只回答能不能登进去。
+ */
+export async function testLogin(input = {}, options = {}) {
+  let config;
+  try {
+    ({ config } = loadConfig());
+  } catch (error) {
+    if (error?.code !== 'needs_config') throw error;
+    config = { base_url: DEFAULT_BASE_URL, tenant_name: DEFAULT_TENANT_NAME, timeout_seconds: 20 };
+  }
+  const username = String(input.username ?? config.username ?? '').trim();
+  const password =
+    input.clearPassword === true ? '' : String(input.password ?? config.password ?? '');
+  if (!username) throw new ConfigHttpError('invalid', '请先填写用户名', 400, 'username');
+  if (!password) throw new ConfigHttpError('invalid', '请先填写密码', 400, 'password');
+
+  const client = createClient(
+    { ...config, username, password },
+    { fetchImpl: options.fetchImpl, persistToken: false },
+  );
+  try {
+    const token = await client.login(true);
+    return {
+      ok: true,
+      userId: Number(token.userId ?? 0) || null,
+      tenantId: client.tenantId ?? null,
+      expiresAt: token.expiresTime ? new Date(token.expiresTime).toISOString() : null,
+      message: '登录成功',
+    };
+  } catch (error) {
+    if (error instanceof BpmsError) return { ok: false, message: error.message };
+    throw error;
+  }
+}
+
+/** 试登录路由；body: { username?, password?, clearPassword? }。 */
+export function createTestRoute() {
+  return {
+    path: TEST_ROUTE_PATH,
+    methods: ['POST'],
+    requestBody: 'buffered',
+    async fetch(request) {
+      try {
+        const text = await request.text();
+        if (Buffer.byteLength(text, 'utf8') > MAX_BODY_BYTES) {
+          return jsonResponse({ error: { code: 'too-large', message: '请求体过大' } }, 413);
+        }
+        let input = {};
+        try {
+          input = text === '' ? {} : JSON.parse(text);
+        } catch {
+          return jsonResponse({ error: { code: 'invalid-body', message: '请求体不是合法 JSON' } }, 400);
+        }
+        return jsonResponse(await testLogin(input));
+      } catch (error) {
+        if (error instanceof ConfigHttpError) {
+          return jsonResponse(
+            { error: { code: error.code, message: error.message, field: error.field } },
+            error.status,
+          );
+        }
+        console.warn(`[cp-bpms] 试登录失败：${error?.name || 'Error'}`);
+        return jsonResponse({ error: { code: 'internal', message: '试登录失败' } }, 500);
       }
     },
   };
