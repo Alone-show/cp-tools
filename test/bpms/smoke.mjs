@@ -20,12 +20,13 @@ fs.writeFileSync(
   { mode: 0o600 },
 );
 process.env.BPMS_CONFIG = configPath;
+process.env.DSH_HOME = TMP; // token / 备份都写到测试目录，别碰真实 ~/.dsh
 
 const { loadConfig, maskSecrets, configCandidates } = await import('../../src/bpms/config.js');
 const { indexFields, resolveField, diffPaths, onlyInside, buildUpdateBody, summarize } = await import(
   '../../src/bpms/records.js'
 );
-const { TOOL_FACTORIES, compact, rowsOf } = await import('../../src/bpms/tools.js');
+const { TOOL_FACTORIES, compact, rowsOf, planAttachmentValue, fillAttachmentUrls, normalizeAttachmentItem } = await import('../../src/bpms/tools.js');
 const { configView, applyConfigUpdate, normalizeValues, testLogin } = await import('../../src/bpms/http.js');
 const bpms = await import('../../src/bpms/index.js');
 
@@ -192,11 +193,11 @@ step('列表响应两种形态都能取到 rows', () => {
   assert.equal(rowsOf(null).length, 0);
 });
 
-step('四个工具名唯一且 schema 合法', () => {
+step('五个工具名唯一且 schema 合法', () => {
   const tools = TOOL_FACTORIES.map((factory) => factory());
-  assert.deepEqual(tools.map((t) => t.name), ['bpms_login', 'bpms_fields', 'bpms_get', 'bpms_update']);
+  assert.deepEqual(tools.map((t) => t.name), ['bpms_login', 'bpms_fields', 'bpms_get', 'bpms_update', 'bpms_upload']);
   const names = new Set(tools.map((t) => t.name));
-  assert.equal(names.size, 4);
+  assert.equal(names.size, 5);
   for (const tool of tools) {
     assert.equal(typeof tool.execute, 'function', tool.name);
     assert.equal(tool.parameters.type, 'object', tool.name);
@@ -220,6 +221,10 @@ step('skill 与插件导出符合契约', () => {
   assert.ok(!/[<>]/.test(skill.description));
   assert.ok(skill.content.includes('登录流程'));
   assert.ok(skill.content.includes('寻址规则'));
+  // 订单链路（与 flash / cpservice 联动）的硬规则不许被删
+  for (const kw of ['订单链路', '软件需求信息/OS版本', 'expectStatus', 'merge-package.sh', '暂存', '等用户说']) {
+    assert.ok(skill.content.includes(kw), `SKILL.md 缺订单链路关键词：${kw}`);
+  }
 });
 
 step('Web 配置接口：首次读取是 missing，保存后可读且密码不回显', () => {
@@ -350,8 +355,149 @@ step('apply 能把工具和 skill 注册进 ctx', () => {
     skills: { register: (skill) => registered.skills.push(skill.name) },
   };
   bpms.apply(ctx);
-  assert.deepEqual(registered.tools.sort(), ['bpms_fields', 'bpms_get', 'bpms_login', 'bpms_update']);
+  assert.deepEqual(registered.tools.sort(), ['bpms_fields', 'bpms_get', 'bpms_login', 'bpms_update', 'bpms_upload']);
   assert.deepEqual(registered.skills, ['bpms']);
+});
+
+
+// ── 附件上传与状态门（离线：stub 掉 fetch，不碰真实 BPMS）────────────────────
+async function stepAsync(name, fn) {
+  try {
+    await fn();
+    console.log(`✓ ${name}`);
+  } catch (error) {
+    failed += 1;
+    console.error(`✗ ${name}\n  ${error.message}`);
+  }
+}
+
+/** 记录所有请求；按 URL 子串路由到假响应。 */
+function stubFetch(routes) {
+  const calls = [];
+  globalThis.fetch = async (url, init = {}) => {
+    const href = String(url);
+    const method = String(init.method ?? 'GET').toUpperCase();
+    calls.push({ href, method, init });
+    for (const [needle, handler] of routes) {
+      if (href.includes(needle)) {
+        const body = await handler({ href, method, init });
+        return new Response(JSON.stringify(body), { status: 200, headers: { 'content-type': 'application/json' } });
+      }
+    }
+    return new Response(JSON.stringify({ code: 501, msg: `no route: ${href}` }), { status: 200 });
+  };
+  return calls;
+}
+
+const loginRoutes = [
+  ['/tenant/get-id-by-name', () => ({ code: 0, data: 1 })],
+  ['/auth/login', () => ({ code: 0, data: { accessToken: 'test-token', expiresTime: Date.now() + 3600_000, userId: 1 } })],
+];
+const toolByName = (name) => TOOL_FACTORIES.map((factory) => factory()).find((tool) => tool.name === name);
+const tmpZip = path.join(TMP, 'pkg.zip');
+fs.writeFileSync(tmpZip, 'PK\u0003\u0004fake');
+
+await stepAsync('bpms_upload：multipart 字段 file，返回 url，不泄漏 token', async () => {
+  const calls = stubFetch([
+    ...loginRoutes,
+    ['/infra/file/upload', () => ({ code: 0, data: 'https://oss.example/up/demo.zip' })],
+  ]);
+  const result = await toolByName('bpms_upload').execute({ path: tmpZip, name: 'demo_20261112.zip' });
+  assert.equal(result.status, 'ok');
+  assert.equal(result.file.url, 'https://oss.example/up/demo.zip');
+  assert.equal(result.file.name, 'demo_20261112.zip');
+  const up = calls.find((call) => call.href.includes('/infra/file/upload'));
+  assert.ok(up, '应当调用上传接口');
+  assert.equal(up.method, 'POST');
+  assert.ok(up.init.body instanceof FormData, 'body 必须是 FormData');
+  assert.ok(up.init.body.has('file'), 'multipart 字段名必须是 file');
+  assert.notEqual(String(up.init.headers['Content-Type'] ?? ''), 'application/json');
+  assert.ok(!JSON.stringify(result).includes('test-token'), '工具返回值不能带 accessToken');
+});
+
+await stepAsync('expectStatus 不符：不下载/不上传/不写库', async () => {
+  const calls = stubFetch([
+    ...loginRoutes,
+    ['/order-requirements/detail/', () => ({ ...detail, status: 3 })],
+  ]);
+  const result = await toolByName('bpms_update').execute({
+    id: detail.id,
+    patch: { '包装需求信息/卡通箱图案上传': [{ path: tmpZip }] },
+    expectStatus: 0,
+  });
+  assert.equal(result.status, 'status_mismatch');
+  assert.equal(result.currentStatus, 3);
+  assert.equal(calls.some((call) => call.href.includes('/infra/file/upload')), false, '不该上传');
+  assert.equal(calls.some((call) => call.href.includes('/update')), false, '不该写库');
+});
+
+await stepAsync('dry-run 带本地文件：只校验，不上传', async () => {
+  const calls = stubFetch([...loginRoutes, ['/order-requirements/detail/', () => detail]]);
+  const result = await toolByName('bpms_update').execute({
+    id: detail.id,
+    patch: { '包装需求信息/卡通箱图案上传': [{ path: tmpZip, name: 'c.zip' }] },
+    expectStatus: 0,
+  });
+  assert.equal(result.status, 'ok');
+  assert.equal(result.applied, false);
+  assert.equal(result.uploads?.length, 1);
+  assert.equal(result.uploads[0].name, 'c.zip');
+  assert.equal(calls.some((call) => call.href.includes('/infra/file/upload')), false, 'dry-run 不该上传');
+});
+
+await stepAsync('apply：先上传再把 url 写进附件字段', async () => {
+  const calls = stubFetch([
+    ...loginRoutes,
+    ['/infra/file/upload', () => ({ code: 0, data: 'https://oss.example/up/c.zip' })],
+    ['/order-requirements/update', () => ({ code: 0, data: true })],
+    ['/order-requirements/detail/', () => detail],
+  ]);
+  const result = await toolByName('bpms_update').execute({
+    id: detail.id,
+    patch: { '包装需求信息/卡通箱图案上传': [{ path: tmpZip, name: 'c.zip' }] },
+    expectStatus: 0,
+    apply: true,
+  });
+  assert.equal(result.status, 'ok');
+  assert.equal(result.uploaded?.length, 1);
+  const update = calls.find((call) => call.href.includes('/order-requirements/update'));
+  assert.ok(update, '应当写库');
+  const body = JSON.parse(update.init.body);
+  assert.ok(body.parameters.includes('https://oss.example/up/c.zip'), '写库时应带真实 url');
+  assert.ok(!body.parameters.includes('local:'), '不能把本地占位写进库');
+});
+
+step('附件项归一与 append 去重', () => {
+  assert.deepEqual(normalizeAttachmentItem('https://oss/a.zip'), { url: 'https://oss/a.zip', name: 'a.zip' });
+  assert.equal(normalizeAttachmentItem('~/x/y.zip').name, 'y.zip');
+  assert.equal(normalizeAttachmentItem({ path: '/tmp/a.zip', name: '显示名.zip' }).name, '显示名.zip');
+  assert.equal(normalizeAttachmentItem({}), null);
+
+  const pending = [];
+  const entry = { key: '包装需求信息/卡通箱图案上传' };
+  const prev = [{ name: 'c.zip', url: 'https://oss/c.zip', uid: 1, status: 'success' }];
+  const appended = planAttachmentValue({
+    entry,
+    raw: [{ url: 'https://oss/c.zip' }, { url: 'https://oss/d.zip' }],
+    prev,
+    mode: 'append',
+    pending,
+  });
+  assert.equal(appended.length, 2, '同 url 不重复追加');
+  assert.equal(pending.length, 0);
+});
+
+step('fillAttachmentUrls 回填 local: 占位', () => {
+  const params = {
+    requireInfoList: [
+      { label: '包装需求信息', fieldList: [{ label: '卡通箱图案上传', type: 'upload', value: [{ name: 'c.zip', url: 'local:/tmp/a.zip' }] }] },
+    ],
+  };
+  fillAttachmentUrls(params, [{ path: '/tmp/a.zip', name: 'c.zip', url: 'https://oss/c.zip', size: 3 }]);
+  const value = params.requireInfoList[0].fieldList[0].value[0];
+  assert.equal(value.url, 'https://oss/c.zip');
+  assert.equal(value.status, 'success');
+  delete globalThis.fetch;
 });
 
 step('插件里不写死本机绝对路径', () => {

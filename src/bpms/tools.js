@@ -1,12 +1,15 @@
 /**
- * /bpms 的四个工具：登录、字段列表、读记录、改记录。
+ * /bpms 的工具：登录、字段列表、读记录、改记录、上传附件。
  *
  * 约定：
  *   - 默认 dry-run，只有 apply:true 才写库
+ *   - 附件项的 {path} 只在 apply 时才上传；dry-run 只校验文件
  *   - 写前备份 + updateTime 并发校验 + 写后白名单 diff
  *   - 任何返回值都不含密码/token
  */
 import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { loadConfig, permissionWarning, writeBackup } from './config.js';
 import { BpmsError, createClient } from './client.js';
 import {
@@ -21,8 +24,21 @@ import {
 
 const DETAIL = (id) => `/admin-api/crm/order-requirements/detail/${id}`;
 const UPDATE = '/admin-api/crm/order-requirements/update';
+const UPLOAD = '/admin-api/infra/file/upload';
+const UPLOAD_DIRECTORY = 'bpms';
+const MAX_UPLOAD_BYTES = 200 * 1024 * 1024;
 
-const STATUS = ['ok', 'needs_config', 'auth_failed', 'not_found', 'ambiguous', 'conflict', 'rejected', 'error'];
+const STATUS = [
+  'ok',
+  'needs_config',
+  'auth_failed',
+  'not_found',
+  'ambiguous',
+  'conflict',
+  'rejected',
+  'error',
+  'status_mismatch',
+];
 
 function text(render) {
   return (_args, value) => {
@@ -78,6 +94,7 @@ function fail(error) {
     ...(error?.template ? { template: configTemplateForTool() } : {}),
     ...(error?.candidates ? { candidates: error.candidates } : {}),
     ...(error?.hint ? { hint: error.hint } : {}),
+    ...(error?.uploaded ? { uploaded: error.uploaded } : {}),
   };
 }
 
@@ -93,6 +110,76 @@ function configTemplateForTool() {
 function makeClient(options = {}) {
   const { config } = loadConfig();
   return { client: createClient(config, options), config };
+}
+
+/** 上传按体积放宽超时：8 MB 实测约 4 s，30 MB 左右要十几秒，默认 20 s 会被掐断。 */
+function makeUploadClient(sizeBytes) {
+  const { config } = loadConfig();
+  const mb = Number(sizeBytes || 0) / (1024 * 1024);
+  const timeout_seconds = Math.max(Number(config.timeout_seconds) || 20, Math.ceil(30 + mb * 2));
+  return createClient({ ...config, timeout_seconds });
+}
+
+function expandHomePath(value) {
+  const raw = String(value ?? '').trim();
+  if (raw === '~') return os.homedir();
+  if (raw.startsWith('~/')) return path.join(os.homedir(), raw.slice(2));
+  return raw;
+}
+
+function humanSize(bytes) {
+  const n = Number(bytes) || 0;
+  if (n >= 1024 * 1024 * 1024) return `${(n / 1024 / 1024 / 1024).toFixed(1)} GB`;
+  if (n >= 1024 * 1024) return `${(n / 1024 / 1024).toFixed(1)} MB`;
+  if (n >= 1024) return `${(n / 1024).toFixed(1)} KB`;
+  return `${n} B`;
+}
+
+/** 上传前把文件校验一遍：存在、是文件、没超上限。不读内容，避免 dry-run 时白读几十 MB。 */
+function assertUploadable(filePath) {
+  const abs = path.resolve(expandHomePath(filePath));
+  let stat;
+  try {
+    stat = fs.statSync(abs);
+  } catch {
+    throw new BpmsError('bad_query', `找不到本地文件：${filePath}`);
+  }
+  if (!stat.isFile()) throw new BpmsError('bad_query', `不是文件：${filePath}`);
+  if (stat.size > MAX_UPLOAD_BYTES) {
+    throw new BpmsError('bad_query', `文件 ${filePath} 有 ${humanSize(stat.size)}，超过 ${humanSize(MAX_UPLOAD_BYTES)} 上限`);
+  }
+  return { abs, size: stat.size };
+}
+
+/** 本地文件 → BPMS 附件存储，返回 { name, url, size }。 */
+async function uploadLocalFile(filePath, displayName, directory = UPLOAD_DIRECTORY) {
+  const { abs, size } = assertUploadable(filePath);
+  const client = makeUploadClient(size);
+  const buffer = await fs.promises.readFile(abs);
+  const form = new FormData();
+  form.append('file', new Blob([buffer]), path.basename(abs));
+  if (directory) form.append('directory', String(directory).replace(/^\/+|\/+$/g, ''));
+  const payload = await client.request(UPLOAD, { method: 'POST', form });
+  const url = typeof payload?.data === 'string' ? payload.data : payload?.data?.url;
+  if (!url) throw new BpmsError('error', '上传接口没有返回文件地址');
+  return { name: String(displayName || path.basename(abs)), url, size };
+}
+
+/** 附件项归一：字符串（url 或本地路径）、{url,name}、{path,name} 都接受。 */
+function normalizeAttachmentItem(item) {
+  if (typeof item === 'string' && item.trim()) {
+    const raw = item.trim();
+    if (/^https?:\/\//i.test(raw)) return { url: raw, name: raw.split('/').pop() };
+    return { path: expandHomePath(raw), name: path.basename(expandHomePath(raw)) };
+  }
+  if (!item || typeof item !== 'object') return null;
+  const name = item.name ? String(item.name) : '';
+  if (item.path) {
+    const abs = expandHomePath(item.path);
+    return { path: abs, name: name || path.basename(abs) };
+  }
+  if (item.url) return { name: name || String(item.url).split('/').pop(), url: String(item.url) };
+  return null;
 }
 
 function fieldValueLabel(entry) {
@@ -332,16 +419,26 @@ export function updateTool() {
   return tool({
     name: 'bpms_update',
     description:
-      '改订单需求表的字段：默认 dry-run 只返回 diff；apply:true 才写库（写前备份、校验 updateTime、写后只允许白名单内的字段变化）。patch 的键是 bpms_fields 返回的「分区/字段名」。',
+      '改订单需求表的字段：默认 dry-run 只返回 diff；apply:true 才写库（写前备份、校验 updateTime、写后只允许白名单内的字段变化）。patch 的键是 bpms_fields 返回的「分区/字段名」。附件字段可以给本地文件 [{path:"/abs/x.zip"}]，apply 时才上传；expectStatus 可在订单状态不符时中止（上传安装包传 0=暂存）。',
     parameters: {
       type: 'object',
       properties: {
         id: { type: 'string', description: '订单需求主键' },
         patch: {
           type: 'object',
-          description: '要改的字段：{ "分区/字段名": 新值 }。文本/下拉直接给字符串，多选给数组，附件给 [{name,url}]',
+          description:
+            '要改的字段：{ "分区/字段名": 新值 }。文本/下拉直接给字符串，多选给数组；附件给 [{name,url}] 或 [{path:"/abs/x.zip",name:"显示名"}]（path 只在 apply 时上传）',
         },
         apply: { type: 'boolean', description: 'true 才真正写库；默认 false（dry-run）' },
+        expectStatus: {
+          type: 'number',
+          description: '可选。要求记录当前状态等于该值，否则返回 status_mismatch、不写库也不上传（0=暂存）',
+        },
+        attachmentMode: {
+          type: 'string',
+          enum: ['replace', 'append'],
+          description: '附件字段写入方式：replace=整字段替换（默认），append=在现有附件后按 url 去重追加',
+        },
         restoreFrom: { type: 'string', description: '可选。用备份文件恢复该记录（忽略 patch）' },
       },
       required: ['id'],
@@ -357,15 +454,33 @@ export function updateTool() {
           changes: { type: 'array', items: { type: 'object' } },
           backupPath: { type: 'string' },
           rejected: { type: 'array', items: { type: 'object' } },
+          currentStatus: { type: 'number' },
+          expectedStatus: { type: 'number' },
+          uploads: { type: 'array', items: { type: 'object' } },
+          uploaded: { type: 'array', items: { type: 'object' } },
+          warnings: { type: 'array', items: { type: 'string' } },
         },
       },
     },
     render: text((r) => {
-      if (r.status !== 'ok') return [`失败（${r.status}）：${r.message}`];
+      if (r.status === 'status_mismatch') {
+        return [
+          `订单状态是 ${r.currentStatus}，不是 expectStatus=${r.expectedStatus}：按约定不写库、不上传。`,
+          r.message ?? '',
+        ];
+      }
+      if (r.status !== 'ok') {
+        return [
+          `失败（${r.status}）：${r.message}`,
+          r.uploaded?.length ? `已上传但未写库：${r.uploaded.map((u) => u.url).join(', ')}` : '',
+        ];
+      }
       const head = r.applied ? `已保存 ${r.id}` : `dry-run（未写库）${r.id}`;
       return [
         head,
         ...r.changes.map((c) => `- ${c.key}: ${c.before} → ${c.after}`),
+        r.uploads?.length ? `待上传（apply 时执行）：${r.uploads.map((u) => u.name).join(', ')}` : '',
+        r.uploaded?.length ? `已上传：${r.uploaded.map((u) => u.url).join(', ')}` : '',
         r.backupPath ? `备份：${r.backupPath}` : '',
         r.rejected?.length ? `被拒绝的改动：${r.rejected.map((x) => x.path).join(', ')}` : '',
       ];
@@ -384,17 +499,36 @@ export function updateTool() {
         }
 
         const before = await client.request(DETAIL(id));
+        if (args.expectStatus !== undefined && args.expectStatus !== null) {
+          const expected = Number(args.expectStatus);
+          if (!Number.isFinite(expected)) throw new BpmsError('bad_query', 'expectStatus 必须是数字');
+          if (Number(before.status) !== expected) {
+            return {
+              status: 'status_mismatch',
+              id,
+              currentStatus: Number(before.status),
+              expectedStatus: expected,
+              message: `订单状态是 ${before.status}，不是 ${expected}；已按约定中止（未上传、未写库）`,
+            };
+          }
+        }
+
         const beforeParams = parseParameters(before);
         const index = indexFields(beforeParams);
 
         const next = JSON.parse(JSON.stringify(beforeParams));
         const nextIndex = indexFields(next);
         const changes = [];
+        const mode = args.attachmentMode === 'append' ? 'append' : 'replace';
+        const pending = [];
         for (const [key, value] of Object.entries(patch)) {
           const entry = resolveField(index, key);
           const target = resolveField(nextIndex, entry.key);
           const prev = target.item?.value;
-          target.item.value = cloneValue(value);
+          const isUpload = String(entry.item?.type ?? '') === 'upload';
+          target.item.value = isUpload
+            ? planAttachmentValue({ entry, raw: value, prev, mode, pending })
+            : cloneValue(value);
           changes.push({
             key: entry.key,
             path: entry.path,
@@ -410,11 +544,33 @@ export function updateTool() {
           return { status: 'rejected', id, message: '有超出 patch 范围的改动，已中止', rejected };
         }
 
-        if (!args.apply) return { status: 'ok', id, applied: false, changes };
+        const planned = pending.map((p) => ({ name: p.name, path: p.path, size: assertUploadable(p.path).size }));
+        if (!args.apply) {
+          return { status: 'ok', id, applied: false, changes, uploads: planned.length ? planned : undefined };
+        }
+
+        const uploaded = [];
+        for (const item of pending) {
+          try {
+            uploaded.push({ ...(await uploadLocalFile(item.path, item.name)), path: item.path });
+          } catch (error) {
+            throw new BpmsError(
+              'error',
+              `上传 ${item.name} 失败：${error?.message ?? error}${uploaded.length ? `（已上传 ${uploaded.length} 个文件，未写库，会在存储里留下孤儿文件）` : ''}`,
+              { uploaded },
+            );
+          }
+        }
+        if (uploaded.length) fillAttachmentUrls(next, uploaded);
 
         const fresh = await client.request(DETAIL(id));
         if (Number(fresh.updateTime) !== Number(before.updateTime)) {
-          throw new BpmsError('conflict', '这条记录刚被别人改过（updateTime 变化），已中止');
+          return {
+            status: 'conflict',
+            id,
+            message: '这条记录刚被别人改过（updateTime 变化），已中止；本地文件已上传但未写库',
+            uploaded: uploaded.length ? uploaded : undefined,
+          };
         }
 
         const backupPath = writeBackup(id, before);
@@ -432,16 +588,73 @@ export function updateTool() {
             applied: true,
             changes,
             backupPath,
+            uploaded: uploaded.length ? uploaded : undefined,
             rejected: unexpected,
           };
         }
 
-        return { status: 'ok', id, applied: true, changes, backupPath, appliedDiffs: afterDiffs.length };
+        return {
+          status: 'ok',
+          id,
+          applied: true,
+          changes,
+          backupPath,
+          uploaded: uploaded.length ? uploaded : undefined,
+          appliedDiffs: afterDiffs.length,
+        };
       } catch (error) {
         return fail(error);
       }
     },
   });
+}
+
+/** 附件字段的值规划：{path} 先用 local: 占位，apply 时再替换成真实 url。 */
+function planAttachmentValue({ entry, raw, prev, mode, pending }) {
+  const incoming = (Array.isArray(raw) ? raw : [raw]).filter((item) => item !== null && item !== undefined && item !== '');
+  const items = incoming.map(normalizeAttachmentItem);
+  if (items.length === 0 || items.some((item) => !item)) {
+    throw new BpmsError('bad_query', `${entry.key}：附件项要写 {path:"本地文件"} 或 {name,url}`);
+  }
+  const planned = [];
+  for (const [i, item] of items.entries()) {
+    if (item.url) {
+      planned.push({ name: item.name, url: item.url, uid: Date.now() + i, status: 'success' });
+      continue;
+    }
+    const { abs, size } = assertUploadable(item.path);
+    pending.push({ path: abs, name: item.name || path.basename(abs), size });
+    planned.push({ name: item.name || path.basename(abs), url: `local:${abs}`, uid: 0, status: 'pending' });
+  }
+  if (mode !== 'append') return planned;
+
+  const existing = (Array.isArray(prev) ? prev : []).filter(Boolean).map((item) => cloneValue(item));
+  const seen = new Set(existing.map((item) => item?.url).filter(Boolean));
+  for (const item of planned) {
+    if (seen.has(item.url)) continue;
+    existing.push(item);
+    seen.add(item.url);
+  }
+  return existing;
+}
+
+/** 把 local: 占位换成真实上传结果（递归处理整包 parameters）。 */
+function fillAttachmentUrls(value, uploaded) {
+  const byPath = new Map(uploaded.map((item) => [item.path, item]));
+  const stamp = Date.now();
+  const walk = (node) => {
+    if (Array.isArray(node)) return node.map(walk);
+    if (!node || typeof node !== 'object') return node;
+    if (typeof node.url === 'string' && node.url.startsWith('local:')) {
+      const hit = byPath.get(node.url.slice('local:'.length));
+      if (hit) return { name: hit.name, url: hit.url, uid: stamp, status: 'success' };
+    }
+    const out = {};
+    for (const [key, item] of Object.entries(node)) out[key] = walk(item);
+    return out;
+  };
+  for (const key of Object.keys(value)) value[key] = walk(value[key]);
+  return value;
 }
 
 function cloneValue(value) {
@@ -459,6 +672,55 @@ async function restore(client, id, file) {
   return { status: 'ok', id, applied: true, changes: [{ key: '(restore)', before: '(current)', after: `恢复自 ${file}` }] };
 }
 
-export const TOOL_FACTORIES = [loginTool, fieldsTool, getTool, updateTool];
-export { compact, rowsOf };
+export function uploadTool() {
+  return tool({
+    name: 'bpms_upload',
+    description:
+      '把本地文件传到 BPMS 附件存储，返回可直接写进附件字段的 {name,url}。不写库；一般用 bpms_update 的 {path} 一步到位，需要先拿 url 时才单独调。',
+    parameters: {
+      type: 'object',
+      properties: {
+        path: { type: 'string', description: '本地文件路径，支持 ~/' },
+        name: { type: 'string', description: '可选。BPMS 里显示的附件名，默认取文件名' },
+        directory: { type: 'string', description: '可选。存储目录，默认 bpms' },
+      },
+      required: ['path'],
+    },
+    output: {
+      schema: {
+        type: 'object',
+        properties: {
+          status: { type: 'string', enum: STATUS },
+          message: { type: 'string' },
+          file: {
+            type: 'object',
+            properties: {
+              name: { type: 'string' },
+              url: { type: 'string' },
+              size: { type: 'number' },
+            },
+          },
+        },
+      },
+    },
+    render: text((r) =>
+      r.status === 'ok' && r.file
+        ? [`已上传：${r.file.name}（${humanSize(r.file.size)}）`, r.file.url]
+        : [`上传失败（${r.status ?? 'error'}）：${r.message ?? ''}`],
+    ),
+    async execute(args = {}) {
+      try {
+        const raw = String(args.path ?? '').trim();
+        if (!raw) throw new BpmsError('bad_query', '需要 path（本地文件路径）');
+        const file = await uploadLocalFile(raw, args.name, args.directory || UPLOAD_DIRECTORY);
+        return { status: 'ok', file };
+      } catch (error) {
+        return fail(error);
+      }
+    },
+  });
+}
+
+export const TOOL_FACTORIES = [loginTool, fieldsTool, getTool, updateTool, uploadTool];
+export { compact, rowsOf, planAttachmentValue, fillAttachmentUrls, normalizeAttachmentItem };
 

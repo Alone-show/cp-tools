@@ -1,11 +1,11 @@
 ---
 name: bpms
-description: 登录 BPMS（CPSales）并读写订单需求表：查记录、按「分区/字段名」改字段、备份与回滚。BPMS, CPSales, 订单需求表, 需求编号, CPS-SY, 改字段, 登录, token, 租户。
+description: 登录 BPMS（CPSales）并读写订单需求表：查记录、按「分区/字段名」改字段、上传附件、备份与回滚；订单链路里拉 OS版本 交 /flash 刷机、把 cpservice 做好的安装包传进「预装软件文件上传」（状态非暂存只出包不传）。BPMS, CPSales, 订单需求表, 需求编号, CPS-SY, 改字段, 上传, 安装包, 刷机, 登录, token, 租户。
 ---
 
 # BPMS 订单需求表（登录 + 编辑）
 
-只关心两件事：**怎么登录**、**怎么安全地改一条记录**。
+三件事：**怎么登录**、**怎么安全地改一条记录**、**怎么把做好的安装包传上去**（订单链路的入口在本页，刷机/出包分别交给 `/flash`、`/cpservice`）。
 
 ## 快速路由
 
@@ -15,9 +15,34 @@ description: 登录 BPMS（CPSales）并读写订单需求表：查记录、按�
 | 「这张单有哪些字段」 | `bpms_fields` |
 | 「看下 CPS-SY… 这张单」 | `bpms_get`（可直接给需求编号） |
 | 「把 xx 字段改成 yy」 | `bpms_update`（先 dry-run） |
+| 「这个订单帮我更新 MDM / 做个 logo 包」 | 本页「订单链路」五步：拉版本 → 刷机 → 出包 → 验证 → 确认后上传 |
+| 「把包传上去」/「帮我上传」 | `bpms_update` 带 `expectStatus:0`，先 dry-run 给用户看，再 `apply` |
 
-工具返回的 `status`：`ok` / `needs_config` / `auth_failed` / `not_found` / `ambiguous` / `conflict` / `rejected` / `error`。
+工具返回的 `status`：`ok` / `needs_config` / `auth_failed` / `not_found` / `ambiguous` / `conflict` / `rejected` / `error` / `status_mismatch`（`expectStatus` 不符，未上传未写库）。
 `needs_config` 时按返回的 `paths` 建配置文件再登录，不要自己拼登录请求。
+
+## 订单链路：拉版本 → 刷机 → 出包 → 验证 → 确认 → 上传
+
+用户给出订单链接/编号 + 「帮我做包 / 更新 MDM / 做个 logo 包」时，按这五步走。**不要反问要不要刷机，也不要另找版本来源。**
+
+| 步 | 做什么 | 谁执行 |
+|---|---|---|
+| 1 拉版本 | `bpms_get` 拿摘要（状态），`bpms_fields` 取：`软件需求信息/OS版本`（**这就是目标固件版本**）、`软件需求信息/系统`、`基本信息/品名`、`定制图案图片上传`、`硬件需求信息/LOGO图样上传`、`软件需求信息/预装软件文件上传` | 本 skill |
+| 2 判刷机 | 进 `/flash`：adb 读设备当前版本 vs 订单版本，顺带核对机型/屏参 | 直接进 flash skill（**不用等用户输 `/flash`**） |
+| 3 刷机 | 版本不一致 → 刷到订单版本（会清 userdata，刷前一行说明）；一致 → 跳过并说明原因 | flash |
+| 4 出包 | 预装包为空 → cpservice 从零出包；不空 → 下载原包 + `merge-package.sh` 增量合并；然后真机验证 | cpservice |
+| 5 上传 | 汇报「包路径 + 验证结论 + 目标字段 + 当前状态」→ **等用户说「传」** → `bpms_update(expectStatus:0, apply:true)` | 本 skill |
+
+### 硬规则
+
+- **状态门**：`status === 0`（暂存）才上传。`1 待审核 / 2 打回修改 / 3 已审核 / 4 需求完结` → **包照做、验证照跑，但不上传**，回复里明确提醒（例：「状态 3=已审核，按约定只出包不上传」）。
+- **确认门**：`bpms_update` 默认 dry-run 就是第一道闸；用户没明确说「传 / 上传」就不 `apply`。
+- **版本只认订单 `OS版本`**：去掉 `.img` 后缀；`firmware_find(version=<该串>)` 只用来取线刷直链，不参与选版本。查不到直链（客户定制版）→ 停，不拿「最新量产」顶。
+- **平台映射**（交给 cpservice 选 reference）：`Android 6.0` → T3 安卓；`Android 11.x` → RK 安卓；`Debian` → RK Debian；`Buildroot` → T3 Linux。机型/客户用 `firmware_models` / `firmware_find` 归一，有多解就停下来问。
+- **已有包 = 增量**：`预装软件文件上传` 非空时，先下载原包（`mdmobs.cpuniverse.cn` 直链可匿名 GET；403/过期就重拉详情取新 url），再用 `merge-package.sh` 合资源——**保持包内布局与 xml 引用名**，分辨率/logo 帧数以包内既有资源为准（如 `video_demo.yuv` 215,654,400 B = 1024x600、`logo` 4,915,200 B = 2 帧）。
+- **上传写法**：`patch: { "软件需求信息/预装软件文件上传": [{ path: "/abs/…zip", name: "原包名_20261112.zip" }] }`，只留合并后的新包（`attachmentMode` 默认 replace，别用 append 把旧包留着）。`apply:false` 时只校验文件、不上传。
+- **SN 写入手动确认**：刷机清数据后，订单 `SN写入=是` + `序列号范围-SN` 不在本链路代做，提示用户单独处理。
+- **不越界**：只改用户点名的字段；打包事实（logo 生成、xml 动作、验证口径）一律以 `/cpservice` 为准，本页不另写一套。
 
 ## 配置（账号密码填这里）
 
@@ -64,7 +89,7 @@ description: 登录 BPMS（CPSales）并读写订单需求表：查记录、按�
 | 详情 | `GET /admin-api/crm/order-requirements/detail/{id}` |
 | 列表 | `POST /admin-api/crm/order-requirements/select-list` |
 | 更新 | `POST /admin-api/crm/order-requirements/update` |
-| 附件上传 | `POST /admin-api/infra/file/upload`，multipart 字段 `file`，返回 url（本插件不封装） |
+| 附件上传 | `POST /admin-api/infra/file/upload`，multipart 字段 `file`（可选 `directory`），返回 `{code:0,data:"<url>"}`；`bpms_upload` / `bpms_update` 的 `{path}` 已封装 |
 
 `id` 是详情页 URL 里的数字主键（如 `2000550683162509709`）；`requirementsNumber`（`CPS-SY2026DX0949`）只是业务编号，两者别混用。
 
@@ -95,11 +120,14 @@ description: 登录 BPMS（CPSales）并读写订单需求表：查记录、按�
 5. **写后白名单 diff**：只允许本次 patch 的字段路径变化，出现别的差异 → 报错并给备份路径。
 6. **权限 toast 是噪音**：编辑页会一直弹「没有该操作权限」，实际可以保存。以接口返回值为准，toast 只记日志。
 7. **回滚**：`bpms_update` 传 `restoreFrom: <备份文件>`，用备份里的 parameters 原样写回。
+8. **附件字段可以给本地文件**：`[{path:"/abs/x.zip"}]` 会在 apply 时先上传再写 URL；上传失败整次中止（不写库）；上传成功但保存失败会留下孤儿文件，报告里写清。
+9. **状态门用 `expectStatus`**：上传安装包一律带 `expectStatus:0`；不符时工具返回 `status_mismatch`，既不备份也不上传。
 
 ## 红线
 
 - 不把密码/token 写进命令行参数、日志、报告或 git。
 - 没有备份不写库；`apply` 默认 false，先看 dry-run 的 diff。
+- 订单状态不是暂存（0）不上传安装包；用户没说「传」不 `apply`。
 - 白名单外的改动一律拒绝执行，不做「顺便帮你改一下」。
 - 模板级元素（表头 logo、模板字段定义）只报告不改；改模板会影响所有用该模板的订单。
 - 不把整包详情 JSON 丢进对话上下文；要细节用 `bpms_fields` / `bpms_get` 按需取。

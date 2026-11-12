@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "BPMS Order Demand",
-    "description": "Sign in to BPMS (CPSales) and read/edit order-demand records by section/field name, with backup and rollback; credentials live in the plugin config; command /bpms."
+    "description": "Sign in to BPMS (CPSales) and read/edit order-demand records by section/field name, upload attachments, with backup and rollback. In the order workflow it hands the OS version to /flash, then uploads the package built by /cpservice to the preinstall field (never uploads when the order is not in draft/暂存 state). Credentials live in the plugin config; command /bpms."
   }
 }
