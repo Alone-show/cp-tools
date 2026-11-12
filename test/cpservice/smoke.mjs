@@ -424,6 +424,77 @@ assert.ok(skill.content.includes(LINUX_PRESET_REL), 'SKILL.md 应列出 linux-ne
 assert.ok(/中性/.test(fs.readFileSync(path.join(LINUX_PRESET, 'README.md'), 'utf8')), '预置 README 应写清中性用途');
 console.log('  预置 Linux 中性 logo: 源图 + 2 帧 logo + bootlogo.bmp OK');
 
+
+// 16) merge-package.sh：往已有包里增量合资源（保持布局 + 引用校验 + 命名）
+const MERGE = path.join(SKILL_DIR, 'assets', 'merge-package.sh');
+assert.ok(fs.existsSync(MERGE), '缺少 assets/merge-package.sh');
+assert.ok(fs.statSync(MERGE).mode & 0o100, 'assets/merge-package.sh 需要可执行位');
+assert.equal(spawnSync('bash', ['-n', MERGE], { encoding: 'utf8' }).status, 0, 'merge-package.sh 语法错误');
+assert.ok(skill.content.includes('merge-package.sh'), 'SKILL.md 应提到 merge-package.sh');
+{
+  const work = fs.mkdtempSync(path.join(os.tmpdir(), 'merge-pkg-'));
+  const run = (...args) => spawnSync(MERGE, args, { encoding: 'utf8' });
+  const listZip = (zip) => spawnSync('unzip', ['-Z1', zip], { encoding: 'utf8' }).stdout.trim().split('\n').filter(Boolean);
+  const readZip = (zip, name) => spawnSync('unzip', ['-p', zip, name], { encoding: 'utf8' }).stdout;
+  const today = new Date();
+  const stamp = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+
+  try {
+    // 16a) 套一层目录的包：同名就地覆盖 + 新文件进包根，布局不变
+    const nestedSrc = path.join(work, 'nested-src');
+    fs.mkdirSync(path.join(nestedSrc, 'pkg'), { recursive: true });
+    fs.writeFileSync(path.join(nestedSrc, 'pkg', 'E9631Service.xml'),
+      '<?xml version="1.0"?><root><item action="install" params="app.apk"/></root>');
+    fs.writeFileSync(path.join(nestedSrc, 'pkg', 'app.apk'), 'old');
+    const nestedZip = path.join(work, 'nested.zip');
+    assert.equal(spawnSync('zip', ['-qr', nestedZip, 'pkg'], { cwd: nestedSrc }).status, 0);
+    const newApk = path.join(work, 'app.apk');
+    fs.writeFileSync(newApk, 'new-binary');
+    const extra = path.join(work, 'extra.bin');
+    fs.writeFileSync(extra, 'extra');
+
+    const out = run(nestedZip, '--out', path.join(work, 'out'), newApk, extra);
+    assert.equal(out.status, 0, `merge 应成功：${out.stderr}`);
+    assert.ok(out.stdout.includes('套一层目录'), '应识别出套目录布局');
+    const merged = path.join(work, 'out', `nested_${stamp}.zip`);
+    assert.ok(fs.existsSync(merged), `产物命名应为 <原包名>_YYYYMMDD.zip：${out.stdout}`);
+    const entries = listZip(merged);
+    assert.deepEqual(entries.sort(), ['pkg/', 'pkg/E9631Service.xml', 'pkg/app.apk', 'pkg/extra.bin'], '布局应保持套一层目录');
+    assert.equal(readZip(merged, 'pkg/app.apk'), 'new-binary', '同名文件应就地覆盖');
+    assert.ok(readZip(merged, 'pkg/E9631Service.xml').includes('app.apk'), 'xml 应原样保留');
+
+    // 16b) 平铺包：合并后仍平铺
+    const flatSrc = path.join(work, 'flat-src');
+    fs.mkdirSync(flatSrc, { recursive: true });
+    fs.writeFileSync(path.join(flatSrc, 'unattended_installation.sh'), '#!/bin/sh\necho ok\n');
+    fs.writeFileSync(path.join(flatSrc, 'logo'), 'logo-old');
+    const flatZip = path.join(work, 'flat.zip');
+    assert.equal(spawnSync('zip', ['-qr', flatZip, '.'], { cwd: flatSrc }).status, 0);
+    const newLogo = path.join(work, 'logo');
+    fs.writeFileSync(newLogo, 'logo-new');
+    const flatOut = run(flatZip, '--out', path.join(work, 'out'), newLogo);
+    assert.equal(flatOut.status, 0, `平铺包 merge 应成功：${flatOut.stderr}`);
+    const flatMerged = path.join(work, 'out', `flat_${stamp}.zip`);
+    assert.deepEqual(listZip(flatMerged).sort(), ['logo', 'unattended_installation.sh'], '平铺包不应被套目录');
+    assert.equal(readZip(flatMerged, 'logo'), 'logo-new');
+
+    // 16c) xml 引用缺失就拒绝产包
+    const badSrc = path.join(work, 'bad-src');
+    fs.mkdirSync(badSrc, { recursive: true });
+    fs.writeFileSync(path.join(badSrc, 'E9631Service.xml'),
+      '<?xml version="1.0"?><root><item action="install" params="missing.apk"/></root>');
+    const badZip = path.join(work, 'bad.zip');
+    assert.equal(spawnSync('zip', ['-qr', badZip, 'E9631Service.xml'], { cwd: badSrc }).status, 0);
+    const badOut = run(badZip, '--out', path.join(work, 'bad-out'), extra);
+    assert.equal(badOut.status, 3, 'xml 引用缺失应退出码 3');
+    assert.ok(badOut.stderr.includes('missing.apk'), '应指明缺失的引用');
+    assert.equal(fs.existsSync(path.join(work, 'bad-out', `bad_${stamp}.zip`)), false, '拒绝时不应产包');
+    console.log('  增量合并: 套目录/平铺布局 + 同名覆盖 + xml 引用校验 + 命名 OK');
+  } finally {
+    fs.rmSync(work, { recursive: true, force: true });
+  }
+}
+
 // 10) 职责边界：整机线刷已拆到 skill `flash`（20261109），这里只留指针
 assert.ok(skill.content.includes('`flash`'), 'SKILL.md 应指明整机线刷走 skill flash');
 assert.ok(/不在这里/.test(skill.content), 'SKILL.md 应写明整机线刷不在本 skill');

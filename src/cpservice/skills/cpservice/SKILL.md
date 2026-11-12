@@ -109,6 +109,10 @@ Debian 盘根必须直接有 `unattended_installation.sh`：套一层目录 = �
 
 触发：Launcher → 设置 → U盘查看 → 右上角开关；Launcher 起 `bash` 并把 `"./<脚本>"` 写进 stdin（**没有 `$1`、不要读 stdin、脚本要有 `+x`**）。细节 `t3-linux.md` §1–§5。
 
+- **E 增量（客户已经有包）**：不新建包，用 `assets/merge-package.sh <原包.zip> [--out DIR] <资源...>` 把新 logo / MDM / 固件换进去。
+  它**保留原包内部布局**（实测有套一层目录的，也有平铺的，别拍平）、同名就地覆盖、合并后校验 xml 引用名仍在（缺一个拒绝产包），产物名 `<原包名>_YYYYMMDD.zip`。
+  引用名对不上（例如新 MDM 叫 `VanCoreT3-260415.apk`、xml 里写的是 `VanCoreT3-260414.apk`）→ 按引用名放置，或另议改 xml，不要偷偷改名。
+
 ## 5. 硬约束
 
 ### 5.1 XML 与执行（仅 Android）
@@ -293,6 +297,7 @@ adb shell 'rm -rf /mnt/usb/sda1; rm -f /data/cp-unattended/probe*'   # T3 Linux 
 | `assets/probe-cpservice.xml` / `assets/probe-collect.sh` / `assets/probe.xml` / `assets/trigger.sh` / `assets/rk-virtual-disk.sh` | 探针与触发（RK 虚拟盘 / T3 假挂载） |
 | `assets/add-icon-device.sh` / `assets/verify-report.md` / `assets/update-mdm-wifi.sh` | 桌面图标 / 报告模板 / T3 MDM+WiFi；skill 目录 `vendor/` 只复用 `VanCoreT3-*.apk` |
 | `assets/generate-bootlogo.sh` | logo 资源生成驱动（§8.4）：`--image`/`--chip`/`--system`/`--rotate`/`--logo-frames`/`--no-video`/`--assets-only` |
+| `assets/merge-package.sh` | 往**已有安装包**里增量合资源（保持内部布局与 xml 引用名）：`merge-package.sh <原包.zip> [--out DIR] <文件...>` |
 | `assets/presets/rk-android-neutral/` | 预置「中性」logo/动画包（RK 安卓，**仅在明确要求中性时用**）：`logo.img` + `bootanimation.zip` + `CpService.xml` + `README.md` |
 | `assets/presets/linux-neutral/` | 预置「中性」Linux 开机 logo（**仅明确要求中性时用**）：`logo.png`（源图）+ `logo`（2 帧 R180）+ `bootlogo.bmp`（R180）+ `README.md` |
 | `assets/vendor/generate_bootlogo.sh` | 上游 `CP_Generate_Bootlogo` 原样副本（交互式，输出写在自己目录）；驱动的一致性基准 |
@@ -316,5 +321,5 @@ adb shell 'rm -rf /mnt/usb/sda1; rm -f /data/cp-unattended/probe*'   # T3 Linux 
 
 ## 11. 整机线刷（不在这里）
 
-整机 `.img` 覆盖烧写（会清 userdata、跨系统重装、救砖）走独立 skill **`flash`**：该 skill 设为用户专属（`disable-model-invocation`），**让用户输入 `/flash` 显式触发**；线刷脚本、事实页与烧写工具都在 `src/flash/`，验收口径是「只比版本号」。
-本 skill 只负责 U 盘升级包（装应用/换 logo/换动画），不提供线刷脚本。
+整机 `.img` 覆盖烧写（会清 userdata、跨系统重装、救砖）走独立 skill **`flash`**：`/bpms` 的订单链路里由模型直接触发（刷前说明会清数据），用户也可 `/flash` 手动触发；线刷脚本、事实页与烧写工具都在 `src/flash/`，验收口径是「只比版本号」。
+本 skill 只负责 U 盘升级包（装应用/换 logo/换动画），不提供线刷脚本；刷完机之后的「出包/合并/验证」再回到这里。
