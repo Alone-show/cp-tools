@@ -1,82 +1,41 @@
 ---
 name: firmware
-description: 查固件、TB 版本任务/子任务（待解决/已解决）、以及 bug 是否修进正式版。默认只找量产固件（不带 DEV 标识），用户点名 DEV 时才返回 DEV 构建。固件, firmware, 线刷, OTA, 量产版本, 量产固件, DEV, DEV构建, 发版, Teambition, 子任务, 问题, 已解决, 待解决, 修复。
+description: 查量产固件、线刷与 OTA 直链、机型写法与系统。只做固件查找；工单任务号、子任务状态、历史 bug 是否修复请用 tickets skill。固件, firmware, 线刷, OTA, 量产版本, 量产固件, DEV, 发版, alist, minio, 机型, 系统, 客户。
 ---
 
-# 固件与问题检索
+# 固件查找
 
-用户可以直接用自然语言问（「spring2pro 最新固件」「这个摄像头问题解决了吗」），也可以输入 `/firmware ...` 作为显式入口；两者都走本 skill 的工具，没有强制的斜杠闸门。
+本 skill 只负责「找固件」：可用 `/firmware` 显式触发，也可直接用自然语言问。按机型 / 系统 / 客户定位量产固件，给线刷与 OTA 直链，并处理机型写法归一等歧义。
 
-## 三条能力线
+**不负责**：TB 工单/任务号/子任务状态、历史 bug 是否修进正式版、TB 登录与看板同步。这些统一走 `tickets` skill（`ticket_search` / `ticket_bug_check` / `ticket_sync`）。
 
-1. **固件**：`firmware_find` / `firmware_models` —— 按机型/系统/客户找量产固件和线刷、OTA 链接。
-2. **TB 版本任务/子任务**：`firmware_issues` —— 当前和历史版本任务下的子任务，标已解决 / 待解决 / 已拒绝 / 暂挂起，并挂回父版本任务。
-3. **修复判定**：`firmware_fix_check` / `firmware_fix_models` / `firmware_fix_log` / `firmware_fix_matrix` —— 在 alist `/PROD` 的 commit-logs 里判断 bug 是否修进客户正式版，并比对其它机型/系统/芯片。
+## 工具
 
-**TB 状态不等于代码已修复**：`firmware_issues` 给业务侧记录，`firmware_fix_check` 给代码证据（结论是「疑似」），两者分开写。
+| 工具 | 用途 |
+|---|---|
+| `firmware_find` | 机型 + 系统 + 客户 → 固件版本、构建日期、客户、线刷/OTA 直链 |
+| `firmware_models` | TB 看板里的机型族、同族别名、变体；机型写法拿不准时先查这里 |
 
 ## 参数与默认值
 
-- 机型：`spring2pro`、`SP2-10PRO`、`apollo 12 pro`、`瑞芯微 / APOLLO 12 PRO`、`T3 / SPRING2`。
-- 系统：安卓 / Android、Debian、BuildRoot、Linux（`linux` = Debian + BuildRoot）。
-- 客户：`-c` / `--customer CP|SZ|QX|VR|*`；**缺省 CP**，`*` / 「所有客户」不限。
-- 其它：`--version`、`--mainline`、`--stage`、`-n/--limit`、`--verify`、`--all`、`--source auto|live|index`、`--dev`。
-- **DEV 构建默认不返回**：只给量产版（不带 `DEV-`/`DEV_` 标识）。用户明确说「要 DEV / DEV 版 / 看开发版」时才传 `dev: true`；被过滤的条数会写在返回的 `note` 里，回答时不要漏掉。
-- 用户说「最新的」→ `limit: 1`；没说条数用默认值。
-
-## 子命令路由
-
-| 输入 | 工具 |
-|---|---|
-| `<机型> [系统/参数]` / `/firmware <机型>` | `firmware_find` |
-| `models` / `/firmware models` | `firmware_models` |
-| `问题 <机型> [系统] [--status open/done/all] [关键词]` | `firmware_issues` |
-| `修复 <bug 描述> [机型/客户/系统]` | `firmware_fix_check`（默认带 TB 证据） |
-| `日志 ...` | `firmware_fix_log` |
-| `矩阵 <hash/DO-xxxx/标题>` | `firmware_fix_matrix` |
-| `sync [tb/fix]` | `firmware_sync`（看板+子任务）/ `firmware_fix_sync`（commit 索引） |
-| `登录` | `firmware_login` |
-
-**默认每次都刷新，不需要先 sync**：
-
-- `firmware_find` 每次调用都会实时核对 TB（补拉版本父任务详情）并实时扫描 alist `/PROD` 目录（不复用旧缓存），单次约 3–8 秒；刚归档的版本也能立刻查到。`liveChecked=false` 表示实时核对失败（未登录/断网），此时才用本地索引快照兜底，note 会写明快照时间。
-- `firmware_issues` 默认走实时 TB 搜索（约 2–6 秒），实时失败才回退本地索引。
-- 用户明确要「全量/历史所有/完整状态」→ 传 `source: "index"` 或 `full: true`；没有全量索引时先 `firmware_sync`（约 60–90 秒）。
-- TB 登录态失效时两条线都会降级到本地快照，提示用户 `/firmware login`。
-
-## 少走弯路
-
-1. 机型写法拿不准时，把主工具与对应 models 工具同轮并发：TB 看板用 `firmware_models`，alist 产品线用 `firmware_fix_models`，不要混用。
-2. 「这个问题解决没有 / TB 上有没有记录」→ 先 `firmware_issues`；需要代码层结论时同轮并发 `firmware_fix_check`，回答里分开写「TB 业务状态」和「代码证据」。
-3. 「修没修 / 进了哪个正式版 / 其它机型有没有」→ `firmware_fix_check`；不要只凭 TB 的 `isDone` 说已修复。
-4. 一次把参数带满：「最新的」→ `limit: 1`；看全客户 → `customer: "*"`；要体积第一次就带 `verify: true`。
-5. `firmware_issues` 默认 CP；`otherCustomers` 里的客户必须列出来，不要悄悄吞掉。
-6. 不要用 bash 直接读 `.tbfw` / `.fixfinder` / `token.json`，也不要手工拼 alist 路径；一律走工具。
+- 机型：自由写法均可（`spring2pro`、`SP2-10PRO`、`apollo 12 pro`、`瑞芯微 / APOLLO 12 PRO`、`T3 / SPRING2`）。
+- 系统：安卓 / Android、Debian、BuildRoot；`linux` = Debian + BuildRoot。
+- 客户：缺省 **CP**；`*` 或「所有客户」不限。同一机型的不同客户固件不能混刷。
+- 其它：`version`、`mainline`、`stage`、`limit`（默认 5，最大 20）、`verify`、`all`、`source(auto|tb|alist)`。
+- **DEV 构建默认不返回**：只给量产版（不带 `DEV-`/`DEV_`）。用户明确说要 DEV 时才传 `dev: true`，被过滤条数写在 `note` 里。
+- 用户说「最新的」→ `limit: 1`。
 
 ## 流程
 
-1. 查询类请求直接调工具，不必先 sync；每次调用都会实时核对，只有工具返回 `needs_sync` / `needs_auth` 时才需要 sync 或登录。
-2. `firmware_find`：
-   - `ok`：用表格/列表给版本、构建日期、客户、线刷/OTA 链接；转述 `note`、`otherCustomers`、`pending`。
-   - 同版本在 TB 与 alist 都有时，两条线刷直链都要列：`OSS 线刷地址`（minio/next）与 `alist 线刷地址`（alist 优先下载）。
-   - 行首标注来源：`[实时]` = 本次实时 TB、`[alist]` = alist `/PROD`、`[tb+alist]` = 两边都有；`stage=生产库归档` 才是量产归档。
-   - `liveChecked=false` 时必须转述 note 里的「实时核对失败 + 快照时间」，不要把它当最新结果。
-   - `source: alist`：说明来自 alist `/PROD`，Teambition 没有归档链接。
-   - `needs_confirmation`：列候选（含 variants），请用户确认规范机型；不要猜。
-3. `firmware_issues`：
-   - `ok`：按版本分组，给已解决/待解决计数和每条子任务的状态、日期、执行人；`query` 命中时给分数/命中词。
-   - `empty` 且有 `lowConfidence`：把低置信候选列出来，请用户换更具体的现象词。
-   - `needs_confirmation`：列候选机型，请用户确认。
-   - `needs_auth`：提示刷新登录。
-   - `needs_sync`：说明「要全量索引」再 `firmware_sync`；日常查询可改用 `source: "live"`。
-4. `firmware_fix_check`：
-   - 结论是「疑似」，依据候选提交与客户正式版；把 `tb` 里的 TB 子任务证据一并转述。
-   - 代码/TB 不一致时按 `tb.notes` 提示（代码已发版但 TB 未关闭，或 TB 已解决但日志未命中）。
-5. 工具报错时按 `status` 与 `hint` 处理；不要用其它插件的数据源顶替。
+1. 查询直接调 `firmware_find`；每次调用都会实时核对 TB（补拉版本父任务详情）并实时扫描 alist `/PROD`，约 3–8 秒，不需要先同步。`liveChecked=false` 表示实时核对失败（如未登录），此时按 note 里的快照时间说明，不要当最新结果。
+2. 机型歧义（`status=needs_confirmation`）时列候选（含 variants），请用户确认后再查，不要猜。
+3. 结果里同一版本在 TB 与 alist 都有时，两条线刷直链都要给：`OSS 线刷地址`（minio/next）与 `alist 线刷地址`（alist 优先下载）；`stage=生产库归档` 才是量产归档。
+4. 输出：机型、系统、版本、构建日期、客户、线刷/OTA 链接，并标注来源（`[实时]` TB / `[alist]` / `[tb+alist]`）；转述 `note`、`otherCustomers`、`pending`。
+5. `firmware_models` 传 `alist: true` 可附 alist 产品目录概览；TB 看板索引由 tickets 维护，若提示找不到索引，让用户先 `/tickets sync`（只影响机型族与阶段，alist 结果仍可用）。
 
-## 输出
+## 数据与边界
 
-- 固件：机型、系统、版本、构建日期、客户、线刷/OTA 链接（alist 优先 + minio 备用，两条都给）；标注数据源（实时 TB / alist / 两者）。
-- 问题：版本任务、阶段、构建日期、子任务状态（已解决/待解决/已拒绝/暂挂起）、完成日期、执行人；明确这是 TB 业务记录。
-- 修复：verdict、依据提交、客户正式版版本；注明「疑似，需研发复核」，并附 TB 证据。
-- 不确定机型时给候选，不要编造版本号、链接或状态。
+- 只看固件：不根据 TB 子任务或 commit log 判断「问题是否解决」；这类问题转 `tickets`。
+- 共享缓存：与 `tickets` 共用 `.tbfw`（`board-<projectId>.json`、`token.json`）与 alist 缓存；本 skill 只读，不写索引。
+- 不要用 bash 直接读 `.tbfw` 或手工拼 alist 路径；一律走工具。
+- alist 不可达时 `firmware_find` 会降级到 TB/本地快照，按返回的 `note` 说明。

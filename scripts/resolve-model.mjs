@@ -79,7 +79,7 @@ if (catalog === 'docs') {
     console.log(`  ${String(score).padStart(3)}  ${g.name}${g.aliases?.length ? ` (${g.aliases.join(' / ')})` : ''}`);
   }
 } else if (catalog === 'alist') {
-  const { resolveModel } = await import('../src/firmware/lib/fix/models.js');
+  const { resolveModel } = await import('../src/tickets/lib/bug/models.js');
   const dir = dataDir('DSH_FIXFINDER_DIR', '.fixfinder');
   if (!dir || !fs.existsSync(path.join(dir, 'index.json'))) {
     console.error('找不到 .fixfinder/index.json，先运行 npm run sync -- --fix');

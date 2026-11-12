@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 安装前/发布前的包清单校验：exports → 文件、bundle patch 五行、locale/icon、
+ * 安装前/发布前的包清单校验：exports → 文件、bundle patch 六行、locale/icon、
  * skill、vendor、files 覆盖、禁止进入包内的产物。
  *
  *   node scripts/check-package.mjs
@@ -50,6 +50,7 @@ if (!fs.existsSync(patchFile)) {
     ['cp-tools-web', '@local/cp-tools'],
     ['cp-docs', '@local/cp-tools/docs'],
     ['firmware-finder', '@local/cp-tools/firmware'],
+    ['cp-tickets', '@local/cp-tools/tickets'],
     ['e9631service', '@local/cp-tools/cpservice'],
     ['cp-flash', '@local/cp-tools/flash'],
     ['cp-bpms', '@local/cp-tools/bpms'],
@@ -96,6 +97,7 @@ for (const [key, target] of Object.entries(exportsMap)) {
 const subplugins = [
   { key: 'docs', mod: 'src/docs/index.js', locale: 'locale/docs', icon: 'icons/docs.svg' },
   { key: 'firmware', mod: 'src/firmware/index.js', locale: 'locale/firmware', icon: 'icons/firmware.svg' },
+  { key: 'tickets', mod: 'src/tickets/index.js', locale: 'locale/tickets', icon: 'icons/tickets.svg' },
   { key: 'cpservice', mod: 'src/cpservice/index.js', locale: 'locale/cpservice', icon: 'icons/cpservice.svg' },
   { key: 'flash', mod: 'src/flash/index.js', locale: 'locale/flash', icon: 'icons/flash.svg' },
   { key: 'bpms', mod: 'src/bpms/index.js', locale: 'locale/bpms', icon: 'icons/bpms.svg' },
@@ -141,6 +143,7 @@ const SKILL_MAX_LINES = 500;
 const DESC_MAX = 1024;
 const skills = [
   ['firmware', 'src/firmware/skills/firmware/SKILL.md'],
+  ['tickets', 'src/tickets/skills/tickets/SKILL.md'],
   ['cpservice', 'src/cpservice/skills/cpservice/SKILL.md'],
   ['flash', 'src/flash/skills/flash/SKILL.md'],
   ['bpms', 'src/bpms/skills/bpms/SKILL.md'],

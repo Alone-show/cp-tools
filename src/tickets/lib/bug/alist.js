@@ -30,7 +30,7 @@ function httpRequest(urlStr, { method = 'GET', body = null, timeoutMs = 15000, r
     }
     const payload = body == null ? null : Buffer.from(JSON.stringify(body));
     const headers = {
-      'user-agent': 'firmware-finder/0.5.0',
+      'user-agent': 'cp-tools-tickets/1.3.0',
       accept: '*/*',
     };
     if (payload) {

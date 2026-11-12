@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { discoverLines, pickReleaseBuild, DEFAULT_ROOTS } from '../../src/firmware/lib/fix/discover.js';
+import { discoverLines, pickReleaseBuild, DEFAULT_ROOTS } from '../../src/tickets/lib/bug/discover.js';
 
 const dir = (name, isDir = true) => ({ name, isDir, size: 0, modified: '' });
 

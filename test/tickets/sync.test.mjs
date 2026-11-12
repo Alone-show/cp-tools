@@ -5,8 +5,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { runSync } from '../../src/firmware/lib/fix/sync.js';
-import { loadIndex, loadMeta, INDEX_VERSION } from '../../src/firmware/lib/fix/store.js';
+import { runSync } from '../../src/tickets/lib/bug/sync.js';
+import { loadIndex, loadMeta, INDEX_VERSION } from '../../src/tickets/lib/bug/store.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const LOG = fs.readFileSync(path.join(HERE, 'fixtures', 'sample-log.txt'), 'utf8');

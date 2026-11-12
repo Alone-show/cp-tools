@@ -37,6 +37,9 @@ if (!fast) {
     { name: 'firmware model', cmd: ['node', 'test/firmware/model-resolve.test.mjs'] },
     { name: 'firmware alist', cmd: ['node', 'test/firmware/alist.test.mjs'] },
     { name: 'firmware suite', cmd: ['node', '--test', 'test/firmware/*.test.mjs'] },
+    { name: 'tickets gate', cmd: ['node', 'test/tickets/gate-smoke.mjs'] },
+    { name: 'tickets suite', cmd: ['node', '--test', 'test/tickets/*.test.mjs'] },
+    { name: 'package check', cmd: ['node', 'scripts/check-package.mjs'] },
   );
 }
 

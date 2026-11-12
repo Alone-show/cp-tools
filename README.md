@@ -1,17 +1,18 @@
 # cp-tools（从平定制工具集）
 
-一个 DSH bundle，五个可独立开关的子插件：
+一个 DSH bundle，六个可独立开关的子插件：
 
 | 子插件 | 入口 | 能力 |
 |---|---|---|
 | 产品资料 | `/cp-docs` | 按机型返回本地全部资料（参数 / 接口与线束表 / 图内文字 / 编程节点 / 工作点），由模型定位作答 |
-| 固件与问题 | `/firmware` | 量产固件与线刷/OTA 直链（alist 优先 + minio 备用）、TB 版本任务/子任务状态、bug 是否修进客户正式版 |
+| 固件查找 | `/firmware` | 量产固件与线刷/OTA 直链（alist 优先 + minio 备用）、机型族与写法归一；只做固件查找 |
+| 工单与历史问题 | `/tickets` | 按现象查 TB 工单/任务号与子任务状态；历史 bug 是否修进客户正式版、跨机型/系统/芯片比对 |
 | U 盘升级 | `/cpservice` | RK 安卓 / T3 安卓 / RK Debian / T3 Linux 升级包生成与真机验证 |
 | 整机线刷 | `/flash` | 整机镜像覆盖烧写（RK / T3，安卓 / Debian / Buildroot），刷完只比版本号验收 |
 | BPMS 订单需求 | `/bpms` | BPMS（CPSales）登录、按「分区/字段名」读写订单需求表、备份与回滚 |
 
-五个子插件共用一次安装/升级，但在插件管理器里可以按 id 单独停用：
-`cp-docs`、`firmware-finder`、`e9631service`、`cp-flash`、`cp-bpms`。
+六个子插件共用一次安装/升级，但在插件管理器里可以按 id 单独停用：
+`cp-docs`、`firmware-finder`、`cp-tickets`、`e9631service`、`cp-flash`、`cp-bpms`。
 
 另有一行 `cp-tools-web`（模块名就是包名 `@local/cp-tools`）：它不注册任何能力，只作为包根载体，
 让 DSH 的 `client-modules` 能发现本包的 `./client`（浏览器端的 BPMS 配置页）。
@@ -47,15 +48,27 @@ plugin_manager install_bundle target=/home/my/Documents/deepseek-harness/default
 
 ```text
 /firmware spring2pro 安卓
-/firmware 问题 spring2pro 摄像头断层 --status open
-/firmware 修复 摄像头热插拔断层 spring2pro
+/firmware apollo 12 pro debian --customer CP
 /firmware models
-/firmware sync
 ```
 
-默认只返回**量产版**（`DEV-` 构建需点名 `dev:true`）。注册 10 个工具：`firmware_find`、`firmware_models`、`firmware_sync`、`firmware_login`、
-`firmware_issues`、`firmware_fix_check`、`firmware_fix_models`、`firmware_fix_log`、
-`firmware_fix_matrix`、`firmware_fix_sync`。数据在 `.tbfw` 与 `.fixfinder`。
+默认只返回**量产版**（`DEV-` 构建需点名 `dev:true`）。只注册 2 个工具：
+`firmware_find`、`firmware_models`。只做固件查找；工单/任务号/bug 修复判定走 `/tickets`。
+TB 看板快照与登录凭据由 `/tickets` 维护（共用 `.tbfw`），firmware 只读。
+
+### `/tickets`
+
+```text
+/tickets 单卡 设置里出现两个卡 上不去网
+/tickets 问题 spring2pro 摄像头断层 --status open
+/tickets 修复 摄像头热插拔断层 spring2pro
+/tickets sync
+/tickets login
+```
+
+注册 8 个工具：`ticket_search`、`ticket_sync`、`ticket_login`、`ticket_bug_check`、
+`ticket_bug_models`、`ticket_bug_log`、`ticket_bug_matrix`、`ticket_bug_sync`。
+与 `/firmware` 共用 TB 缓存（`.tbfw`）与 commit 索引（`.fixfinder`），是本 bundle 里唯一写 TB 索引的子插件。
 
 ### `/cpservice`
 
@@ -103,11 +116,11 @@ BPMS（CPSales）登录与订单需求表编辑：登录、读记录、按字段
 ## 固定流程脚本
 
 ```bash
-npm test                 # 全部离线测试（docs + firmware + cpservice + flash + bpms + shared/contract）
+npm test                 # 全部离线测试（docs + firmware + tickets + cpservice + flash + bpms + shared/contract）
 npm run check            # 包清单校验：exports / patch / locale / icon / skill / vendor / files
 npm run import:docs      # work/cpdoc/ai-readable → .cpdocs
 npm run login            # Teambition 登录/刷新凭据
-npm run sync -- --tb     # TB 看板 + 子任务
+npm run sync -- --tb     # TB 看板 + 子任务（/tickets 口径）
 npm run sync -- --fix    # alist commit 索引
 npm run sync -- --all    # 资料 + TB + commit 索引
 npm run resolve -- SPRING2PRO --catalog docs
@@ -119,7 +132,7 @@ node scripts/live-smoke.mjs   # 在线冒烟；无凭据/断网时 SKIP
 | 子插件 | 默认目录 | 环境变量 |
 |---|---|---|
 | docs | `.cpdocs` | `DSH_CPDOCS_DIR` |
-| firmware / fix | `.tbfw` / `.fixfinder` | `DSH_TBFW_DIR` / `DSH_FIRMWARE_DIR` / `DSH_FIXFINDER_DIR` |
+| firmware / tickets | `.tbfw` / `.fixfinder` | `DSH_TBFW_DIR` / `DSH_FIRMWARE_DIR` / `DSH_FIXFINDER_DIR` |
 
 `DSH_FIRMWARE_NO_PROBE=1` 关闭 TB 实时探测；`DSH_ALIST_DISABLE=1` 关闭 alist；
 `DSH_ALIST_TTL_MS` 控制 alist 目录缓存。
@@ -128,13 +141,15 @@ node scripts/live-smoke.mjs   # 在线冒烟；无凭据/断网时 SKIP
 
 ```text
 src/shared/       机型归一原语、SKILL frontmatter、数据目录解析
+src/tb/           TB 共享层：凭据、看板/子任务同步、实时检索、机型归一
 src/docs/         /cp-docs 子插件 + 运行期数据
-src/firmware/     /firmware 子插件 + 工具 + skill
+src/firmware/     /firmware 子插件（只做固件查找）+ skill
+src/tickets/      /tickets 子插件（工单 + 历史 bug）+ skill
 src/cpservice/    /cpservice 子插件 + skill + references/assets/vendor
 src/flash/        /flash 子插件 + 线刷 skill（SOP + flash.sh + tools）
 src/bpms/         /bpms 子插件 + BPMS 登录/编辑工具 + skill
 scripts/          固定流程脚本
-test/             docs / firmware / cpservice / flash / bpms / shared / contract
+test/             docs / firmware / tickets / cpservice / flash / bpms / shared / contract
 docs/             合并审查与各子插件的详细说明（不随包发布）
 ```
 

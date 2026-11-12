@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { rebuildIndex, loadIndex, loadCommits, INDEX_VERSION } from '../../src/firmware/lib/fix/store.js';
+import { rebuildIndex, loadIndex, loadCommits, INDEX_VERSION } from '../../src/tickets/lib/bug/store.js';
 
 const LINE_A = 'PROD/RK/DEBIAN/SP2-10PRO/CP/LCD10';
 const LINE_B = 'PROD/RK/ANDROID/SP2-10PRO/CP/LCD10';

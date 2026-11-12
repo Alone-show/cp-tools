@@ -13,7 +13,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const MANUAL_HINT =
   '手动获取：在该浏览器打开 Teambition 并登录 → F12 → Network → 任意请求右键「Copy as cURL」→ ' +
-  '把整段粘给 firmware_login(cookie="...")。TB_ACCESS_TOKEN 是 HttpOnly，document.cookie 读不到。';
+  '把整段粘给 ticket_login(cookie="...")。TB_ACCESS_TOKEN 是 HttpOnly，document.cookie 读不到。';
 
 export const tokenFile = (dataDir) => path.join(dataDir, 'token.json');
 export const profileDir = (dataDir) => path.join(dataDir, 'browser-profile');

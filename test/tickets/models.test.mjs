@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { makeIndex } from './index-fixture.mjs';
-import { buildCatalog, resolveModel, probeVersion, probeModel, platformsOf, gapScore, canonCore } from '../../src/firmware/lib/fix/models.js';
+import { buildCatalog, resolveModel, probeVersion, probeModel, platformsOf, gapScore, canonCore } from '../../src/tickets/lib/bug/models.js';
 
 const index = makeIndex();
 

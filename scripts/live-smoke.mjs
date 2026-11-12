@@ -8,7 +8,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { checkToken } from '../src/firmware/login.js';
+import { checkToken } from '../src/tb/login.js';
 import { createAlist } from '../src/firmware/alist.js';
 
 function findUp(name, start = process.cwd()) {

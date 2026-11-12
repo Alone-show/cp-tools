@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { parseCommitLine, parseCommitLog, parseBuildName, isBuildName, parseVersionString, nz } from '../../src/firmware/lib/fix/parse.js';
+import { parseCommitLine, parseCommitLog, parseBuildName, isBuildName, parseVersionString, nz } from '../../src/tickets/lib/bug/parse.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const fixture = fs.readFileSync(path.join(HERE, 'fixtures', 'sample-log.txt'), 'utf8');

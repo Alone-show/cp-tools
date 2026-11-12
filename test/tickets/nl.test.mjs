@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { nlScore, similarity, semanticText, tokens, longestCommonRun } from '../../src/firmware/lib/fix/nl.js';
+import { nlScore, similarity, semanticText, tokens, longestCommonRun } from '../../src/tickets/lib/bug/nl.js';
 
 const CIF = 'feat(common): 修复CIF驱动REQBUFS时cif_fmt_out空指针导致的kernel panic';
 const TEARING = 'feat(common): DO-7778 解决camera 热插拔出现图像断层问题';

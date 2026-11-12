@@ -1,10 +1,10 @@
 /**
- * 修复判定工具（原 @local/fix-finder，0.5.0 起并入 firmware 子插件（现 @local/cp-tools/firmware））。
+ * 历史 bug 修复判定工具（tickets 子插件）。
  *
  * 数据来源：https://alist.cpinnov.run 的 /PROD/<芯片>/<系统> 下每条产品线最新一版**正式构建**的
  * commit-logs.txt（累积全量 git log）。只索引 PROD：数据量小一半，且「是否已修复」只关心正式版。
  *
- * 使用顺序：firmware_fix_models 探测机型写法 -> firmware_fix_check 判定；需要看原文时用 firmware_fix_log。
+ * 使用顺序：ticket_bug_models 探测机型写法 -> ticket_bug_check 判定；需要看原文时用 ticket_bug_log。
  * 芯片（platform）是一等维度：不同芯片的同名机型绝不互相顶替。
  */
 import { createAlistClient } from './alist.js';
@@ -39,7 +39,7 @@ const VERDICT_LABEL = {
   not_found: '未找到匹配的修复提交',
 };
 
-const NEEDS_SYNC_HINT = '还没有本地提交索引（或索引格式已升级）。先调用 firmware_fix_sync 重建（只抓 PROD 正式版，cold sync 约 10–20 秒）；只想查某个型号时可用 only 参数收窄。';
+const NEEDS_SYNC_HINT = '还没有本地提交索引（或索引格式已升级）。先调用 ticket_bug_sync 重建（只抓 PROD 正式版，cold sync 约 10–20 秒）；只想查某个型号时可用 only 参数收窄。';
 
 async function loadIndexOrNull(ctx, exec) {
   const dir = await store.resolveDataDir(ctx, exec);
@@ -61,14 +61,14 @@ function renderTb(tb) {
 }
 
 /* ------------------------------------------------------------------ *
- * 工具：firmware_fix_check
+ * 工具：ticket_bug_check
  * ------------------------------------------------------------------ */
 
 function checkToolFor(ctx, deps = {}) {
   return {
-    name: 'firmware_fix_check',
+    name: 'ticket_bug_check',
     description:
-      '判断某个 bug/现象是否已被修复：先做机型探测（拼写/别名/省略尺寸段都能归一，探测不唯一时要求确认），再把现象描述在本地索引里按自然语言相似度检索，返回疑似修复提交、是否已进入客户产品线的正式版、以及其它机型/系统/芯片是否做了同样修改。数据来自 alist 各产品线最新正式构建的 commit-logs.txt（累积全量 git log，只索引 PROD）。传了 currentVersion 时会先剔除「现网包已经包含的老提交」。首次使用先调 firmware_fix_sync；想看原文提交清单用 firmware_fix_log。结论是「疑似」，需要研发复核代码；日志只有标题没有 diff。',
+      '判断某个 bug/现象是否已被修复：先做机型探测（拼写/别名/省略尺寸段都能归一，探测不唯一时要求确认），再把现象描述在本地索引里按自然语言相似度检索，返回疑似修复提交、是否已进入客户产品线的正式版、以及其它机型/系统/芯片是否做了同样修改。数据来自 alist 各产品线最新正式构建的 commit-logs.txt（累积全量 git log，只索引 PROD）。传了 currentVersion 时会先剔除「现网包已经包含的老提交」。首次使用先调 ticket_bug_sync；想看原文提交清单用 ticket_bug_log。结论是「疑似」，需要研发复核代码；日志只有标题没有 diff。',
     parameters: {
       type: 'object',
       properties: {
@@ -173,7 +173,7 @@ function renderProbe(v) {
 function renderCheck(v) {
   if (v.status === 'needs_sync') return `还没有本地索引。${v.hint || ''}`;
   if (v.status === 'needs_keywords') return `无法检索。${v.hint || ''}`;
-  if (v.status === 'error') return `firmware_fix_check 出错：${v.message}`;
+  if (v.status === 'error') return `ticket_bug_check 出错：${v.message}`;
 
   const lines = [];
   if (v.status === 'needs_confirmation') {
@@ -183,7 +183,7 @@ function renderCheck(v) {
     lines.push('');
     for (const note of v.notes || []) lines.push(`· ${note}`);
     if (v.hint) lines.push('', v.hint);
-    if (v.index) lines.push(`索引：${v.index.lineCount} 条线 / ${v.index.commitCount} 个提交，${v.index.ageHours} 小时前（${v.index.stale ? '已过期，建议 firmware_fix_sync' : '新鲜'}）`);
+    if (v.index) lines.push(`索引：${v.index.lineCount} 条线 / ${v.index.commitCount} 个提交，${v.index.ageHours} 小时前（${v.index.stale ? '已过期，建议 ticket_bug_sync' : '新鲜'}）`);
     return lines.join('\n');
   }
 
@@ -208,7 +208,7 @@ function renderCheck(v) {
   lines.push('');
 
   if (!v.candidates?.length) {
-    lines.push('未命中任何提交。建议换更具体的现象词、补工单号/hash，或用 firmware_fix_log 直接看该机型全部提交标题。');
+    lines.push('未命中任何提交。建议换更具体的现象词、补工单号/hash，或用 ticket_bug_log 直接看该机型全部提交标题。');
   } else {
     lines.push(`候选修复提交（${v.candidates.length}，按自然语言相似度）：`);
     v.candidates.slice(0, 6).forEach((c, i) => {
@@ -252,19 +252,19 @@ function renderCheck(v) {
 
   if (v.tb) lines.push(...renderTb(v.tb));
   for (const note of v.notes || []) lines.push(`· ${note}`);
-  if (v.index) lines.push(`索引：${v.index.lineCount} 条线 / ${v.index.commitCount} 个提交，${v.index.ageHours} 小时前（${v.index.stale ? '已过期，建议 firmware_fix_sync' : '新鲜'}）`);
+  if (v.index) lines.push(`索引：${v.index.lineCount} 条线 / ${v.index.commitCount} 个提交，${v.index.ageHours} 小时前（${v.index.stale ? '已过期，建议 ticket_bug_sync' : '新鲜'}）`);
   return lines.join('\n');
 }
 
 /* ------------------------------------------------------------------ *
- * 工具：firmware_fix_models
+ * 工具：ticket_bug_models
  * ------------------------------------------------------------------ */
 
 function modelsToolFor(ctx) {
   return {
-    name: 'firmware_fix_models',
+    name: 'ticket_bug_models',
     description:
-      '机型探测：把用户写的机型名归一化到索引里的规范写法（处理拼写、别名 SP2/SPRING2、省略尺寸段 SPRING2PRO → SPRING2-10PRO），返回芯片、系统、客户、产线条数与最新正式版；不传 model 时列出索引内全部机型族。探测不唯一时会返回候选列表，必须先确认再调 firmware_fix_check。不同芯片的同名机型互相隔离。',
+      '机型探测：把用户写的机型名归一化到索引里的规范写法（处理拼写、别名 SP2/SPRING2、省略尺寸段 SPRING2PRO → SPRING2-10PRO），返回芯片、系统、客户、产线条数与最新正式版；不传 model 时列出索引内全部机型族。探测不唯一时会返回候选列表，必须先确认再调 ticket_bug_check。不同芯片的同名机型互相隔离。',
     parameters: {
       type: 'object',
       properties: {
@@ -343,8 +343,8 @@ function modelsToolFor(ctx) {
 }
 
 function renderModels(v) {
-  if (v.status === 'needs_sync') return `还没有本地索引，先调用 firmware_fix_sync 建索引（只抓 PROD 正式版）。${v.hint || ''}`;
-  if (v.status === 'error') return `firmware_fix_models 出错：${v.message}`;
+  if (v.status === 'needs_sync') return `还没有本地索引，先调用 ticket_bug_sync 建索引（只抓 PROD 正式版）。${v.hint || ''}`;
+  if (v.status === 'error') return `ticket_bug_models 出错：${v.message}`;
 
   const lines = [];
   if (!v.probe) {
@@ -381,17 +381,17 @@ function renderModels(v) {
   }
   if (probe.availableCustomers?.length) lines.push(`· 现有客户：${probe.availableCustomers.join('/')}；现有系统：${probe.availableOS.join('/') || '-'}`);
   if (probe.availablePlatforms?.length) lines.push(`· 索引内芯片：${probe.availablePlatforms.join('/')}`);
-  lines.push('写法确认后再调 firmware_fix_check。');
+  lines.push('写法确认后再调 ticket_bug_check。');
   return lines.join('\n');
 }
 
 /* ------------------------------------------------------------------ *
- * 工具：firmware_fix_log
+ * 工具：ticket_bug_log
  * ------------------------------------------------------------------ */
 
 function logToolFor(ctx) {
   return {
-    name: 'firmware_fix_log',
+    name: 'ticket_bug_log',
     description:
       '把某个范围（芯片/系统/机型/客户 + 可选时间窗）的 PROD 提交标题原样取出来，按 hash 去重并标注落点，分页返回。用于「拿出来直接做自然语言匹配」：语料很小（单机型+系统 < 600 条），可以直接读标题判断。传 query 只附加相似度分数，不做过滤。',
     parameters: {
@@ -453,7 +453,7 @@ function logToolFor(ctx) {
 
 function renderLog(v) {
   if (v.status === 'needs_sync') return `还没有本地索引。${v.hint || ''}`;
-  if (v.status === 'error') return `firmware_fix_log 出错：${v.message}`;
+  if (v.status === 'error') return `ticket_bug_log 出错：${v.message}`;
   const s = v.scope || {};
   const scope = `${[s.platform, s.os, s.product].filter(Boolean).join('/') || '全部'}${s.customer ? `(${s.customer})` : ''}`;
   const window = [s.since && `从 ${s.since}`, s.until && `到 ${s.until}`].filter(Boolean).join(' ');
@@ -476,14 +476,14 @@ function renderLog(v) {
 }
 
 /* ------------------------------------------------------------------ *
- * 工具：firmware_fix_matrix
+ * 工具：ticket_bug_matrix
  * ------------------------------------------------------------------ */
 
 function matrixToolFor(ctx) {
   return {
-    name: 'firmware_fix_matrix',
+    name: 'ticket_bug_matrix',
     description:
-      '给定 commit hash、工单号（DO-xxxx）或标题片段，输出「产品线 × 是否包含」的覆盖矩阵：哪些机型/客户/系统/芯片已经合入，哪些没有。用于回答「其它机型是否做了同样的更改」「Android/Linux 是否也同步了」。cherry-pick 换 hash 的情况会用同工单号与标题相似度兜底。索引来自 firmware_fix_sync（只含 PROD）。',
+      '给定 commit hash、工单号（DO-xxxx）或标题片段，输出「产品线 × 是否包含」的覆盖矩阵：哪些机型/客户/系统/芯片已经合入，哪些没有。用于回答「其它机型是否做了同样的更改」「Android/Linux 是否也同步了」。cherry-pick 换 hash 的情况会用同工单号与标题相似度兜底。索引来自 ticket_bug_sync（只含 PROD）。',
     parameters: {
       type: 'object',
       properties: {
@@ -557,9 +557,9 @@ function matrixToolFor(ctx) {
 }
 
 function renderMatrix(v) {
-  if (v.status === 'needs_sync') return `还没有本地索引，先调用 firmware_fix_sync 建索引。${v.hint || ''}`;
+  if (v.status === 'needs_sync') return `还没有本地索引，先调用 ticket_bug_sync 建索引。${v.hint || ''}`;
   if (v.status === 'needs_key') return `缺少查询条件：至少给 hash / ticket / subject 之一。${v.hint || ''}`;
-  if (v.status === 'error') return `firmware_fix_matrix 出错：${v.message}`;
+  if (v.status === 'error') return `ticket_bug_matrix 出错：${v.message}`;
 
   const lines = [];
   const key = v.key || {};
@@ -605,12 +605,12 @@ function renderMatrix(v) {
 }
 
 /* ------------------------------------------------------------------ *
- * 工具：firmware_fix_sync
+ * 工具：ticket_bug_sync
  * ------------------------------------------------------------------ */
 
 function syncToolFor(ctx) {
   return {
-    name: 'firmware_fix_sync',
+    name: 'ticket_bug_sync',
     description:
       '从 https://alist.cpinnov.run 同步 commit log 索引：只遍历 /PROD/<芯片>/<系统> 下每条产品线，且每条线只取最新一版**正式构建**（_V…_，DEV/tip 跳过）的 commit-logs.txt（累积全量 git log）。构建未变化的线会被跳过。提交正文按 hash 去重只存一份，每条线只存 hash 列表。冷同步约 5–10 秒。只读，不修改 alist 上任何内容。',
     parameters: {
@@ -648,7 +648,7 @@ function syncToolFor(ctx) {
           force: args.force === true,
           only: args.only || null,
           onProgress: (p) => {
-            if (p.updated % 20 === 0) process.stderr.write(`[firmware-fix] 已更新 ${p.updated}/${p.total} 条线\n`);
+            if (p.updated % 20 === 0) process.stderr.write(`[ticket-bug] 已更新 ${p.updated}/${p.total} 条线\n`);
           },
         });
         return jsonSafe({
@@ -671,7 +671,7 @@ function syncToolFor(ctx) {
 }
 
 function renderSync(v) {
-  if (v.status === 'error') return `firmware_fix_sync 出错：${v.message}`;
+  if (v.status === 'error') return `ticket_bug_sync 出错：${v.message}`;
   const lines = [];
   lines.push(`同步完成：更新 ${v.stats?.updated ?? 0} 条，跳过 ${v.stats?.skipped ?? 0} 条，失败 ${v.stats?.failed ?? 0} 条（共发现 ${v.stats?.discovered ?? 0} 条 PROD 产品线）`);
   if (v.index) {

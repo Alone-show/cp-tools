@@ -9,9 +9,8 @@ import {
   issueOutcome,
   scoreIssue,
   renderIssues,
-  syncSubtasks,
-  readSubtasks,
-} from '../../src/firmware/lib/issues.js';
+} from '../../src/tickets/lib/issues.js';
+import { syncSubtasks, readSubtasks } from '../../src/tb/board.js';
 
 function parent(overrides = {}) {
   return {

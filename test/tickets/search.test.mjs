@@ -12,7 +12,7 @@ import {
   selectLines,
   selectCustomerLines,
   loadKeywords,
-} from '../../src/firmware/lib/fix/search.js';
+} from '../../src/tickets/lib/bug/search.js';
 
 const dict = loadKeywords();
 const index = makeIndex();

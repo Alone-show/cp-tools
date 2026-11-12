@@ -1,10 +1,10 @@
 /**
  * TB 实时检索：不依赖本地全量索引，按型号/现象直接查 /api/v2/search，
- * 只对命中的父任务抓子任务。用于 /firmware 的默认快速路径。
+ * 只对命中的父任务抓子任务。firmware 的实时核对与 tickets 的默认检索共用。
  */
-import { plainText } from './issues.js';
+import { plainText } from './text.js';
 import { UA, LINK_FIELDS, asList } from './constants.js';
-import { nz } from '../../shared/model-core.js';
+import { nz } from '../shared/model-core.js';
 
 const SYSTEM_ALIASES = {
   android: ['android'],
@@ -127,7 +127,11 @@ export function normalizeTask(raw, defs) {
     stage,
     updated: raw.updated ?? '',
     created: raw.created ?? '',
+    accomplished: raw.accomplished ?? '',
+    executor: raw.executor?.name ?? '',
+    uniqueId: raw.uniqueId ?? null,
     isDone: raw.isDone === true,
+    isArchived: raw.isArchived === true,
     subtaskCount: raw.subtaskCount ?? { total: 0, done: 0 },
     parentId: raw._taskId ?? raw.parentTaskId ?? (Array.isArray(raw.ancestorIds) && raw.ancestorIds.length ? raw.ancestorIds[raw.ancestorIds.length - 1] : ''),
     fields,
@@ -225,6 +229,8 @@ export async function findLiveRecords({
   pages = 2,
   maxHits = 60,
   maxParents = 30,
+  includeTasks = false,
+  extraQueries = [],
 } = {}) {
   const queries = [];
   if (model) {
@@ -232,7 +238,8 @@ export async function findLiveRecords({
   } else if (query) {
     queries.push(query);
   }
-  if (!queries.length) return { records: [], parents: [], otherCustomers: [], queries: [] };
+  for (const item of extraQueries ?? []) if (item) queries.push(String(item));
+  if (!queries.length) return { records: [], tasks: [], parents: [], otherCustomers: [], queries: [] };
 
   const batches = await Promise.all([...new Set(queries)].map((q) => client.search(projectId, q, pages).catch(() => [])));
   const hits = [];
@@ -253,8 +260,9 @@ export async function findLiveRecords({
   const needDetail = [];
   for (const task of direct) {
     // 搜索接口不返回 taskflowstatus，版本父任务也必须补拉详情，否则阶段会被当成空
-    if (!task.parentId && isVersionParent(task)) details.push(task);
-    if (needDetail.length < 25) needDetail.push(task);
+    if (!task.parentId && (isVersionParent(task) || includeTasks)) details.push(task);
+    if (!includeTasks && needDetail.length < 25) needDetail.push(task);
+    else if (includeTasks) needDetail.push(task);
   }
   const fetched = await mapPool(needDetail, 8, async (task) => {
     try {
@@ -293,10 +301,45 @@ export async function findLiveRecords({
     if (!task) continue;
     const parent = task.parentId ? await getParent(task.parentId) : task;
     if (!parent) continue;
-    if (!isVersionParent(parent)) continue;
-    if (!matchModel(parent, model ? modelAliases(model) : [])) continue;
-    if (!matchSystem(parent, system)) continue;
+    const modelNeedles = model ? modelAliases(model) : [];
+    if (!includeTasks) {
+      if (!isVersionParent(parent)) continue;
+      if (!matchModel(parent, modelNeedles)) continue;
+      if (!matchSystem(parent, system)) continue;
+    } else {
+      if (modelNeedles.length && !matchModel(parent, modelNeedles) && !matchModel(task, modelNeedles)) continue;
+      if (!matchSystem(parent, system)) continue;
+    }
     normalized.push({ task, parent });
+  }
+
+  if (includeTasks) {
+    // 工单检索：不限客户、不要求版本父任务、不因 0 子任务丢弃。
+    // 返回命中的任务本身（ITR/缺陷单），并附所属版本信息。
+    const seen = new Set();
+    const tasks = [];
+    for (const { task, parent } of normalized) {
+      if (!task || seen.has(task.id)) continue;
+      seen.add(task.id);
+      const isVersion = isVersionParent(task);
+      tasks.push({
+        ...task,
+        isVersionTask: isVersion,
+        parentVersion: isVersion ? '' : String(asList(parent.fields?.['固件版本'])[0] ?? '') || String(parent.title ?? ''),
+        parentTask: isVersion
+          ? null
+          : { id: parent.id, uniqueId: parent.uniqueId ?? null, title: parent.title, stage: parent.stage, url: parent.url },
+      });
+    }
+    return {
+      records: [],
+      tasks,
+      parents: [],
+      otherCustomers: [],
+      customerDefaulted: !String(customer ?? '').trim(),
+      customer: String(customer ?? '').trim() || '*',
+      queries: [...new Set(queries)],
+    };
   }
 
   // 客户口径：默认 CP，但要统计其他客户

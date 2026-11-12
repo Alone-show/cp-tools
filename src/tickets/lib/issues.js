@@ -5,36 +5,15 @@
  *   subtasks-<projectId>.json = { format, projectId, syncedAt, parents:{id:{updated,total,done,fetchedAt,error}}, byParent:{parentId:[subtask]} }
  * 子任务记录只存展示/检索需要的字段；父任务（版本任务）字段仍从 board-*.json 读。
  */
-import fs from 'node:fs';
-import path from 'node:path';
-import { nz } from './fix/parse.js';
-import { nlScore, bigrams } from './fix/nl.js';
-import { LINK_FIELDS, asList } from './constants.js';
+import { nz } from './bug/parse.js';
+import { LINK_FIELDS, asList } from '../../tb/constants.js';
+import { isVersionTask } from '../../tb/models.js';
 
-export const SUBTASKS_FORMAT = 1;
+export { isVersionTask };
+import { matchScore, taskMatches } from './symptoms.js';
+
 
 /** TB 富文本/HTML -> 纯文本，截断，用于匹配与展示 */
-export function plainText(input, max = 2000) {
-  let s = String(input ?? '');
-  s = s
-    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<\/(p|div|li|tr)>/gi, '\n')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/gi, ' ')
-    .replace(/&amp;/gi, '&')
-    .replace(/&lt;/gi, '<')
-    .replace(/&gt;/gi, '>')
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;/gi, "'")
-    .replace(/[ \t\u00a0]+/g, ' ')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
-  if (s.length > max) s = `${s.slice(0, max)}…`;
-  return s;
-}
-
 /** 子任务状态 -> 业务口径 */
 export function issueOutcome(isDone, status) {
   const st = String(status ?? '');
@@ -49,32 +28,6 @@ const OUTCOME_ORDER = { pending: 0, suspended: 1, unknown: 2, solved: 3, rejecte
 
 export function outcomeLabel(outcome) {
   return { solved: '已解决', pending: '待解决', suspended: '暂挂起', rejected: '已拒绝', unknown: '状态未知' }[outcome] || '状态未知';
-}
-
-export function normalizeSubtask(raw, parentId) {
-  if (!raw || !raw._id) return null;
-  const status = raw.taskflowstatus?.name ?? '';
-  return {
-    id: raw._id,
-    parentId,
-    content: String(raw.content ?? '').trim(),
-    note: plainText(raw.note ?? '', 2000),
-    status,
-    isDone: raw.isDone === true,
-    created: raw.created ?? '',
-    updated: raw.updated ?? '',
-    accomplished: raw.accomplished ?? '',
-    executor: raw.executor?.name ?? '',
-    uniqueId: raw.uniqueId ?? null,
-    url: `https://www.teambition.com/task/${raw._id}`,
-  };
-}
-
-export function isVersionTask(parent) {
-  const f = parent?.fields ?? {};
-  if (asList(f['固件版本']).length) return true;
-  if (String(parent?.title ?? '').includes('【版本迭代】')) return true;
-  return LINK_FIELDS.some((key) => asList(f[key]).length);
 }
 
 export function linksOf(parent) {
@@ -110,20 +63,9 @@ export function stageRank(stage) {
   return 2;
 }
 
-/** 子任务与查询的匹配：nlScore + 查询 bigram 命中率 + 子串加成 */
+/** 子任务与查询的匹配：同义词归一后的最优分数 */
 export function scoreIssue(query, subtask) {
-  const q = nz(query);
-  const text = nz(`${subtask.content ?? ''} ${subtask.note ?? ''}`);
-  if (!q || !text) return { score: 0, hits: [], ratio: 0, substring: false };
-  const qb = bigrams(q);
-  const tb = new Set(bigrams(text));
-  const hits = [...new Set(qb.filter((b) => tb.has(b)))];
-  const ratio = qb.length ? hits.length / qb.length : 0;
-  const substring = text.includes(q);
-  let score = nlScore(query, `${subtask.content ?? ''} ${subtask.note ?? ''}`);
-  if (substring) score += 200;
-  score += Math.round(ratio * 120);
-  return { score, hits: hits.slice(0, 8), ratio, substring };
+  return matchScore(query, `${subtask.content ?? ''} ${subtask.note ?? ''}`);
 }
 
 export function issueMatches(query, scored) {
@@ -309,141 +251,189 @@ export function buildIssueRows({
 }
 
 /* ------------------------------------------------------------------ *
- * 子任务同步
+ * 工单检索（跨全部看板任务 / 子任务，不要求版本父任务）
  * ------------------------------------------------------------------ */
 
-function subtasksFile(dir, projectId) {
-  return path.join(dir, `subtasks-${projectId}.json`);
+function taskHaystack(task, note = '') {
+  const fields = task?.fields ?? {};
+  return [
+    task?.title ?? '',
+    note,
+    ...Object.values(fields).flatMap((value) => (Array.isArray(value) ? value : [value])),
+  ]
+    .filter(Boolean)
+    .join(' ');
 }
 
-let subtasksCache = { file: null, mtimeMs: 0, data: null };
-
-export function readSubtasks(dir, projectId) {
-  const file = subtasksFile(dir, projectId);
-  let st;
-  try {
-    st = fs.statSync(file);
-  } catch {
-    return null;
-  }
-  if (subtasksCache.file === file && subtasksCache.mtimeMs === st.mtimeMs) return subtasksCache.data;
-  try {
-    const data = JSON.parse(fs.readFileSync(file, 'utf8'));
-    if (!data || data.format !== SUBTASKS_FORMAT || !data.byParent) return null;
-    subtasksCache = { file, mtimeMs: st.mtimeMs, data };
-    return data;
-  } catch {
-    return null;
-  }
+function taskOutcome(task) {
+  const stage = String(task?.stage ?? '');
+  if (/拒绝|不解决/.test(stage)) return 'rejected';
+  if (/挂起/.test(stage)) return 'suspended';
+  if (task?.isDone === true) return 'solved';
+  if (task?.isDone === false) return 'pending';
+  return 'unknown';
 }
 
-async function fetchPaged(headers, url, pick, fetchImpl, maxPages = 20) {
-  const out = [];
-  let token = '';
-  for (let i = 0; i < maxPages; i += 1) {
-    const full = `${url}${url.includes('?') ? '&' : '?'}pageSize=100${token ? `&pageToken=${encodeURIComponent(token)}` : ''}`;
-    const res = await fetchImpl(full, { headers });
-    if (res.status === 401) throw new Error('Teambition 登录态失效，需要重新登录（/firmware login）');
-    if (!res.ok) throw new Error(`${url} -> ${res.status}`);
-    const json = await res.json();
-    out.push(...pick(json));
-    if (!json.nextPageToken) break;
-    token = json.nextPageToken;
-  }
-  return out;
+function modelNeedlesOf(model) {
+  const raw = String(model ?? '').trim();
+  if (!raw) return [];
+  const out = new Set([raw]);
+  if (/SP2/i.test(raw)) out.add(raw.replace(/SP2/gi, 'SPRING2'));
+  if (/SPRING2/i.test(raw)) out.add(raw.replace(/SPRING2/gi, 'SP2'));
+  if (/APOLLO2/i.test(raw)) out.add(raw.replace(/APOLLO2/gi, 'APOLLO'));
+  if (/APOLLO/i.test(raw)) out.add(raw.replace(/APOLLO/gi, 'APOLLO2'));
+  return [...out].map((x) => nz(x)).filter(Boolean);
 }
 
-async function mapPool(items, limit, worker) {
-  const out = new Array(items.length);
-  let cursor = 0;
-  const runners = Array.from({ length: Math.max(1, Math.min(limit, items.length)) }, async () => {
-    for (;;) {
-      const index = cursor++;
-      if (index >= items.length) return;
-      out[index] = await worker(items[index], index);
-    }
-  });
-  await Promise.all(runners);
-  return out;
+function taskRowOf(task, { parent = null, kind = 'task', score = 0, hits = [] } = {}) {
+  const isVersion = isVersionTask(task);
+  return {
+    kind,
+    id: task.id,
+    taskNo: task.uniqueId ?? null,
+    title: String(task.title ?? ''),
+    stage: String(task.stage ?? ''),
+    isDone: task.isDone === true,
+    isArchived: task.isArchived === true,
+    created: task.created ?? '',
+    accomplished: task.accomplished ?? '',
+    updated: task.updated ?? '',
+    executor: task.executor ?? '',
+    url: task.url ?? '',
+    outcome: taskOutcome(task),
+    score,
+    hits,
+    parentVersion: isVersion ? '' : String(asList(parent?.fields?.['固件版本'])[0] ?? '') || String(parent?.title ?? ''),
+    parentTask:
+      isVersion || !parent
+        ? null
+        : { id: parent.id, taskNo: parent.uniqueId ?? null, title: parent.title, stage: parent.stage, url: parent.url },
+  };
 }
 
 /**
- * 抓取父任务的子任务。只抓 subtaskCount.total > 0 的父任务；未变化时复用旧记录。
- * @returns {{file,parents,items,fetched,skipped,failed,failures,syncedAt}}
+ * 按现象搜索任意 TB 任务（含无子任务、无客户字段、已归档的 ITR/缺陷单）。
+ * 命中子任务时挂回所属父任务。
  */
-export async function syncSubtasks({
-  dir,
-  projectId,
-  tasks,
-  headers,
-  fetchImpl = globalThis.fetch,
-  force = false,
-  concurrency = 8,
-  onProgress,
-} = {}) {
-  const old = readSubtasks(dir, projectId);
-  const parents = (tasks ?? []).filter((t) => Number(t.subtaskCount?.total ?? 0) > 0);
-  const meta = { ...(old?.parents ?? {}) };
-  const byParent = { ...(old?.byParent ?? {}) };
-  const stats = { fetched: 0, skipped: 0, failed: 0 };
-  const failures = [];
+export function searchBoardTasks(board, subtasks, { query = '', limit = 10, status = 'all', model = '', system = '', stage = '' } = {}) {
+  const q = String(query ?? '').trim();
+  if (!q) return { status: 'needs_model', mode: 'tasks', hint: '请给一个现象关键词，如「单卡 出现两个卡 上不去网」。', tasks: [] };
+  const items = board?.items ?? [];
+  const byId = new Map(items.map((task) => [task.id, task]));
+  const needles = modelNeedlesOf(model);
+  const wantedSystem = String(system ?? '').trim().toLowerCase();
 
-  await mapPool(parents, concurrency, async (task) => {
-    const total = Number(task.subtaskCount?.total ?? 0);
-    const done = Number(task.subtaskCount?.done ?? 0);
-    const prev = meta[task.id];
-    if (!force && prev && prev.updated === task.updated && prev.total === total && prev.done === done && byParent[task.id]) {
-      stats.skipped += 1;
-      return;
-    }
-    try {
-      const raw = await fetchPaged(
-        headers,
-        `https://www.teambition.com/api/v2/tasks/${task.id}/subtasks`,
-        (json) => json.result ?? [],
-        fetchImpl,
-      );
-      byParent[task.id] = raw.map((item) => normalizeSubtask(item, task.id)).filter(Boolean);
-      meta[task.id] = { updated: task.updated ?? '', total, done, fetchedAt: new Date().toISOString(), error: '' };
-      stats.fetched += 1;
-    } catch (error) {
-      stats.failed += 1;
-      const message = error?.message || String(error);
-      failures.push({ parent: task.id, title: task.title, error: message });
-      if (meta[task.id]) meta[task.id] = { ...meta[task.id], fetchedAt: new Date().toISOString(), error: message };
-      else meta[task.id] = { updated: task.updated ?? '', total, done, fetchedAt: '', error: message };
-    }
-    onProgress?.({ fetched: stats.fetched, skipped: stats.skipped, failed: stats.failed, total: parents.length });
-  });
-
-  // 清掉已不再有子任务的父任务
-  for (const id of Object.keys(byParent)) {
-    if (!parents.some((task) => task.id === id)) {
-      delete byParent[id];
-      delete meta[id];
+  const docs = [];
+  for (const task of items) {
+    docs.push({
+      kind: 'task',
+      id: task.id,
+      title: String(task.title ?? ''),
+      task,
+      parent: null,
+      text: taskHaystack(task),
+    });
+  }
+  for (const [parentId, list] of Object.entries(subtasks?.byParent ?? {})) {
+    const parent = byId.get(parentId);
+    if (!parent) continue;
+    for (const sub of list ?? []) {
+      docs.push({
+        kind: 'subtask',
+        id: sub.id,
+        title: String(sub.content ?? ''),
+        task: {
+          ...sub,
+          url: sub.url,
+          uniqueId: sub.uniqueId,
+          stage: parent.stage,
+          isDone: sub.isDone,
+          isArchived: parent.isArchived,
+          created: sub.created,
+          accomplished: sub.accomplished,
+          updated: sub.updated,
+          executor: sub.executor,
+        },
+        parent,
+        text: taskHaystack({ title: sub.content, fields: parent.fields }, sub.note ?? ''),
+      });
     }
   }
 
-  const data = {
-    format: SUBTASKS_FORMAT,
-    projectId,
-    syncedAt: new Date().toISOString(),
-    parents: meta,
-    byParent,
-  };
-  const file = subtasksFile(dir, projectId);
-  const tmp = `${file}.${process.pid}.tmp`;
-  fs.writeFileSync(tmp, JSON.stringify(data));
-  fs.renameSync(tmp, file);
-  subtasksCache = { file: null, mtimeMs: 0, data: null };
+  const kept = [];
+  const low = [];
+  for (const doc of docs) {
+    if (needles.length) {
+      const hay = nz(doc.text);
+      if (!needles.some((needle) => hay.includes(needle))) continue;
+    }
+    if (wantedSystem) {
+      const systems = asList(doc.parent?.fields?.['操作系统'] ?? doc.task?.fields?.['操作系统'])
+        .map((x) => String(x).toLowerCase())
+        .join(' ');
+      if (systems && !systems.includes(wantedSystem) && !(wantedSystem === 'linux' && /(debian|buildroot)/.test(systems))) continue;
+    }
+    if (stage && !String(doc.parent?.stage ?? doc.task?.stage ?? '').includes(String(stage))) continue;
+    const scored = matchScore(q, doc.text);
+    if (!taskMatches(scored)) {
+      low.push({ ...doc, score: scored.score, hits: scored.hits, ratio: scored.ratio });
+      continue;
+    }
+    if (status && status !== 'all') {
+      const outcome = taskOutcome(doc.task);
+      if (status === 'open' && outcome !== 'pending' && outcome !== 'suspended' && outcome !== 'unknown') continue;
+      if (status === 'done' && outcome !== 'solved') continue;
+      if (status === 'rejected' && outcome !== 'rejected') continue;
+    }
+    kept.push({ doc, scored });
+  }
 
+  const dedup = new Map();
+  for (const item of kept) {
+    const row = taskRowOf(item.doc.task, { parent: item.doc.parent, kind: item.doc.kind, score: item.scored.score, hits: item.scored.hits });
+    row.concepts = item.scored.concepts?.length ?? 0;
+    const prev = dedup.get(row.id);
+    if (!prev || row.score > prev.score) dedup.set(row.id, row);
+  }
+  const tasks = [...dedup.values()].sort(
+    (a, b) =>
+      b.score - a.score ||
+      (b.concepts ?? 0) - (a.concepts ?? 0) ||
+      String(b.accomplished || b.updated).localeCompare(String(a.accomplished || a.updated)),
+  );
+
+  if (!tasks.length) {
+    low.sort((a, b) => b.score - a.score);
+    return {
+      status: 'empty',
+      mode: 'tasks',
+      query: q,
+      summary: { tasks: 0, open: 0, done: 0, rejected: 0 },
+      tasks: [],
+      lowConfidence: low.slice(0, 3).map((item) => ({
+        title: item.title,
+        score: item.score,
+        hits: item.hits,
+        parentVersion: item.parent ? String(asList(item.parent.fields?.['固件版本'])[0] ?? '') || item.parent.title : '',
+      })),
+      notes: ['没有达到阈值的工单；下面是相似度最高的低置信候选，可换更具体的现象词。'],
+    };
+  }
+
+  const picked = tasks.slice(0, Math.max(1, limit));
   return {
-    file,
-    parents: parents.length,
-    items: Object.values(byParent).reduce((acc, list) => acc + list.length, 0),
-    ...stats,
-    failures,
-    syncedAt: data.syncedAt,
+    status: 'ok',
+    mode: 'tasks',
+    query: q,
+    summary: {
+      tasks: picked.length,
+      open: picked.filter((t) => t.outcome === 'pending' || t.outcome === 'suspended').length,
+      done: picked.filter((t) => t.outcome === 'solved').length,
+      rejected: picked.filter((t) => t.outcome === 'rejected').length,
+    },
+    tasks: picked,
+    lowConfidence: [],
+    notes: [],
   };
 }
 
@@ -456,7 +446,7 @@ export function renderIssues(result) {
   if (result.status === 'needs_setup') return `还没有 TB 看板索引。${result.hint || ''}`;
   if (result.status === 'needs_model') return `请补充机型。${result.hint || ''}`;
   if (result.status === 'needs_auth') return `需要 Teambition 登录。${result.hint || ''}`;
-  if (result.status === 'error') return `firmware_issues 出错：${result.message}`;
+  if (result.status === 'error') return `ticket_search 出错：${result.message}`;
   if (result.status === 'needs_confirmation') {
     const lines = [`机型「${result.query || result.resolvedModel || '-'}」无法唯一确定，需要用户确认：`, ''];
     for (const c of result.candidates || []) {
@@ -465,8 +455,46 @@ export function renderIssues(result) {
       lines.push(`- ${c.model}  [${c.score} 分, ${c.tasks} 个任务]${alias}${vs}`);
     }
     if (result.note) lines.push('', result.note);
-    lines.push('', '请让用户选定一个后用 /firmware 重发，不要自行猜测。');
+    lines.push('', '请让用户选定一个后用 /tickets 重发，不要自行猜测。');
     return lines.join('\n');
+  }
+
+  if (result.mode === 'tasks' || (result.tasks && !result.rows)) {
+    const lines = [];
+    const scope = [result.query || '-', '全部系统', '不限客户'];
+    lines.push(`范围：${scope.join(' | ')}`);
+    if (result.summary) {
+      lines.push(
+        `共 ${result.summary.tasks ?? 0} 条工单命中：已解决 ${result.summary.done ?? 0}，待解决 ${result.summary.open ?? 0}，已拒绝 ${result.summary.rejected ?? 0}`,
+      );
+    }
+    lines.push('');
+    for (const task of result.tasks || []) {
+      const tag = { solved: '已解决', pending: '待解决', suspended: '暂挂起', rejected: '已拒绝', unknown: '状态未知' }[task.outcome] || '状态未知';
+      const no = task.taskNo != null ? `#${task.taskNo}` : '#-';
+      const score = task.score ? ` [${task.score} 分]` : '';
+      const hit = task.hits?.length ? `（命中：${task.hits.slice(0, 5).join('/')}）` : '';
+      const dates = [
+        task.created ? `创建 ${String(task.created).slice(0, 10)}` : '',
+        task.accomplished ? `完成 ${String(task.accomplished).slice(0, 10)}` : '',
+        task.executor ? `执行人 ${task.executor}` : '',
+      ].filter(Boolean).join('，');
+      lines.push(`- ${no} [${tag}] ${task.title}${score}${hit}`);
+      const meta = [task.stage || '', task.parentVersion ? `所属版本 ${task.parentVersion}` : '', dates].filter(Boolean).join(' | ');
+      if (meta) lines.push(`    ${meta}`);
+      if (task.url) lines.push(`    ${task.url}`);
+      if (/^ITR:/.test(String(task.title)) && !/ITR[\s-]*\d/i.test(String(task.title))) {
+        lines.push('    注：标题只有「ITR:」前缀，TB 里没有对应的 ITR 编号。');
+      }
+    }
+    if (result.status === 'empty') {
+      lines.push('', '没有匹配的工单。');
+      for (const item of result.lowConfidence || []) {
+        lines.push(`  低置信：${item.title}（${item.parentVersion || '-'}，${item.score} 分）`);
+      }
+    }
+    for (const note of result.notes || []) lines.push(`· ${note}`);
+    return lines.join('\n').trim();
   }
 
   const lines = [];
@@ -509,7 +537,7 @@ export function renderIssues(result) {
 
   for (const note of result.notes || []) lines.push(`· ${note}`);
   if (result.ageHours !== null && result.ageHours !== undefined) {
-    lines.push(`索引：${Number(result.ageHours).toFixed(1)} 小时前${result.ageHours > 72 ? '（已过期，建议 /firmware sync）' : ''}`);
+    lines.push(`索引：${Number(result.ageHours).toFixed(1)} 小时前${result.ageHours > 72 ? '（已过期，建议 /tickets sync）' : ''}`);
   }
   return lines.join('\n').trim();
 }

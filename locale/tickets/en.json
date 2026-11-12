@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Tickets & Bug History",
+    "description": "Ask in natural language or type /tickets to find Teambition tickets by symptom (task number, owner, solved/pending), and check whether a historical bug landed in the customer release, across models and OSes. Shares the TB cache and login with firmware."
+  }
+}

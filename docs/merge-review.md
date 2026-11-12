@@ -85,7 +85,7 @@ plugins/cp-tools/
 ## 5. 公共契约（不变）
 
 - 命令：`/cp-docs`。
-- 工具：`firmware_find`、`firmware_models`、`firmware_sync`、`firmware_login`、`firmware_issues`、`firmware_fix_check`、`firmware_fix_models`、`firmware_fix_log`、`firmware_fix_matrix`、`firmware_fix_sync`。
+- 工具：`firmware_find`、`firmware_models`（固件）；`ticket_search`、`ticket_sync`、`ticket_login`、`ticket_bug_check`、`ticket_bug_models`、`ticket_bug_log`、`ticket_bug_matrix`、`ticket_bug_sync`（工单与历史问题，另见 `src/tickets/`）。
 - skill：`firmware`、`cpservice`。
 - 数据目录与环境变量：`.cpdocs`、`.tbfw`、`.fixfinder`、`DSH_CPDOCS_DIR`、`DSH_TBFW_DIR`、`DSH_FIRMWARE_DIR`、`DSH_FIXFINDER_DIR`、`DSH_FIRMWARE_NO_PROBE`、`DSH_ALIST_*`。
 - 输出报文与 `source.kind = cp-docs` 折叠卡片。

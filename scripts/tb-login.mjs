@@ -11,7 +11,7 @@
  * 默认数据目录：$DSH_TBFW_DIR / $DSH_FIRMWARE_DIR / ./.tbfw。
  */
 import path from 'node:path';
-import { checkToken, ensureToken, loginWithCookie } from '../src/firmware/login.js';
+import { checkToken, ensureToken, loginWithCookie } from '../src/tb/login.js';
 import { dataDir } from './lib/paths.mjs';
 
 function arg(name, fallback) {

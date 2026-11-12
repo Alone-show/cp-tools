@@ -5,8 +5,8 @@
     "zh": "从平定制工具集"
   },
   "description": {
-    "en": "CP customization suite: product docs, firmware/issues, USB upgrade packages, full-device flashing, and BPMS order-demand sub-plugins in one bundle.",
-    "zh": "从平定制工具集：产品资料、固件与问题、U 盘升级、整机线刷、BPMS 订单需求，一个 bundle 五个子插件。"
+    "en": "CP customization suite: product docs, firmware lookup, tickets & bug history, USB upgrade packages, full-device flashing, and BPMS order-demand sub-plugins in one bundle.",
+    "zh": "从平定制工具集：产品资料、固件查找、工单与历史问题、U 盘升级、整机线刷、BPMS 订单需求，一个 bundle 六个子插件。"
   },
   "metadata": {
     "categories": {},
@@ -21,8 +21,8 @@
         "zh": "从平工具集"
       },
       "description": {
-        "en": "One bundle with five independently toggleable sub-plugins: /cp-docs product documentation, /firmware firmware & issue lookup, /cpservice USB upgrade packages, /flash full-device flashing (version-match acceptance), /bpms BPMS sign-in and order-demand editing.",
-        "zh": "一个 bundle、五个可独立开关的子插件：/cp-docs 产品资料、/firmware 固件与问题检索、/cpservice U 盘升级包、/flash 整机线刷（只比版本号验收）、/bpms BPMS 登录与订单需求编辑。"
+        "en": "One bundle with six independently toggleable sub-plugins: /cp-docs product documentation, /firmware firmware lookup, /tickets Teambition tickets & historical bug checks, /cpservice USB upgrade packages, /flash full-device flashing (version-match acceptance), /bpms BPMS sign-in and order-demand editing.",
+        "zh": "一个 bundle、六个可独立开关的子插件：/cp-docs 产品资料、/firmware 固件查找、/tickets 工单与历史问题查验、/cpservice U 盘升级包、/flash 整机线刷（只比版本号验收）、/bpms BPMS 登录与订单需求编辑。"
       },
       "icon": "icons/cp-tools.svg",
       "author": "Alone-show",
@@ -37,6 +37,7 @@
           "cpdevice",
           "product-docs",
           "firmware",
+          "tickets",
           "cpservice",
           "flash",
           "bpms"
@@ -44,6 +45,15 @@
         "labels": []
       },
       "versions": [
+        {
+          "version": "1.3.0",
+          "publishTimestamp": 1794540000,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/Alone-show/cp-tools"
+          },
+          "engines": {}
+        },
         {
           "version": "1.2.0",
           "publishTimestamp": 1794456000,

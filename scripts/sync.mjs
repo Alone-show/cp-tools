@@ -12,7 +12,7 @@
  */
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { apply } from '../src/firmware/index.js';
+import { apply as applyTickets } from '../src/tickets/index.js';
 import { importData } from '../src/docs/lib/import.js';
 import { dataDir, workspaceRoot } from './lib/paths.mjs';
 
@@ -45,7 +45,7 @@ const ctx = {
   },
   skills: { register: () => () => {} },
 };
-apply(ctx);
+applyTickets(ctx);
 
 function tool(name) {
   const found = tools.find((t) => t.name === name);
@@ -84,7 +84,7 @@ if (doDocs) {
 
 if (doTb) {
   try {
-    const { result, ms } = await runTool('firmware_sync', {
+    const { result, ms } = await runTool('ticket_sync', {
       issues: true,
       force: argv.has('--force'),
     });
@@ -103,7 +103,7 @@ if (doTb) {
 
 if (doFix) {
   try {
-    const { result, ms } = await runTool('firmware_fix_sync', {
+    const { result, ms } = await runTool('ticket_bug_sync', {
       force: argv.has('--force'),
       ...(arg('only', '') ? { only: arg('only', '') } : {}),
     });
