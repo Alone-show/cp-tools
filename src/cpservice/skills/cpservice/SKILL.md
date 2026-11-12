@@ -1,6 +1,6 @@
 ---
 name: cpservice
-description: 按需求生成并验证 U 盘升级包：先判定 RK 安卓（CpService.xml / com.cpdevice.cpservice，21 个动作）、T3 安卓（E9631Service.xml / com.android.guard）、RK Debian（unattended_installation.sh / auto_unattended_installation + silentInstaller，udev 或工具窗口触发）还是 T3 Linux（Buildroot，盘根 unattended_installation.sh，/Launcher 设置→U盘查看→开关），再加载对应上下文出包并做真机验证。判定先看 OS；取证优先用 assets/debian-trigger.sh、assets/t3linux-trigger.sh、assets/verify.sh 一条命令，证据落 /var/log、/data 不落 /tmp。E9631Service, E9631Service.xml, CpService, CpService.xml, U盘升级, 升级包, 升级脚本, setup_cpservice.sh, setup_e9631service.sh, 刷机, adb, bootlogo, logo, 生成logo, bootanimation, install, copy, copyout, canuse_ver, runlimit, remount, 静默安装, 生成脚本, 验证, 验证报告, 证据, MDM, VanCoreT3, wifi 固件, cyw43438, RK, rk356x, rk3588, T3, cpservice, 真机验证, Debian, debian, RK Debian, T3 Linux, Buildroot, Launcher, U盘查看, unattended_installation, auto_unattended_installation, silentInstaller, udev, dpkg, /media/usb_disk, /mnt/installUsb, SPRING2-PRO, SPRING2_L, 服务模式, 启动时序, JobMonitor, CFT, VariableMonitor, can0, eglfs。
+description: 生成并验证 CP 的 U 盘升级包（静默安装 / 换 bootlogo / 开机动画）：先判平台——RK 安卓 CpService.xml、T3 安卓 E9631Service.xml、RK Debian unattended_installation.sh + silentInstaller、T3 Linux Buildroot 盘根脚本 + Launcher，再按对应 reference 出包并真机验证。只做 U 盘包；整机线刷/清数据不在本 skill，由用户用 /flash 显式触发。
 ---
 
 # E9631Service / CpService / RK Debian / T3 Linux 升级包：生成与验证
@@ -20,9 +20,9 @@ description: 按需求生成并验证 U 盘升级包：先判定 RK 安卓（CpS
 | RK 安卓 | `assets/rk-virtual-disk.sh setup`（无真盘）+ 触发 | `verify.sh --rk <log> <pkg…>` |
 | T3 安卓 | `assets/trigger.sh` | `verify.sh --t3 <log> <pkg…>` |
 | T3 Linux | `assets/t3linux-trigger.sh bootcheck` + `stage <包目录>` + `run`（或 `stdin-run`） | `verify.sh --t3linux /data/cp-unattended/<pkg>.log` |
-| 整机线刷 | **不在这里**：走 `flash` skill（`/flash`，会清数据、只比版本号） | — |
+| 整机线刷 | **不在这里**：用户输入 `/flash` 显式触发（会清数据、只比版本号） | — |
 
-**0.2 时间预算**：Android 一轮 ~2 min；Debian 一轮 ~3 min（安装 ~130 s + 重启 ~32 s）；T3 Linux 一轮 ~2 min（脚本 + 取证，含重启 ~3 min）；整机线刷（走 `flash` skill）一轮 10–25 min（整盘写入 + 首次开机）。超了就是走弯路。**不要为取证重复跑整包**；日志没留按 §7.8-5 反查。
+**0.2 时间预算**：Android 一轮 ~2 min；Debian 一轮 ~3 min（安装 ~130 s + 重启 ~32 s）；T3 Linux 一轮 ~2 min（脚本 + 取证，含重启 ~3 min）；整机线刷（用户 `/flash`）一轮 10–25 min（整盘写入 + 首次开机）。超了就是走弯路。**不要为取证重复跑整包**；日志没留按 §7.8-5 反查。
 
 **0.3 验证纪律（先定边界，再动手）**
 
@@ -67,7 +67,9 @@ adb shell 'getprop ro.board.platform; getprop ro.hardware; getprop ro.build.vers
 | RK Debian | `references/rk-debian.md` | **顶部 runbook**、两种方式、`:uisum`、脚本约束、dpkg/落点、验证、坑 |
 | T3 Linux | `references/t3-linux.md` | **顶部 runbook**、Launcher 触发链、`/mnt/usb/sda1`、落点、bash 约束、假挂载验证、坑 |
 
-平台能力差异只看 §5.2，别在 reference 里另立对照表。
+平台能力差异只看 §5.2 / `references/platform-matrix.md`，别在 reference 里另立对照表。
+
+判定后先读对应平台 reference；平台差异、核验、取证、写法、LOGO 的专题页只在需要时读，本正文只留结论与红线。
 
 ## 3. 交付物
 
@@ -121,13 +123,7 @@ Debian / T3 Linux 没有 xml、没有动作：顺序 = 脚本顺序，失败靠 
 
 ### 5.2 平台差异（唯一对照表）
 
-| 维度 | RK 安卓 | T3 安卓 | RK Debian | T3 Linux |
-|---|---|---|---|---|
-| 描述文件 | `CpService.xml` | `E9631Service.xml` | `auto_unattended_installation/auto_unattended_installation.sh`（+ 根入口） | 盘根 `unattended_installation.sh`（Launcher 写死路径） |
-| 动作模型 | 21 个 action | 9 个 action | 无动作，脚本全权；`:uisum` 进 UI 摘要 | 无动作，脚本全权；stdout 进 Launcher 进程 |
-| 设备端 shell | mksh，有 `awk`/`sqlite3` | mksh，**无 `awk`**、无 `cmd` | udev：bash；入口：sh（dash） | bash 4.3（`/bin/sh` 也是 bash）；busybox |
-| 系统分区 | 动态分区 + verity，**默认不写 `/system`** | 可 remount（工具写死分区号） | rootfs **rw**：`dpkg`/`systemctl` 可用，改前备份 | `/`、`/data` ext4 rw；boot-resource 单独 mount |
-| 重启 | `cmd reboot`（自动延后） | 异步，会打断安装 | 默认不重启，交给 UI「重启」按钮 | 默认 `reboot`（Launcher 的 bash 收不到 EOF） |
+四平台的描述文件、动作模型、设备端 shell、分区写权限、重启差异见 `references/platform-matrix.md`；不要在平台 reference 里另立对照表。
 
 ### 5.3 设备端脚本
 
@@ -212,25 +208,7 @@ Debian 装之前先备份（回滚靠它）：`cp /etc/lightdm/lightdm.conf /etc
 
 ### 7.4 核验（共用项）
 
-| 检查项 | 命令 | 通过判据 |
-|---|---|---|
-| 工具执行 | Android：logcat 过滤（RK：`logcat -d -s _Command:V \| grep -- '--xml---action---'`，详见 `rk-android.md` §7 / `t3-android.md` §5）；Debian：`journalctl -b --no-pager` + `/run/auto_unattended_installation.log` | 有 action 行、无解析异常（重启前有效） |
-| 脚本日志 | `cat /var/log/cp-unattended/<pkg>.log`、`/data/cp-unattended/<pkg>.log` 或 `/sdcard/<name>.log` | `start, usb root:`、无 `skip missing`、`… Success`、结尾 `done`（老包不写日志 → §7.8-5） |
-| 本轮跑完 | `dpkg-query -W` / `dumpsys package <pkg>` / `ls -l` + `date -r`（T3 Linux 没有 `--full-time`） | **时间戳**在本轮窗口内（别只比 md5） |
-| 文件到位 | `md5sum`（设备 vs 包内） | 一致 |
-| **可用性（必查）** | 安卓：`am start`/`monkey -p` 后 `dumpsys activity activities \| grep mResumedActivity`、`pidof <pkg>`、`logcat -d \| grep -F "FATAL EXCEPTION"`；Debian：`systemctl show -p UnitFileState,ActiveState,Result,ExecMainStatus,NRestarts <unit>`；T3 Linux：按包设计取进程集（桌面=Launcher/MDM；服务模式=`JobMonitor.out`/`CFT.out`/`VariableMonitor` 等）+ `ps` + 目视 | 见下「可用性判据」；客户应用/系统服务/桌面起不来 = 不通过 |
-| 残留 | `ls /data/*.apk /data/local/tmp/usbroot`、`/media/usb_disk`、`/run/…`、`/mnt/usb/sda1` | 无 |
-| 重启回来（OTG） | `adb devices -l`、`lsusb \| grep -iE '2207\|1f3a'`、`uptime` | 切回后 adb 出现；超时按 §7.3 提示用户切 DEVICE（不写报告） |
-| UI（仅 Debian 自动方式） | `ffmpeg -f x11grab` 截屏 | 摘要区 `:uisum…`、结束 `退出码:0`；**手动方式没有摘要，不用截图**（eglfs 机型还可能全黑） |
-
-**可用性判据**（四平台共用；`is-active` 一刀切会误杀，实测就踩过）：
-
-- **常驻服务**（`Type=simple` 长期跑）：`ActiveState=active`，且 `NRestarts` 不持续增长（停在 1 次属正常）。
-- **一次性 / oneshot**（如 `cpwelcome`，播完就退出）：`UnitFileState=enabled` + `Result=success` + `ExecMainStatus=0`；`inactive/dead` 是**正常**的。
-- **被其它单元拉起**（如 `lovolrun` 由 `cpfeh` 启动）：`ActiveState=active` 即可，`UnitFileState=disabled` 是**正常**的；证据里写清"谁拉起的"（journal 行）。
-- **安卓应用**：有 Launcher Activity → 启动后 `mResumedActivity` 命中包名；**无 Activity 的服务型**（如 `com.android.guard`、VanCoreT3）→ `dumpsys activity services <pkg>` 有记录或 `pidof` 非空。两种情况都要求 logcat 无该包的 `FATAL EXCEPTION`。
-- **T3 Linux 桌面/服务**：桌面包看 `pidof Launcher`、`pidof MDM`；服务模式包看包内约定的进程（如 `JobMonitor.out`、`CFT.out`、`VariableMonitor`）。服务模式替换 Launcher 时，Launcher/MDM 不在是**可能正常**的，报告写清包设计，不要一律判失败。
-- **T3 Linux UI**：`eglfs/mali` 下 `/dev/fb0` 可能仍显示开机帧/黑屏，不能据此判 UI 成败；必须目视或拍照，否则标「未验证（需目视）」。
+核验项目、命令、通过判据与「可用性判据」见 `references/verification.md`；平台专属命令仍按 §7.7 / §7.9 与各平台 reference。
 
 ### 7.5 收尾
 
@@ -262,19 +240,7 @@ adb shell 'rm -rf /mnt/usb/sda1; rm -f /data/cp-unattended/probe*'   # T3 Linux 
 
 ### 7.8 取证硬规则（踩过的坑）
 
-1. **日志落持久路径**：`/var/log/`、`/userdata/`、`/usr/local/share/`。**禁止 `/tmp`**——Debian 开机 bootclean 清空，重启后整段 stdout 消失。
-2. **一次抓全**：reboot 前用一条 `adb shell 'a; b; c'` 或 `debian-trigger.sh evidence`，别一条条打。
-3. **systemd 查询带 `--no-pager` 或 `| cat`**：`systemctl show|status` 在 adb pty 下会进 less，卡 60 s 不动。
-4. **包自带 reboot 时 `adb` 会假 `rc=0` 提前返回**，拿不到脚本 rc：只看 `dpkg.log`/`apt history.log`/时间戳，别判失败、别重跑。
-5. **旧包没有自写日志**：用 `/var/log/dpkg.log`（装了哪些包、几点）+ `/var/log/apt/history.log`（apt 事务是否整组被拒，如降级 `E: Packages were downgraded and -y was used without --allow-downgrades`）+ 落点 `ls -l --full-time` 反查。
-6. 只取设备端可见落点：分区 hash、文件 md5、服务状态、进程、日志；视觉类（LOGO/动画）单列「仅目视」。
-7. T3 Linux：日志落 `/data/cp-unattended/`（`/tmp` 是 tmpfs）；Launcher 的 bash 收不到 EOF、不会自己结束，**别等 UI 回 idle**；GUI 触发痕迹看 `/data/Log/log.log`；脚本要 `+x`，否则 stdin 模式报 `Permission denied`。
-8. **不杀/不重启业务进程**：验证只读；进程变化用 0/15/60 s 采样 + core + `dmesg` 判断，不要 kill 后重拉。确需重拉先征得同意，结束后重启恢复。
-9. **先查启动依赖**：T3 Linux 的 `/data` 由 `rcS` 挂载，`/etc/autorun.sh` 可能先跑；先看 `/proc/mounts`、`/data/app.sh`、`can0`。CFT 在 `CanInit` 崩溃时先查 `can0`，别反复跑二进制。
-10. **失败即停**：一项不过就写报告；验证不是排障，不把「为什么」扩成主任务。
-11. **属性/配置回读有陈旧窗口**：`setprop` 后 1–2 s 内 `getprop` 可能仍读到旧值或空值（实测 `persist.hw.modem.nsim` 0→1，立即读仍是 0，2 s 后才变 1）；判定前 `sleep 2`，以 `/data/property/<name>` 终值为准。**别用单次回读判失败**，更别据此推成权限/沙箱问题（本次差点误判成 SELinux 拒绝，白查 9 分钟）。
-12. **无电池 RTC 的设备每次重启时钟归零**（1970/2022 起算）：`mtime`、日志时间跨重启不可比，判断先后一律用 `uptime` 对齐；只比属性值和文件内容，别拿 mtime 推「有服务在覆盖」。
-13. **复制/落盘失败先查挂载**：`cp` 报目标不存在、脚本里 `[ -d ]` 突然判假、目录「看着空了」，先看 `/proc/mounts`——挂到上级目录会遮蔽整棵子树。实测 T3 Linux 包先 `mount /dev/mmcblk0p2 /mnt` 再装应用，Launcher 的盘路径 `/mnt/usb/sda1` 被遮住，日志只剩一句 `app目录不存在`（遮蔽按路径生效，真 U 盘挂同一路径也一样）。挂载点用独立目录（如 `/mnt/bootresource`），写完 `sync` + `umount`。
+13 条硬规则见 `references/pitfalls.md`（编号 1–13，§7.8-5 即第 5 条）：日志落持久路径、一次抓全、systemctl 加 `--no-pager`、旧包反查、属性回读陈旧窗口、无电池 RTC、挂载遮蔽等；取证前先读。
 
 ### 7.9 T3 Linux 真机流程
 
@@ -291,80 +257,34 @@ adb shell 'rm -rf /mnt/usb/sda1; rm -f /data/cp-unattended/probe*'   # T3 Linux 
 
 ### 8.1 Android
 
-见 `rk-android.md` §5 / `t3-android.md` §5：`install`、`copy`、`logo`/`bootlogo`、`bootanimation`、写 `/system`（RK 拒绝、T3 先 remount）、`canuse_ver`、`runlimit`。
+`install` / `copy` / `logo` / `bootlogo` / `bootanimation` / 写 `/system` / `canuse_ver` / `runlimit` 的写法见 `references/recipes.md` 与 `rk-android.md` §5 / `t3-android.md` §5。
 
 ### 8.2 RK Debian
 
-| 需求 | 写法 |
-|---|---|
-| 装 deb | `dpkg -i --force-overwrite <deb>`，或 `apt install -y --allow-downgrades <deb>`（**不带 `--allow-downgrades` 遇降级整组拒绝，一个都不装**）；装完 `dpkg-query -W` 核对 |
-| 推文件/目录 | `cp -a` + md5 校验 + `chown` |
-| 改服务/自启 | 备份 → 改 → `systemctl daemon-reload` → `enable/restart` |
-| 换开机 LOGO | `dd if=logo.img of=/dev/block/by-name/logo`（不是安卓的 `logo` 动作） |
-| 装完重启 | 默认交给 UI「重启」按钮；自动重启用 `DO_REBOOT=1` + `.done` 标记 |
-| 只跑一次 / 大载荷 | `ONLY_ONCE=1`（`/var/lib/cp-unattended/<pkg>.done`）+ `flock`；大载荷放 U 盘根 |
-| 清临时物 | `rm -rf /customization /customization.tar`（`rm` 不带 `-r` 静默失败，172 MB 留在 `/`） |
+装 deb、推文件、改服务、换 LOGO、重启、只跑一次、大载荷、清临时物见 `references/recipes.md`。
 
 ### 8.3 T3 Linux
 
-| 需求 | 写法 |
-|---|---|
-| 装应用 | `tar xf data.tar.gz -C /data`，或 `cp` 二进制后改 `/data/app.sh` / `/etc/init.d/runqt` |
-| 换开机 LOGO | `cp logo /logo`（5 MB raw，权限 644） |
-| 换 bootlogo | `cp bootlogo.bmp /Configs/` + `mount -t vfat /dev/mmcblk0p2 /mnt` 替换 `bootlogo.bmp` 后 `sync`/`umount` |
-| 换开机动画 | `CPVideoPlayDemo` + `video_demo.yuv`（`rcS` 里 `-t 9`） |
-| 改自启 | 备份 `/etc/init.d/rcS`、`/etc/init.d/runqt` 后再改 |
-| 装完重启 | 默认 `DO_REBOOT=1`；调试 `NO_REBOOT=1` |
-| 只跑一次 | `ONLY_ONCE=1`（`/data/cp-unattended/<pkg>.done`）+ `flock` |
-| 大载荷 | 放 U 盘根，脚本运行时从 `$USB` 读，别整包拷进 `/data` |
+装应用、换 LOGO/bootlogo/动画、改自启、重启、只跑一次、大载荷见 `references/recipes.md`。
 
-### 8.4 生成 LOGO 资源（四平台，必须用脚本）
+### 8.4 生成 LOGO 资源（红线 + 方向）
 
-**红线：开机 logo / bootlogo / 开机动画资源只准由 `assets/generate-bootlogo.sh` 生成；脚本已验过，产物直接进包，不再手工核尺寸/字节数。**
-- 禁止手绘、PS/PIL 拼字、手工 `ffmpeg`、手工 `cat` 拼帧、手工改尺寸/颜色/字节数。
-- 客户已有字标图，先要图（问一句），不要自己"参照样式"造字。
-- 上游 `assets/vendor/generate_bootlogo.sh` 原样保留（交互式），只作对照，不直接改。
+**红线：开机 logo / bootlogo / 开机动画资源只准由 `assets/generate-bootlogo.sh` 生成**；禁止手绘、PS/PIL、手工 `ffmpeg`/拼帧/改尺寸；客户已有字标图先要图，不自己造字。
 
-```bash
-assets/generate-bootlogo.sh --image logo.png --chip T3 --system Linux --name <客户> --out ~/Downloads
-#   --rotate       180°（hflip,vflip）：只转 bootlogo.bmp / logo（哪些机型加见下）
-#   --logo-frames  T3 Linux 的 logo 帧数：原机 /logo 是 2 帧（4,915,200 B）时传 2，默认 1
-#   --no-video     跳过 video_demo.yuv（仅明确不换开机动画时用）
-#   --assets-only  只出媒体，不出 xml / 安装脚本（往已有包里塞）
-```
-
-**方向（通用规则，只在这里写）**
-
-- `/logo`、`bootlogo.bmp`：**存储 = 显示图旋转 180°**（`--rotate` = `hflip,vflip`），屏上才是正的。
-- `video_demo.yuv` **不旋转**：视频层（`CPVideoPlayDemo` / fb1）方向与 logo 层不同；脚本 yuv 分支本身不带翻转，别"顺手修"。
-- **SPRING1 / SPRING2 / SPRING2PRO（含 `SPRING2_L`、`SPRING2_PRO` 等变体）屏幕 180°：识别到这三款就传 `--rotate`**；脚本按参数直出，不硬判机型。
-
-| 芯片_系统 | 产物 | 装包动作 |
-|---|---|---|
-| RK_Android | `logo.img` + `CpService.xml` | `logo` 动作，`params` 必须叫 `logo.img`（见 rk-android.md §3.2） |
-| RK_Linux | `logo.img` + `unattended_installation.sh` | `dd if=logo.img of=/dev/block/by-name/logo`（§8.2） |
-| T3_Android | `bootlogo.bmp` + `E9631Service.xml` | `bootlogo` 动作，`params` 必须是 `bootlogo.bmp` |
-| T3_Linux | `bootlogo.bmp` + `logo` + `video_demo.yuv` + `unattended_installation.sh` | `/logo`、`/Configs/bootlogo.bmp` + `/dev/mmcblk0p2`（§8.3） |
-
-- **预置「中性」包（RK 安卓）**：`assets/presets/rk-android-neutral/` = `logo.img`（1024x600，3,686,966 B）+ `bootanimation.zip`（单帧）+ `CpService.xml`（`logo → bootanimation → sync → sleep 5 → reboot`）。
-  - **只在需求原话明确要「中性」**（中性 logo/动画/开机图）时用；「客户没给图」「随便/默认/通用一点」都不算中性 → 走上面的生成器，或先问。
-  - 还需 RK 安卓（`com.cpdevice.cpservice`）+ 屏幕 1024x600（`adb shell wm size`）。1280x800 / 客户品牌图 / T3 或 Debian / 要真多帧动画 / 调试轮免重启（`NO_REBOOT=1`）一律不用。
-  - 组合需求（如装 apk + 中性 logo）只借 `logo.img` + `bootanimation.zip`，xml 按需求重写；用了就在交付说明里点明用的是预置包。
-  - 设备侧触发：插盘 → `ACTION_MEDIA_MOUNTED` → 工具枚举真实卷 → 读卷根 `CpService.xml` → 顺序执行；`reboot` 后 adb 掉线按 §7.3 等回线。
-- **预置「中性」Linux logo**：`assets/presets/linux-neutral/` = `logo.png`（1024x600 源图）+ `logo`（bgra 2 帧，R180）+ `bootlogo.bmp`（R180），三件套已按现场方向出好。
-  - 只在需求明确要「中性 / Linux 通用 logo」且客户没给品牌图时用；给了品牌图一律用客户的图走生成器。
-  - 只适用 Linux：T3 Linux 直接平铺进包根；RK Linux / RK Debian 用 `logo.png` 重出 `logo.img`。安卓用 `rk-android-neutral`。
-  - 不含 `video_demo.yuv`（215 MB）：要换开机动画从 `logo.png` 现出。
-  - 用了就在交付说明里点明「中性 Linux logo」。
-- 图片只接受 **1024x600 / 1280x800**（ffprobe 判，与上游一致）；脚本末尾自检不通过就不会产出。
-- 生成的安装脚本是**最小版**：RK Linux 按 `/mnt/installUsb` 硬编码（工具窗口方式；要手动入口 `$1` 形式按 §4 C 改写）；T3 Linux 无日志、无 `NO_REBOOT`，正式包用 `assets/t3linux-setup-template.sh` 补齐。
-- 输出目录 `<out>/<CHIP>_<SYSTEM>_<name>_<YYYYMMDD>`，产物平铺进包根。
+- 方向：`/logo`、`bootlogo.bmp` 存储 = 显示图旋转 180°（`--rotate`）；`video_demo.yuv` **不旋转**；SPRING1 / SPRING2 / SPRING2PRO（含变体）屏幕 180°，识别到就传 `--rotate`。
+- 尺寸只接受 1024x600 / 1280x800；`--logo-frames` 按原机 `/logo` 帧数（T3 Linux 2 帧时传 2）；四平台产物与装包动作见 `references/bootlogo.md`。
+- 预置「中性」包（`assets/presets/`）只在需求明确要「中性」时用；非中性需求一律走生成器；其余参数、预置包细节、输出目录见 `references/bootlogo.md`。
 
 ## 9. 文件索引
 
 | 文件 | 用途 |
 |---|---|
 | `references/*.md` | 四平台事实与验证命令（按平台只加载一份） |
+| `references/platform-matrix.md` | 四平台差异唯一对照表（§5.2） |
+| `references/verification.md` | 四平台共用核验项与可用性判据（§7.4） |
+| `references/pitfalls.md` | 取证硬规则 13 条（§7.8） |
+| `references/recipes.md` | 需求→写法速查（§8.1–§8.3） |
+| `references/bootlogo.md` | LOGO/bootlogo/动画生成与预置包（§8.4） |
 | `assets/verify.sh` | 主机核验（`--rk` / `--t3` / `--debian` / `--t3linux` / `auto`） |
 | `assets/debian-trigger.sh` | Debian 触发与取证：`manual` / `udev` / `evidence` / `script` / `shot` / `status` / `cleanup` |
 | `assets/debian-setup-template.sh` / `assets/debian-entry-template.sh` | Debian 主脚本（bash + `:uisum`）/ 手动入口（sh） |
@@ -396,6 +316,5 @@ assets/generate-bootlogo.sh --image logo.png --chip T3 --system Linux --name <�
 
 ## 11. 整机线刷（不在这里）
 
-整机 `.img` 覆盖烧写（会清 userdata、跨系统重装、救砖）走独立 skill **`flash`**（命令 `/flash`）：
-线刷脚本、线刷事实页与烧写工具都已迁到 `src/flash/`，验收口径也简化成「只比版本号」。
-本 skill 只负责 U 盘升级包（装应用/换 logo/换动画），别再在这里找线刷脚本。
+整机 `.img` 覆盖烧写（会清 userdata、跨系统重装、救砖）走独立 skill **`flash`**：该 skill 设为用户专属（`disable-model-invocation`），**让用户输入 `/flash` 显式触发**；线刷脚本、事实页与烧写工具都在 `src/flash/`，验收口径是「只比版本号」。
+本 skill 只负责 U 盘升级包（装应用/换 logo/换动画），不提供线刷脚本。

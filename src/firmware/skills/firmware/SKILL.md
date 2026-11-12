@@ -1,6 +1,6 @@
 ---
 name: firmware
-description: 查量产固件、线刷与 OTA 直链、机型写法与系统。只做固件查找；工单任务号、子任务状态、历史 bug 是否修复请用 tickets skill。固件, firmware, 线刷, OTA, 量产版本, 量产固件, DEV, 发版, alist, minio, 机型, 系统, 客户。
+description: 查 CP 量产固件：按机型 + 系统 + 客户返回版本、构建日期、线刷/OTA 直链（alist 优先、minio 备用），并处理机型写法归一。只做固件查找；工单/子任务/历史 bug 走 tickets。整机线刷会清数据，由用户用 /flash 显式触发，不在本 skill。默认只给量产版（DEV 需点名）。
 ---
 
 # 固件查找
@@ -8,6 +8,8 @@ description: 查量产固件、线刷与 OTA 直链、机型写法与系统。�
 本 skill 只负责「找固件」：可用 `/firmware` 显式触发，也可直接用自然语言问。按机型 / 系统 / 客户定位量产固件，给线刷与 OTA 直链，并处理机型写法归一等歧义。
 
 **不负责**：TB 工单/任务号/子任务状态、历史 bug 是否修进正式版、TB 登录与看板同步。这些统一走 `tickets` skill（`ticket_search` / `ticket_bug_check` / `ticket_sync`）。
+
+**整机线刷/清数据也不在本 skill**：由用户输入 `/flash` 显式触发；本 skill 只给直链，不执行刷写。
 
 ## 工具
 

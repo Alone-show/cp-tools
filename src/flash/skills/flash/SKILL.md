@@ -1,12 +1,15 @@
 ---
 name: flash
-description: 整机线刷（全量覆盖烧写）：把 CP 量产整机镜像 .img 刷进 RK（rk_upgrade_tool UF）或 T3（openixcli flash）设备，用于换版本、救砖、跨系统重装。流程固定为「firmware_find 取 alist + minio 两条线刷直链 → flash.sh plan 预检 → 直接 flash.sh flash --quiet（不等确认，优先下 alist、失败回落 minio）→ 等回线 → 只比版本号即判通过」；默认只刷量产版（不带 DEV 标识），不截图、不验 UI。整机线刷, 线刷, 刷机, 全量烧写, 整机镜像, 救砖, 重装系统, 换系统, 降级, loader, rockusb, FEL, efex, rk_upgrade_tool, openixcli, flash.sh, 版本校验, 版本一致, SPRING2PRO, SPRING2-PRO, SP2-10PRO, APOLLO2, RK, T3, Debian, Android, Buildroot, 跨系统刷机。
+description: 整机线刷（全量覆盖）：把 CP 量产整机镜像 .img 刷进 RK（rk_upgrade_tool UF）或 T3（openixcli flash），用于换版本、救砖、跨系统重装；会清 userdata。流程：firmware_find 取 alist + minio 两条线刷直链 → flash.sh plan 预检 → flash.sh flash --quiet → 等回线（loader/FEL）→ 只比版本号，版本一致即通过；默认只刷量产版。用户须用 /flash 显式触发。
+disable-model-invocation: true
 ---
 
 # 整机线刷：从查版本到验收（一条主线，少走弯路）
 
 > 与 `/cpservice`（U 盘升级包：装 deb/apk、换 logo、换动画）**不是一回事**。这里是**整盘覆盖烧写**，会清 userdata。
 > 参考页：`references/flash.md`（工具细节 / 设备模式 / 失败模式）；脚本：`assets/flash.sh`。
+>
+> **用户专属**：本 skill 不进入模型目录（`disable-model-invocation`），模型不会因自然语言「刷机」自动加载；必须由用户输入 `/flash` 显式触发，避免误触清数据。
 
 ## 0. 何时用 / 不用
 

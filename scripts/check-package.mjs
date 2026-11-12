@@ -141,6 +141,10 @@ const SKILL_KEYS = new Set([
 ]);
 const SKILL_MAX_LINES = 500;
 const DESC_MAX = 1024;
+// DSH 的模型侧 skill catalog 默认把 description 截到 500 字符（@deepseek-ai/dsh-tool-skill
+// 的 catalogDescriptionMaxLength 默认值）。超出部分模型看不到，所以这里按 500 硬拦，
+// 避免再出现「写了 200 个关键词、后 500 字符全是死重」的 skill。
+const CATALOG_DESC_MAX = 500;
 const skills = [
   ['firmware', 'src/firmware/skills/firmware/SKILL.md'],
   ['tickets', 'src/tickets/skills/tickets/SKILL.md'],
@@ -180,6 +184,11 @@ for (const [name, file] of skills) {
     else {
       const len = description.replace(/^(["'])(.*)\1$/, '$2').length;
       if (len > DESC_MAX) fail(`${name}: description ${len} 字符，超出规范上限 ${DESC_MAX}`);
+      else if (len > CATALOG_DESC_MAX) {
+        fail(
+          `${name}: description ${len} 字符，超出 DSH 模型目录默认截断长度 ${CATALOG_DESC_MAX}（超出部分模型看不到）`,
+        );
+      }
       if (/[<>]/.test(description)) fail(`${name}: description 不能含尖括号（规范要求）`);
     }
   }

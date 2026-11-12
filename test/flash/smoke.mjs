@@ -28,9 +28,10 @@ const skill = readBundledSkill();
 assert.match(skill.name, /^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'skill 名必须符合 dsh 的 SKILL_NAME 正则');
 assert.equal(skill.name, 'flash', 'skill 名（调用命令 /flash）');
 assert.equal(skill.resourceBase.path, SKILL_DIR, 'resourceBase 指向 skill/');
-assert.equal(skill.invocation.modelInvocable, true);
-assert.equal(skill.invocation.userInvocable, true);
+assert.equal(skill.invocation.modelInvocable, false, 'flash 设为用户专属：不进模型目录，避免自然语言「刷机」误触清数据');
+assert.equal(skill.invocation.userInvocable, true, '/ 菜单仍可显式触发');
 assert.ok(skill.content.length > 1500, 'skill 正文非空');
+assert.ok(skill.content.includes('用户专属') && skill.content.includes('/flash'), '正文应说明必须由用户 /flash 触发');
 assert.ok(!skill.content.startsWith('---'), '正文不含 frontmatter');
 for (const kw of ['整机线刷', '线刷', 'loader', 'FEL', 'rk_upgrade_tool', 'openixcli', 'flash.sh', '版本一致']) {
   assert.ok(skill.description.includes(kw), `description 缺关键词 ${kw}`);

@@ -31,6 +31,7 @@ assert.equal(skill.name, 'cpservice', 'skill 名（调用命令 /cpservice）');
 assert.ok(skill.description.includes('E9631Service.xml'), 'description 含 T3 xml 名');
 assert.ok(skill.description.includes('CpService'), 'description 含 RK 工具/xml 关键词');
 assert.ok(skill.content.length > 2000, 'skill 正文非空');
+assert.ok(skill.description.length <= 500, `description 应 ≤500（DSH 模型目录截断），实际 ${skill.description.length}`);
 assert.ok(!skill.content.startsWith('---'), '正文不含 frontmatter');
 assert.equal(skill.resourceBase.kind, 'directory');
 assert.equal(skill.resourceBase.path, SKILL_DIR, 'resourceBase 指向 skill/');
@@ -44,7 +45,12 @@ assert.equal(registered[0].name, 'cpservice');
 
 // 3) 平台分流
 const refs = ['rk-android.md', 't3-android.md', 'rk-debian.md', 't3-linux.md'];
+const movedRefs = ['platform-matrix.md', 'verification.md', 'pitfalls.md', 'recipes.md', 'bootlogo.md'];
 for (const f of refs) {
+  assert.ok(fs.existsSync(path.join(SKILL_DIR, 'references', f)), `缺少 references/${f}`);
+  assert.ok(skill.content.includes(`references/${f}`), `SKILL.md 未指向 references/${f}`);
+}
+for (const f of movedRefs) {
   assert.ok(fs.existsSync(path.join(SKILL_DIR, 'references', f)), `缺少 references/${f}`);
   assert.ok(skill.content.includes(`references/${f}`), `SKILL.md 未指向 references/${f}`);
 }
@@ -80,6 +86,8 @@ assert.ok(verifier.includes('/etc/os-release'), 'verify.sh 应能识别 Debian')
 assert.ok(verifier.includes('buildroot') || verifier.includes('Buildroot'), 'verify.sh 应能识别 T3 Linux（Buildroot）');
 
 // 7) 平台差异表唯一（SKILL §5.2）
+const matrix = read('references/platform-matrix.md');
+assert.ok(/\| 维度 \|/.test(matrix), 'platform-matrix.md 应保留唯一平台差异表');
 for (const f of refs) {
   const body = read(`references/${f}`);
   assert.ok(!/与 T3 的差异|与 RK 安卓的差异/.test(body), `references/${f} 不应再有镜像差异表`);
@@ -148,10 +156,15 @@ const facts = {
     '--logo-frames', 'hflip,vflip',
   ],
   'SKILL.md': [
-    '--xml---action---', 'PATH', 'NO_REBOOT', 'YYYYMMDD', 'verify-report.md',
+    'PATH', 'NO_REBOOT', 'YYYYMMDD', 'verify-report.md',
     '§7.3', '§5.2', '只跑一轮', '超时才提示', 'Buildroot', '/Launcher',
     'assets/presets', '--logo-frames', '不旋转', 'SPRING1', 'SPRING2PRO',
   ],
+  'references/platform-matrix.md': ['21 个 action', '9 个 action', 'mksh', 'busybox', 'verity', 'ext4'],
+  'references/verification.md': ['--xml---action---', '可用性判据', 'mResumedActivity', 'NRestarts', 'eglfs', 'dpkg-query'],
+  'references/pitfalls.md': ['/tmp', 'systemctl', 'uptime', '挂载', '陈旧窗口', '1970'],
+  'references/recipes.md': ['dpkg -i --force-overwrite', 'tar xf', 'ONLY_ONCE', 'dd if=logo.img', 'DO_REBOOT'],
+  'references/bootlogo.md': ['--rotate', '--logo-frames', 'video_demo.yuv', '预置「中性」包', 'assets/presets/rk-android-neutral'],
 };
 for (const [file, needles] of Object.entries(facts)) {
   const body = read(file);
@@ -159,7 +172,7 @@ for (const [file, needles] of Object.entries(facts)) {
 }
 
 // 11) 链接与章节守卫
-for (const file of ['SKILL.md', ...refs.map((f) => `references/${f}`)]) {
+for (const file of ['SKILL.md', ...refs.map((f) => `references/${f}`), ...movedRefs.map((f) => `references/${f}`)]) {
   const body = read(file);
   for (const m of body.matchAll(/assets\/([A-Za-z0-9._-]+)/g)) {
     assert.ok(fs.existsSync(path.join(SKILL_DIR, 'assets', m[1])), `${file} 引用了不存在的 assets/${m[1]}`);
@@ -188,7 +201,7 @@ for (const file of ['SKILL.md', ...refs.map((f) => `references/${f}`)]) {
 // 12) 行数预算（软提醒）
 // 20261106：加 §8.4 logo 生成，SKILL 预算 340 → 380
 // 20261111：§3.1 logo 方向并入 §8.4（脚本是权威，不再重复校验步骤），预算收紧
-const budgets = { 'SKILL.md': 410, 'references/rk-android.md': 310, 'references/t3-android.md': 240, 'references/rk-debian.md': 380, 'references/t3-linux.md': 295 };
+const budgets = { 'SKILL.md': 330, 'references/rk-android.md': 310, 'references/t3-android.md': 240, 'references/rk-debian.md': 380, 'references/t3-linux.md': 295, 'references/platform-matrix.md': 60, 'references/verification.md': 60, 'references/pitfalls.md': 50, 'references/recipes.md': 60, 'references/bootlogo.md': 80 };
 for (const [file, max] of Object.entries(budgets)) {
   const n = read(file).split('\n').length;
   if (n > max) console.warn(`⚠ ${file} 现有 ${n} 行，超出预算 ${max}`);

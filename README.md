@@ -8,7 +8,7 @@
 | 固件查找 | `/firmware` | 量产固件与线刷/OTA 直链（alist 优先 + minio 备用）、机型族与写法归一；只做固件查找 |
 | 工单与历史问题 | `/tickets` | 按现象查 TB 工单/任务号与子任务状态；历史 bug 是否修进客户正式版、跨机型/系统/芯片比对 |
 | U 盘升级 | `/cpservice` | RK 安卓 / T3 安卓 / RK Debian / T3 Linux 升级包生成与真机验证 |
-| 整机线刷 | `/flash` | 整机镜像覆盖烧写（RK / T3，安卓 / Debian / Buildroot），刷完只比版本号验收 |
+| 整机线刷 | `/flash` | 整机镜像覆盖烧写（RK / T3，安卓 / Debian / Buildroot），刷完只比版本号验收；**仅用户显式 `/flash` 触发** |
 | BPMS 订单需求 | `/bpms` | BPMS（CPSales）登录、按「分区/字段名」读写订单需求表、备份与回滚 |
 
 六个子插件共用一次安装/升级，但在插件管理器里可以按 id 单独停用：
@@ -55,6 +55,7 @@ plugin_manager install_bundle target=/home/my/Documents/deepseek-harness/default
 默认只返回**量产版**（`DEV-` 构建需点名 `dev:true`）。只注册 2 个工具：
 `firmware_find`、`firmware_models`。只做固件查找；工单/任务号/bug 修复判定走 `/tickets`。
 TB 看板快照与登录凭据由 `/tickets` 维护（共用 `.tbfw`），firmware 只读。
+整机线刷/清数据不在本 skill：由用户输入 `/flash` 显式触发。
 
 ### `/tickets`
 
@@ -73,8 +74,18 @@ TB 看板快照与登录凭据由 `/tickets` 维护（共用 `.tbfw`），firmwa
 ### `/cpservice`
 
 纯 skill：判定 RK 安卓 / T3 安卓 / RK Debian / T3 Linux（Buildroot），按平台读 reference 出包，
-并在真机上验证。可复用二进制在 `src/cpservice/skills/cpservice/vendor/`；预置「中性」开机 logo/动画包在
+并在真机上验证。正文只留主线；平台差异、共用核验、取证硬规则、需求→写法、LOGO 生成分别在
+`references/{platform-matrix,verification,pitfalls,recipes,bootlogo}.md`，按需加载。
+可复用二进制在 `src/cpservice/skills/cpservice/vendor/`；预置「中性」开机 logo/动画包在
 `src/cpservice/skills/cpservice/assets/presets/rk-android-neutral/`（RK 安卓，**仅当需求明确要中性时**才用）。
+整机线刷/清数据不在本 skill：由用户输入 `/flash` 显式触发。
+
+### `/flash`
+
+纯 skill，**用户专属**：frontmatter 设了 `disable-model-invocation: true`，模型目录里不会出现它，
+自然语言「刷机」也不会自动加载；必须由用户输入 `/flash` 显式触发，避免误触清数据。正文主线：
+`firmware_find` 取 alist + minio 两条直链 → `flash.sh plan` 预检 → `flash.sh flash --quiet` →
+等回线 → 只比版本号。会清 userdata，刷前只说明「版本 + 会清数据」，不再等待确认。
 
 ### `/bpms`
 
