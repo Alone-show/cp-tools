@@ -1,33 +1,51 @@
 ---
 name: flash
-description: 整机线刷（全量覆盖）：把 CP 量产整机镜像 .img 刷进 RK（rk_upgrade_tool UF）或 T3（openixcli flash），用于换版本、救砖、跨系统重装；会清 userdata。流程：firmware_find 取 alist + minio 两条线刷直链 → flash.sh plan 预检 → flash.sh flash --quiet → 等回线（loader/FEL）→ 只比版本号，版本一致即通过；默认只刷量产版。用户须用 /flash 显式触发。
-disable-model-invocation: true
+description: 整机线刷（全量覆盖）：把 CP 量产整机镜像 .img 刷进 RK（rk_upgrade_tool UF）或 T3（openixcli flash），用于换版本、救砖、跨系统重装；会清 userdata。流程：目标版本取订单「软件需求信息/OS版本」或 firmware_find 的 alist + minio 两条线刷直链 → flash.sh plan 预检 → flash.sh flash --quiet → 等回线（loader/FEL）→ 只比版本号，版本一致即通过；默认只刷量产版。订单链路里由模型触发，刷前一行说明。
 ---
 
 # 整机线刷：从查版本到验收（一条主线，少走弯路）
 
-> 与 `/cpservice`（U 盘升级包：装 deb/apk、换 logo、换动画）**不是一回事**。这里是**整盘覆盖烧写**，会清 userdata。
+> 与 `/cpservice`（U 盘升级包：装 deb/apk、换 logo / 换动画）**不是一回事**。这里是**整盘覆盖烧写**，会清 userdata。
 > 参考页：`references/flash.md`（工具细节 / 设备模式 / 失败模式）；脚本：`assets/flash.sh`。
 >
-> **用户专属**：本 skill 不进入模型目录（`disable-model-invocation`），模型不会因自然语言「刷机」自动加载；必须由用户输入 `/flash` 显式触发，避免误触清数据。
+> **进入条件（gate，先看这条）**：只有下面两种情形才进来，其余一律不主动刷——
+> 1. 用户给出订单（链接/编号）并要按订单处理：目标版本取订单 `软件需求信息/OS版本`（见 `/bpms`）；
+> 2. 用户明确说「刷机 / 换版本 / 救砖」，或明确点名某个版本。
+> 空口提「刷机」、只是聊到版本、或设备读不到当前版本（多台/离线）→ 都不进，先问清楚。
+> 触发方式：订单链路里**由模型直接进入本 skill**，不需要用户再手输 `/flash`；但**刷前必须用一行说明「要刷的版本 + 会清 userdata」**（已获授权，不等确认）。
 
 ## 0. 何时用 / 不用
 
 | 用它 | 别用（走 `/cpservice`） |
 |---|---|
-| 整机换版本（量产 ↔ DEV） | 只装应用 / deb / 换开机 LOGO / 换动画 |
-| 救砖、系统起不来 | 改单个配置、加自启 |
-| 跨系统重装（安卓 ↔ Debian ↔ Buildroot） | 打补丁、跑验证 |
+| 订单要求的版本与设备不一致（`/bpms` 把订单 `OS版本` 递过来） | 只装应用 / deb / 换开机 LOGO / 换动画 |
+| 整机换版本（量产 ↔ DEV） | 改单个配置、加自启 |
+| 救砖、系统起不来 | 打补丁、跑验证 |
+| 跨系统重装（安卓 ↔ Debian ↔ Buildroot） | — |
+
+**订单链路里先判「要不要刷」**（这一步是只读的，别跳）：
+
+```bash
+adb devices -l                                     # 只有一台才继续
+adb -s <序列号> shell 'getprop ro.build.cp.version'                     # 安卓
+adb -s <序列号> shell 'cat /etc/system_info/system_info.ini'            # RK Debian
+adb -s <序列号> shell 'cat /Configs/system_info/system_info.ini'        # T3 Linux
+# 与订单 OS版本 比对：一致 → 不刷，直接把结论交回 /bpms 继续出包；更低/跨系统 → 进 §1 刷
+```
 
 ## 1. 刷前必须核对的 5 件事（缺一件就停，但不问用户）
 
-1. **目标版本**：来自 `firmware_find`（`model`+`system`+`customer`，用户说「最新」用 `limit:1`），取**线刷直链 `.img`**，不要 `_OTA.zip`。
+1. **目标版本**：**优先取订单 `软件需求信息/OS版本`**（`/bpms` 递过来的那个串，去掉 `.img` 后缀），它是唯一权威版本——不要换成「最新量产」或别的版本。
+   拿这个版本串去 `firmware_find`（`version=<串>`，`model`/`system`/`customer` 按订单归一）**只取线刷直链 `.img`**，不要 `_OTA.zip`；此时 `firmware_find` 只负责给链接，不参与选版本。
+   订单里没有 `OS版本`、或该版本查不到直链（客户定制版）→ **停**，问清楚，不拿别的版本顶。
    同一版本会给两条链接：**`alist 线刷地址`（下载优先）** 和 **`OSS 线刷地址`（minio，备用）**；**汇报时两条都写出来**（alist 在前）。alist 上没有该版本时只给 minio，并说明一句。
-   **默认只取量产版（不带 `DEV-` 标识）**；只有用户明确说「要 DEV / 刷 DEV 构建」时才传 `dev:true`。
+   用户口头点名版本 / 明确说「最新」时，才用 `firmware_find` 直接取（`limit:1`）；**默认只取量产版（不带 `DEV-` 标识）**，只有用户明确说「要 DEV」时才传 `dev:true`。
 2. **会清数据**：userdata 全没；DEV↔量产、跨系统都算降级/重装。**刷机前不等待确认**（已获授权），只在下发前用一行说明「要刷的版本 + 会清数据」；若目标版本是 DEV 而用户没点名 DEV，停下说明并换量产版。
 3. **单台设备**：`adb devices` 只有一台，或命令显式带 `--serial`；序列号写进命令。
-4. **机型/客户/屏参一致**：镜像文件名里的机型、`LCD10/B0` 片段与设备 `Version=` 同构（如 `CP_SP2-10PRO_D_..._LCD10_B0_EU_...`）。
+4. **机型/客户/屏参一致**：镜像文件名里的机型、`LCD10/B0` 片段与设备 `Version=` 同构（如 `CP_SP2-10PRO_D_..._LCD10_B0_EU_...`）；订单链路里同时与订单 `基本信息/品名`、`软件需求信息/系统` 对齐，对不上就停（刷错=黑屏/变砖）。
 5. **先查下载目录**：`~/Downloads/` 顶层若有同名 `.img` 且 size 与 OSS `Content-Length` 一致，**直接用本地路径**——不重新下载，也不另存第二份。`flash.sh plan <url>` 会打印「复用本地镜像」，命中即止。
+
+> 刷完只把「版本前 → 后 + 是否回线」交回 `/bpms`；**不要在这里出 U 盘包**（出包/合并/验证是 `/cpservice`，上传是 `/bpms`）。
 
 ## 2. 标准流程（S1–S6，命令可直接复制；全程不等确认）
 

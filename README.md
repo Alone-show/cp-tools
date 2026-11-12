@@ -55,7 +55,7 @@ plugin_manager install_bundle target=/home/my/Documents/deepseek-harness/default
 默认只返回**量产版**（`DEV-` 构建需点名 `dev:true`）。只注册 2 个工具：
 `firmware_find`、`firmware_models`。只做固件查找；工单/任务号/bug 修复判定走 `/tickets`。
 TB 看板快照与登录凭据由 `/tickets` 维护（共用 `.tbfw`），firmware 只读。
-整机线刷/清数据不在本 skill：由用户输入 `/flash` 显式触发。
+整机线刷/清数据不在本 skill：走 `/flash`（`/bpms` 订单链路里由模型触发，也可用户直接 `/flash`）。
 
 ### `/tickets`
 
@@ -78,14 +78,15 @@ TB 看板快照与登录凭据由 `/tickets` 维护（共用 `.tbfw`），firmwa
 `references/{platform-matrix,verification,pitfalls,recipes,bootlogo}.md`，按需加载。
 可复用二进制在 `src/cpservice/skills/cpservice/vendor/`；预置「中性」开机 logo/动画包在
 `src/cpservice/skills/cpservice/assets/presets/rk-android-neutral/`（RK 安卓，**仅当需求明确要中性时**才用）。
-整机线刷/清数据不在本 skill：由用户输入 `/flash` 显式触发。
+整机线刷/清数据不在本 skill：走 `/flash`（`/bpms` 订单链路里由模型触发，也可用户直接 `/flash`）。
 
 ### `/flash`
 
-纯 skill，**用户专属**：frontmatter 设了 `disable-model-invocation: true`，模型目录里不会出现它，
-自然语言「刷机」也不会自动加载；必须由用户输入 `/flash` 显式触发，避免误触清数据。正文主线：
-`firmware_find` 取 alist + minio 两条直链 → `flash.sh plan` 预检 → `flash.sh flash --quiet` →
-等回线 → 只比版本号。会清 userdata，刷前只说明「版本 + 会清数据」，不再等待确认。
+纯 skill，**订单链路里由模型触发**（用户给出订单并要求按单处理时），也可用户直接输入 `/flash`。
+SKILL.md 顶部有进入 gate：只有「给了订单 / 明确要刷机 / 点名版本」才进，空口提「刷机」不自动加载。
+正文主线：目标版本取订单 `软件需求信息/OS版本`（唯一权威，`firmware_find` 只用来取 alist + minio
+两条直链）→ `flash.sh plan` 预检 → `flash.sh flash --quiet` → 等回线 → 只比版本号。
+会清 userdata，刷前只说明「版本 + 会清数据」，不再等待确认。
 
 ### `/bpms`
 
@@ -121,8 +122,13 @@ BPMS（CPSales）登录与订单需求表编辑：登录、读记录、按字段
 /bpms 恢复某个备份
 ```
 
-工具：`bpms_login` / `bpms_fields` / `bpms_get` / `bpms_update`（默认 dry-run，`apply:true` 才写库；
-写前备份到 `~/.dsh/cp-tools/backups/`，写前校验 `updateTime`，写后只允许本次字段变化）。
+工具：`bpms_login` / `bpms_fields` / `bpms_get` / `bpms_update` / `bpms_upload`（`apply` 默认 false，
+`true` 才写库；写前备份到 `~/.dsh/cp-tools/backups/`，写前校验 `updateTime`，写后只允许本次字段变化；
+附件字段可直接给本地文件 `[{path:"/abs/x.zip"}]`，apply 时才上传）。
+
+订单链路（`/bpms` 是入口）：拉 `软件需求信息/OS版本` → 交 `/flash` 判要不要刷/刷机 → `/cpservice`
+出包或把资源增量合进已有包（`assets/merge-package.sh`）并真机验证 → **用户确认** → `/bpms` 上传并
+替换「预装软件文件上传」。订单状态不是 `0 暂存` 时只出包、不上传。
 
 ## 固定流程脚本
 
