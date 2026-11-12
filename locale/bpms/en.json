@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "BPMS Order Demand",
+    "description": "Sign in to BPMS (CPSales) and read/edit order-demand records by section/field name, with backup and rollback; credentials live in the plugin config; command /bpms."
+  }
+}

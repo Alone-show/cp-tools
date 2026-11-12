@@ -1,6 +1,6 @@
 # cp-tools（从平定制工具集）
 
-一个 DSH bundle，四个可独立开关的子插件：
+一个 DSH bundle，五个可独立开关的子插件：
 
 | 子插件 | 入口 | 能力 |
 |---|---|---|
@@ -8,9 +8,13 @@
 | 固件与问题 | `/firmware` | 量产固件与线刷/OTA 直链（alist 优先 + minio 备用）、TB 版本任务/子任务状态、bug 是否修进客户正式版 |
 | U 盘升级 | `/cpservice` | RK 安卓 / T3 安卓 / RK Debian / T3 Linux 升级包生成与真机验证 |
 | 整机线刷 | `/flash` | 整机镜像覆盖烧写（RK / T3，安卓 / Debian / Buildroot），刷完只比版本号验收 |
+| BPMS 订单需求 | `/bpms` | BPMS（CPSales）登录、按「分区/字段名」读写订单需求表、备份与回滚 |
 
-四个子插件共用一次安装/升级，但在插件管理器里可以按 id 单独停用：
-`cp-docs`、`firmware-finder`、`e9631service`、`cp-flash`。
+五个子插件共用一次安装/升级，但在插件管理器里可以按 id 单独停用：
+`cp-docs`、`firmware-finder`、`e9631service`、`cp-flash`、`cp-bpms`。
+
+另有一行 `cp-tools-web`（模块名就是包名 `@local/cp-tools`）：它不注册任何能力，只作为包根载体，
+让 DSH 的 `client-modules` 能发现本包的 `./client`（浏览器端的 BPMS 配置页）。
 
 ## 安装
 
@@ -59,10 +63,45 @@ plugin_manager install_bundle target=/home/my/Documents/deepseek-harness/default
 并在真机上验证。可复用二进制在 `src/cpservice/skills/cpservice/vendor/`；预置「中性」开机 logo/动画包在
 `src/cpservice/skills/cpservice/assets/presets/rk-android-neutral/`（RK 安卓，**仅当需求明确要中性时**才用）。
 
+### `/bpms`
+
+BPMS（CPSales）登录与订单需求表编辑：登录、读记录、按字段改记录、备份与回滚。
+
+**账号密码填这里**（按优先级找第一个存在的文件）：
+
+1. `BPMS_CONFIG` 环境变量指向的文件
+2. `~/.dsh/cp-tools/bpms.json`（推荐，插件升级不丢）
+3. 插件目录 `bpms_config.json`（本地填写方便，已 gitignore）
+
+```json
+{
+  "base_url": "https://bpms.cpuniverse.cn",
+  "username": "<BPMS 用户名>",
+  "password": "<BPMS 密码>",
+  "tenant_name": "从平",
+  "timeout_seconds": 20
+}
+```
+
+仓库里只有占位模板 `bpms_config.example.json`，**不要把真实口令提交进 git**；建议 `chmod 600`。
+
+也可以直接在 **DSH Web → 插件 → 从平工具集 → 「BPMS 账号」** 里填（写 `~/.dsh/cp-tools/bpms.json`；
+密码只写不回显，保存带 revision 防并发覆盖）。页面会提示当前是否有环境变量/插件目录配置覆盖它。
+
+```text
+/bpms 登录
+/bpms 看下 CPS-SY2026DX0949 这张单
+/bpms 把这张单的「品名」改成 SPRING2 10 特别版
+/bpms 恢复某个备份
+```
+
+工具：`bpms_login` / `bpms_fields` / `bpms_get` / `bpms_update`（默认 dry-run，`apply:true` 才写库；
+写前备份到 `~/.dsh/cp-tools/backups/`，写前校验 `updateTime`，写后只允许本次字段变化）。
+
 ## 固定流程脚本
 
 ```bash
-npm test                 # 全部离线测试（docs + firmware + cpservice + flash + shared/contract）
+npm test                 # 全部离线测试（docs + firmware + cpservice + flash + bpms + shared/contract）
 npm run check            # 包清单校验：exports / patch / locale / icon / skill / vendor / files
 npm run import:docs      # work/cpdoc/ai-readable → .cpdocs
 npm run login            # Teambition 登录/刷新凭据
@@ -91,8 +130,9 @@ src/docs/         /cp-docs 子插件 + 运行期数据
 src/firmware/     /firmware 子插件 + 工具 + skill
 src/cpservice/    /cpservice 子插件 + skill + references/assets/vendor
 src/flash/        /flash 子插件 + 线刷 skill（SOP + flash.sh + tools）
+src/bpms/         /bpms 子插件 + BPMS 登录/编辑工具 + skill
 scripts/          固定流程脚本
-test/             docs / firmware / cpservice / flash / shared / contract
+test/             docs / firmware / cpservice / flash / bpms / shared / contract
 docs/             合并审查与各子插件的详细说明（不随包发布）
 ```
 

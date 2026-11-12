@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 安装前/发布前的包清单校验：exports → 文件、bundle patch 三行、locale/icon、
+ * 安装前/发布前的包清单校验：exports → 文件、bundle patch 五行、locale/icon、
  * skill、vendor、files 覆盖、禁止进入包内的产物。
  *
  *   node scripts/check-package.mjs
@@ -47,15 +47,33 @@ if (!fs.existsSync(patchFile)) {
 } else {
   const patch = fs.readFileSync(patchFile, 'utf8');
   const expected = [
+    ['cp-tools-web', '@local/cp-tools'],
     ['cp-docs', '@local/cp-tools/docs'],
     ['firmware-finder', '@local/cp-tools/firmware'],
     ['e9631service', '@local/cp-tools/cpservice'],
     ['cp-flash', '@local/cp-tools/flash'],
+    ['cp-bpms', '@local/cp-tools/bpms'],
   ];
   for (const [id, name] of expected) {
     if (!new RegExp(`id:\\s*${id}\\b`).test(patch)) fail(`patch 缺 id: ${id}`);
     if (!patch.includes(`name: '${name}'`) && !patch.includes(`name: "${name}"`)) fail(`patch 缺 name: ${name}`);
   }
+}
+
+// 2.5) Web 客户端入口：声明了 dsh.client 就必须有 ./client 且能加载
+if (pkg.dsh?.client) {
+  if (pkg.dsh.client.platform !== 'web') fail(`dsh.client.platform 目前只支持 web，实际 ${pkg.dsh.client.platform}`);
+  const clientExport = pkg.exports?.['./client'];
+  if (typeof clientExport !== 'string') fail('声明了 dsh.client 但 exports 缺 "./client"');
+  else if (!fs.existsSync(path.join(ROOT, clientExport))) fail(`exports["./client"] 目标不存在：${clientExport}`);
+  // client-modules 只扫描「模块名正好等于包名」的插件行；缺这一行，浏览器端永远不加载。
+  const rootExport = pkg.exports?.['.'];
+  if (typeof rootExport !== 'string') fail('声明了 dsh.client 但 exports 缺 "."（包根入口）');
+  else if (!fs.existsSync(path.join(ROOT, rootExport))) fail(`exports["."] 目标不存在：${rootExport}`);
+  const rootRow = new RegExp(`name:\\s*['"]${pkg.name.replace(/[/@]/g, (c) => `\\${c}`)}['"]`).test(
+    fs.readFileSync(patchFile, 'utf8'),
+  );
+  if (!rootRow) fail(`bundle patch 缺包根行：name: '${pkg.name}'（否则 dsh.client 不会被发现）`);
 }
 
 // 3) exports → 目标文件
@@ -80,6 +98,7 @@ const subplugins = [
   { key: 'firmware', mod: 'src/firmware/index.js', locale: 'locale/firmware', icon: 'icons/firmware.svg' },
   { key: 'cpservice', mod: 'src/cpservice/index.js', locale: 'locale/cpservice', icon: 'icons/cpservice.svg' },
   { key: 'flash', mod: 'src/flash/index.js', locale: 'locale/flash', icon: 'icons/flash.svg' },
+  { key: 'bpms', mod: 'src/bpms/index.js', locale: 'locale/bpms', icon: 'icons/bpms.svg' },
 ];
 for (const sub of subplugins) {
   if (!fs.existsSync(path.join(ROOT, sub.mod))) fail(`${sub.key}: 缺模块 ${sub.mod}`);
@@ -124,6 +143,7 @@ const skills = [
   ['firmware', 'src/firmware/skills/firmware/SKILL.md'],
   ['cpservice', 'src/cpservice/skills/cpservice/SKILL.md'],
   ['flash', 'src/flash/skills/flash/SKILL.md'],
+  ['bpms', 'src/bpms/skills/bpms/SKILL.md'],
 ];
 for (const [name, file] of skills) {
   const abs = path.join(ROOT, file);
@@ -224,7 +244,7 @@ if (!fs.existsSync(vendorDir) || !fs.readdirSync(vendorDir).some((f) => /^VanCor
 
 // 7) files 覆盖
 const files = pkg.files ?? [];
-for (const required of ['src/**', 'locale/**', 'icons/**', 'scripts/**', 'cordis.patch.yml', 'README.md']) {
+for (const required of ['src/**', 'locale/**', 'icons/**', 'scripts/**', 'cordis.patch.yml', 'README.md', 'bpms_config.example.json']) {
   if (!files.includes(required)) fail(`package.files 缺 ${required}`);
 }
 if (files.some((f) => f.startsWith('test') || f.startsWith('docs/'))) fail('package.files 不应包含 test/ 或 docs/');

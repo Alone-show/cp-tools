@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="BPMS order demand">
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="#1f4e79"/>
+  <g fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="15" y="13" width="34" height="38" rx="4"/>
+    <path d="M23 24h18M23 32h18M23 40h10"/>
+  </g>
+  <circle cx="43" cy="44" r="7" fill="#1f4e79" stroke="#ffffff" stroke-width="3"/>
+  <path d="M48 49l5 5" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+</svg>
