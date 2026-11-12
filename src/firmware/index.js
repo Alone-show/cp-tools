@@ -157,13 +157,19 @@ function matchModelDir(name, cores) {
   const dirEquiv = equivCore(dirCore);
   let best = 0;
   for (const core of cores) {
-    const qEquiv = equivCore(core);
-    if (!qEquiv) continue;
-    let score;
-    if (dirEquiv === qEquiv) score = 100;
-    else if (dirEquiv.startsWith(qEquiv) || qEquiv.startsWith(dirEquiv)) score = 70;
-    else score = scoreCore(qEquiv, { core: dirEquiv });
-    best = Math.max(best, score);
+    // 查询侧 core 必须先展开缩写（SP2 <-> SPRING2、APOLLO <-> APOLLO2）：
+    // 看板族名是 SPRING2-10PRO，而 alist 机型目录是 SP2-10PRO，
+    // 不展开就只会拿到 30 分（<70 阈值），整条 Debian/Linux 线会被静默跳过，
+    // 结果看起来就像「alist 没有这个版本」——实际是目录没被匹配上。
+    for (const qc of queryCores(core)) {
+      const qEquiv = equivCore(qc);
+      if (!qEquiv) continue;
+      let score;
+      if (dirEquiv === qEquiv) score = 100;
+      else if (dirEquiv.startsWith(qEquiv) || qEquiv.startsWith(dirEquiv)) score = 70;
+      else score = scoreCore(qEquiv, { core: dirEquiv });
+      best = Math.max(best, score);
+    }
   }
   return best;
 }
@@ -942,6 +948,16 @@ async function search(ctx, exec, args) {
     );
   }
   if (alistUsed) noteParts.push('已实时核对 alist /PROD，并用其补齐版本与直链');
+  else if (alistInfo?.ok) {
+    // 静默「没扫到」最容易被读成「alist 没有这个版本」，必须显式说清是匹配问题
+    noteParts.push(
+      'alist /PROD 已实时扫描，但没匹配到该机型的版本目录（机型目录写法可能不同），本次未附 alist 直链；这不代表 alist 没有该版本——next 与 alist 是同一份存储、内容同步',
+    );
+  } else if (alistInfo && !alistInfo.ok) {
+    noteParts.push(
+      `alist /PROD 实时扫描失败（${alistInfo.reason ?? '不可达'}），本次链接全部来自 Teambition；不要据此推断 alist 没有该版本`,
+    );
+  }
   if (devHidden > 0) {
     noteParts.push(
       `已隐藏 ${devHidden} 条 DEV 构建（默认只给量产版；确实要 DEV 请加 dev:true 或在需求里点名 DEV）`,
@@ -990,7 +1006,7 @@ function findToolFor(ctx) {
   return {
     name: 'firmware_find',
     description:
-      '按机型和操作系统定位量产固件，返回固件版本、构建日期、客户，以及线刷/OTA 直链（同版本两边都有时给两条：alist 优先 + minio/next 备用）。默认只返回量产版（不带 DEV 标识）：DEV-xxxx 构建默认被过滤，需要时传 dev:true 或在需求里点名 DEV；过滤数量会写在 note 里。每次调用都会实时核对 Teambition（补拉版本父任务详情，索引快照只作兜底）并实时扫描 alist /PROD 目录（不复用旧缓存），因此刚归档的版本也能立刻查到；单次约 3–8 秒。结果来源标注：source=tb-live 为实时 TB、alist 为 alist /PROD、both 为两边都有。liveChecked=false 表示实时核对失败（如未登录），此时 note 会说明快照时间，回答时应转述。机型支持自由写法（如 apollo 12 pro、SP2-10PRO），7/7A、12/12A 等价写法会合并命中。机型存在歧义时返回 status=needs_confirmation 和候选列表，必须先向用户确认再继续。未指定客户时默认按 CP 过滤，并在 note/otherCustomers 里列出其他客户，不要忽略这部分信息。',
+      '按机型和操作系统定位量产固件，返回固件版本、构建日期、客户，以及线刷/OTA 直链（同版本两边都有时给两条：alist 优先 + minio/next 备用）。next 与 alist 是同一份存储的两个入口、内容同步：链接指向 next 不代表 alist 没有该版本，不要说成「alist 未收录」。默认只返回量产版（不带 DEV 标识）：DEV-xxxx 构建默认被过滤，需要时传 dev:true 或在需求里点名 DEV；过滤数量会写在 note 里。每次调用都会实时核对 Teambition（补拉版本父任务详情，索引快照只作兜底）并实时扫描 alist /PROD 目录（不复用旧缓存），因此刚归档的版本也能立刻查到；单次约 3–8 秒。结果来源标注：source=tb-live 为实时 TB、alist 为 alist /PROD、both 为两边都有。liveChecked=false 表示实时核对失败（如未登录），此时 note 会说明快照时间，回答时应转述。机型支持自由写法（如 apollo 12 pro、SP2-10PRO），7/7A、12/12A 等价写法会合并命中。机型存在歧义时返回 status=needs_confirmation 和候选列表，必须先向用户确认再继续。未指定客户时默认按 CP 过滤，并在 note/otherCustomers 里列出其他客户，不要忽略这部分信息。',
     parameters: {
       type: 'object',
       properties: {

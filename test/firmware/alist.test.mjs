@@ -130,6 +130,14 @@ function makeFakeAlist() {
   assert.equal(matchModelDir('APOLLO2-12PRO', ['apollo7a']), 0);
   ok('matchModelDir：族目录 70 分、精确 100 分、12PRO 不误配');
 
+  // 回归：看板族名是 SPRING2-10PRO，alist 机型目录写的是缩写 SP2-10PRO。
+  // 未展开 SP2 <-> SPRING2 时只有 30 分（<70 阈值），整条线会被静默跳过，
+  // 表现成「alist 没有这个版本」，实际是目录没匹配上。
+  assert.equal(matchModelDir('SP2-10PRO', ['spring210pro']), 100, 'SP2-10PRO 应命中 SPRING2-10PRO 的查询');
+  assert.equal(matchModelDir('SP2-7A', ['spring27a']), 100, 'SP2-7A 应命中 SPRING2-7A 的查询');
+  assert.equal(matchModelDir('SP2-10PRO', ['apollo7a']), 0, 'SP2 与 APOLLO 不能互相命中');
+  ok('matchModelDir 展开 SP2 <-> SPRING2 缩写（回归：alist 机型目录用缩写写法）');
+
   assert.equal(mapCustomerDir('YMZH'), 'YM');
   assert.equal(mapCustomerDir('SmartAG'), 'SmartAG');
   assert.equal(mapCustomerDir('SMARTAG'), 'SmartAG');
@@ -374,6 +382,133 @@ function makeFakeAlist() {
   );
   assert.ok(result.rows.some((r) => r.version.startsWith('APOLLO2_MCU_APP')), 'MCU 行仍保留');
   ok('MCU 包不算整机固件，仍触发 alist 兜底');
+
+  setAlistFactory((options) => createAlist(options));
+  fs.rmSync(tmp, { recursive: true, force: true });
+}
+
+/* ------------------------------------------------------------------ *
+ * 8) 缩写机型目录回归：看板 SPRING2-10PRO vs alist 目录 SP2-10PRO
+ *    （TB 的「固件下载地址」指向 next，但不代表 alist 没有；两条链要同时给）
+ * ------------------------------------------------------------------ */
+{
+  const V116 = 'CP_SP2-10PRO_D_V1.16_LCD10_B0_EU_20261010';
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'firmware-sp2-'));
+  const PROJECT_ID = '65a8da81950780b816d12bd9';
+  const board = {
+    projectId: PROJECT_ID,
+    syncedAt: '2026-10-29T00:00:00.000Z',
+    items: [
+      {
+        id: 't1',
+        title: V116,
+        url: 'https://www.teambition.com/task/t1',
+        stage: '生产库归档',
+        updated: '2026-10-20T00:00:00.000Z',
+        isArchived: false,
+        fields: {
+          机型: ['RK / SPRING2-10PRO'],
+          操作系统: ['Debian'],
+          客户ID: 'CP',
+          固件版本: V116,
+          固件下载地址: `https://next.cpinnov.run/PROD/RK/DEBIAN/SP2-10PRO/CP/LCD10/${V116}`,
+          'OSS 线刷地址': `https://minio.cpuniverse.cn/prod/RK/DEBIAN/SP2-10PRO/CP/LCD10/${V116}/${V116}.img`,
+          'OSS OTA地址': `https://minio.cpuniverse.cn/prod/RK/DEBIAN/SP2-10PRO/CP/LCD10/${V116}/${V116}_OTA.img`,
+        },
+      },
+    ],
+  };
+  fs.writeFileSync(path.join(tmp, `board-${PROJECT_ID}.json`), JSON.stringify(board));
+  process.env.DSH_TBFW_DIR = tmp;
+
+  const base = `/PROD/RK/DEBIAN/SP2-10PRO/CP/LCD10`;
+  const tree = {
+    '/PROD': [dir('RK')],
+    '/PROD/RK': [dir('DEBIAN')],
+    '/PROD/RK/DEBIAN': [dir('SP2-10PRO')],
+    '/PROD/RK/DEBIAN/SP2-10PRO': [dir('CP')],
+    '/PROD/RK/DEBIAN/SP2-10PRO/CP': [dir('LCD10')],
+    [`${base}`]: [dir(V116, '2026-10-10T08:55:25.000Z')],
+  };
+  const entries = {
+    [`${base}/${V116}/${V116}.img`]: file(`${V116}.img`, 3222942282),
+    [`${base}/${V116}/${V116}_OTA.img`]: file(`${V116}_OTA.img`, 3168866890),
+  };
+  const fake = {
+    stats: { requests: 0, cacheHits: 0 },
+    base: 'https://alist.example',
+    pageUrl: (p) => `https://alist.example${p}`,
+    async list(p) {
+      fake.stats.requests += 1;
+      return tree[p] ?? null;
+    },
+    async entry(p) {
+      fake.stats.requests += 1;
+      return entries[p] ?? null;
+    },
+    async text() {
+      return '';
+    },
+  };
+  setAlistFactory(() => fake);
+
+  const result = await search({}, {}, { model: 'SPRING2PRO', system: 'Debian', limit: 5 });
+  assert.equal(result.resolvedModel, 'RK / SPRING2-10PRO');
+  assert.equal(result.rows[0].version, V116);
+  assert.equal(result.rows[0].source, 'both', '同为一份存储：TB 行应被 alist 行合并');
+  assert.match(result.rows[0].links['固件下载地址'], /next\.cpinnov\.run/, 'TB 的 next 链接保留');
+  assert.equal(
+    result.rows[0].links['alist 线刷地址'],
+    `https://alist.example/dl/${encodeURIComponent(`${V116}.img`)}?sign=sig`,
+    'alist 直链必须同时给出（alist 优先下载）',
+  );
+  assert.match(result.note ?? '', /已实时核对 alist/, 'note 应说明 alist 已实时核对');
+  ok('search：SPRING2-10PRO 命中 alist 的 SP2-10PRO 目录，next 与 alist 直链同时输出');
+
+  setAlistFactory((options) => createAlist(options));
+  fs.rmSync(tmp, { recursive: true, force: true });
+}
+
+/* ------------------------------------------------------------------ *
+ * 9) alist 扫到了但没有该机型目录：note 必须说「没匹配到」，不许说成没有该版本
+ * ------------------------------------------------------------------ */
+{
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'firmware-nomatch-'));
+  const PROJECT_ID = '65a8da81950780b816d12bd9';
+  const board = {
+    projectId: PROJECT_ID,
+    syncedAt: '2026-10-29T00:00:00.000Z',
+    items: [
+      {
+        id: 't1',
+        title: 'CP_MEGA1_D_V1.02_LCD10_CN_20261001',
+        url: 'https://www.teambition.com/task/t1',
+        stage: '生产库归档',
+        updated: '2026-10-02T00:00:00.000Z',
+        isArchived: false,
+        fields: {
+          机型: ['RK / MEGA1'],
+          操作系统: ['Debian'],
+          客户ID: 'CP',
+          固件版本: 'CP_MEGA1_D_V1.02_LCD10_CN_20261001',
+          固件下载地址: 'https://next.cpinnov.run/PROD/RK/DEBIAN/MEGA1/CP/LCD10/CP_MEGA1_D_V1.02_LCD10_CN_20261001',
+        },
+      },
+    ],
+  };
+  fs.writeFileSync(path.join(tmp, `board-${PROJECT_ID}.json`), JSON.stringify(board));
+  process.env.DSH_TBFW_DIR = tmp;
+
+  // 目录树里只有别的机型：扫描成功（ok:true）但一条都匹配不上
+  const fake = makeFakeAlist();
+  setAlistFactory(() => fake);
+
+  const result = await search({}, {}, { model: 'MEGA1', system: 'Debian', limit: 5 });
+  assert.equal(result.status, 'ok');
+  assert.equal(result.alist?.ok, true);
+  assert.match(result.note ?? '', /没匹配到该机型的版本目录/, 'note 应说明是匹配问题');
+  assert.match(result.note ?? '', /不代表 alist 没有该版本/, 'note 不应让人读成 alist 缺版本');
+  ok('search：alist 扫到但机型目录没匹配上时，note 说明是匹配问题');
 
   setAlistFactory((options) => createAlist(options));
   fs.rmSync(tmp, { recursive: true, force: true });

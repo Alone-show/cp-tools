@@ -25,11 +25,20 @@ description: 查量产固件、线刷与 OTA 直链、机型写法与系统。�
 - **DEV 构建默认不返回**：只给量产版（不带 `DEV-`/`DEV_`）。用户明确说要 DEV 时才传 `dev: true`，被过滤条数写在 `note` 里。
 - 用户说「最新的」→ `limit: 1`。
 
+## 链接怎么给
+
+- **`next.cpinnov.run` 与 `alist.cpinnov.run` 是同一份存储的两个入口，内容同步**：next 有的版本 alist 一定有，反之亦然。两条路径可以直接互换。
+- 结果里的 `固件下载地址` 是 **TB 任务归档记录里存的那条链接**（常常指向 next），**不是 alist 存在性的证据**。不要因为它是 next 就断言「alist 没收录」「只有 next 有」。
+- 同一版本两边都有时两条线刷直链都要给：`OSS 线刷地址`（minio）+ `alist 线刷地址`（alist，优先下载），目录页给 `alist 下载页`。
+- 只拿到 next/minio 链接时，补一句「alist 同步同一目录，可互换」，不要写成缺失。
+- `note` 里出现「alist 已扫描但没匹配到该机型的版本目录」时，按 **匹配问题** 转述（机型目录写法不同），不要说成 alist 没有该版本。
+- 不要用 bash/curl 探测 alist 判断有没有文件：内网 `10.16.18.x` 走本机代理会 TLS 断开（需 `--noproxy '*'`），而且 alist 目录是 SPA，任何路径都回 200 HTML。存在性以工具返回为准。
+
 ## 流程
 
-1. 查询直接调 `firmware_find`；每次调用都会实时核对 TB（补拉版本父任务详情）并实时扫描 alist `/PROD`，约 3–8 秒，不需要先同步。`liveChecked=false` 表示实时核对失败（如未登录），此时按 note 里的快照时间说明，不要当最新结果。
+1. 查询直接调 `firmware_find`；每次调用都会实时核对 TB（补拉版本父任务详情）并实时扫描 alist `/PROD`，约 3–8 秒，不需要先同步。`liveChecked=false` 表示实时核对失败（如未登录），此时按 note 里的快照时间说明，不要当最新结果；`alist` 字段是本次 alist 扫描的实况（`ok/rows/requests/reason`）。
 2. 机型歧义（`status=needs_confirmation`）时列候选（含 variants），请用户确认后再查，不要猜。
-3. 结果里同一版本在 TB 与 alist 都有时，两条线刷直链都要给：`OSS 线刷地址`（minio/next）与 `alist 线刷地址`（alist 优先下载）；`stage=生产库归档` 才是量产归档。
+3. 链接按上面「链接怎么给」给（alist 优先 + minio/next 备用，两边都有就都列）；`stage=生产库归档` 才是量产归档。
 4. 输出：机型、系统、版本、构建日期、客户、线刷/OTA 链接，并标注来源（`[实时]` TB / `[alist]` / `[tb+alist]`）；转述 `note`、`otherCustomers`、`pending`。
 5. `firmware_models` 传 `alist: true` 可附 alist 产品目录概览；TB 看板索引由 tickets 维护，若提示找不到索引，让用户先 `/tickets sync`（只影响机型族与阶段，alist 结果仍可用）。
 

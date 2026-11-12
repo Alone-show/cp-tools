@@ -1,5 +1,6 @@
 /**
- * alist 公共只读客户端（仅当 /firmware 检索在 Teambition 里取不到结果时兜底）。
+ * alist 公共只读客户端（/firmware 每次查询都会实时扫一遍 /PROD，与 TB 结果合并；
+ * `next.cpinnov.run` 与 `alist.cpinnov.run` 是同一份存储的两个入口，内容同步）。
  *
  * 为什么不用全局 fetch：DSH 里 `NODE_USE_ENV_PROXY=1` + `https_proxy=127.0.0.1:7897`，
  * 内网 alist 走本机代理会 TLS 直接断开（实测 error:0A000126）；这里用 `node:https`
