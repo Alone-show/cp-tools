@@ -63,13 +63,13 @@ T3 Linux：
 
 常见更新：
 
-> 更新 mdm 和 wifi 固件 —— T3 安卓套 `t3-android.md` §7；RK 只装 MDM，WiFi 固件要先确认模块型号。
+> 更新 mdm 和 wifi 固件 —— T3 安卓套 `t3-android.md` §7；T3 Buildroot 的 MDM 是 `vendor/MDM`（落 `/mdm/MDM`，`cp`→`MDM.new`→`mv` 覆盖）；RK 只装 MDM，WiFi 固件要先确认模块型号。
 
 只做开机 logo（不进整包）：
 
 > 用这张图给 RK 安卓出一套开机 logo —— 模型调 `assets/generate-bootlogo.sh`（SKILL §8.4），按 芯片×系统 出 `logo.img`/`bootlogo.bmp`/`logo`/`video_demo.yuv` + 对应 xml 或安装脚本，产物落 `~/Downloads/<CHIP>_<SYSTEM>_<name>_<日期>/` 并自检。
 
-只要通用/无品牌的开机 logo 和动画、且**明确说了要「中性」**，直接取预置包 `assets/presets/rk-android-neutral/`（RK 安卓 1024×600，3 个文件平铺到 U 盘根即插即换）；没说「中性」（包括「客户没给图」「随便弄一个」）仍按上面生成。
+只要通用/无品牌的开机 logo 和动画、且**明确说了要「中性」**，安卓取预置包 `assets/presets/rk-android-neutral/`（RK 安卓 1024×600，3 个文件平铺到 U 盘根即插即换），Linux 取 `assets/presets/linux-neutral/logo.png` 用生成器现出 `logo` / `bootlogo.bmp`；没说「中性」（包括「客户没给图」「随便弄一个」）仍按上面生成。
 
 验证现成包：
 
@@ -111,7 +111,7 @@ E9631Service/
 ├── cordis.patch.yml     # 把插件插进 profile
 ├── index.js             # 读 skills/cpservice/SKILL.md 并 ctx.skills.register()
 ├── test/smoke.mjs       # 离线自检（含去重与链接守卫）
-├── skills/cpservice/vendor/  # T3 可复用二进制
+├── skills/cpservice/vendor/  # T3 可复用二进制（MDM 二进制 / 安卓 MDM apk / WiFi 固件对）
 └── skills/cpservice/
     ├── SKILL.md         # 调度器：判定 + 共享约束 + 验证主线
     ├── references/
@@ -120,5 +120,7 @@ E9631Service/
     │   ├── rk-debian.md
     │   └── t3-linux.md
     └── assets/          # 模板 / 探针 / 触发 / 核验 / 虚拟盘 / Debian / T3 Linux 触发
-        └── presets/rk-android-neutral/   # 预置「中性」logo/动画包（RK 安卓，仅明确要求中性时用）
+        └── presets/
+            ├── rk-android-neutral/      # 预置「中性」logo/动画包（RK 安卓，仅明确要求中性时用）
+            └── linux-neutral/           # 预置「中性」Linux 开机图源图，产物由 generate-bootlogo.sh 现出
 ```

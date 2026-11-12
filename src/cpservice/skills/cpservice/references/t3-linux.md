@@ -110,6 +110,7 @@ adb shell 'getprop ro.board.platform'                            # 报 command n
 | `/Configs/bootlogo.bmp` | 开机图 | 与 boot-resource 分区里的同名文件一起换 |
 | `/dev/mmcblk0p2` → `/mnt/bootlogo.bmp` | boot-resource（vfat） | `mount -rw -t vfat /dev/mmcblk0p2 /mnt`，替换后 `sync` + `umount` |
 | `/etc/init.d/rcS` | 启动主脚本 | 改错会起不来；先备份 |
+| `/mdm/MDM` | MDM 二进制（ELF，root 755） | 进程在跑，**不能直接 `cp` 覆盖**（`Text file busy`）：`cp` 到 `/mdm/MDM.new` → `chmod 755` → `mv` 覆盖。素材 `vendor/MDM`（md5 见 `vendor/README.md`），包内根目录必须仍叫 `MDM` |
 | `/etc/init.d/runqt` | 桌面启动 | 内部 `/data/app.sh &` |
 | `/qt5.9.sh` | Qt 运行环境 | 触摸/eglfs 参数 |
 | `/etc/udev/rules.d/touchscreen.rules` | 触摸校准 | libinput 矩阵，rotate 180 |
@@ -278,6 +279,7 @@ adb shell 'rm -rf /mnt/usb/sda1; rm -f /data/cp-unattended/probe*'   # 客户包
 | `CFT.out` 启动即 `SIGSEGV`（`CanInit`） | 无 `can0` 或 CAN 未就绪 | 先 `ls /sys/class/net`；无 `can0` 记环境不满足，有 `can0` 再查二进制，不反复跑 |
 | 服务模式包 Launcher/MDM 不在 | `runqt` 改成 `/data/app.sh`，桌面被替换 | 按包设计判约定进程，不套桌面包判据 |
 | `/dev/fb0` 一直是 LOVOL/黑屏 | eglfs/mali 不经 fb0 呈现 | 目视/拍照；不要用 fb0 判 UI 失败 |
+| 换 MDM 报 `Text file busy` / 换完 MDM 没起 | 直接 `cp` 覆盖正在运行的 `/mdm/MDM` | 走 `cp`→`MDM.new`、`chmod 755`、`mv` 覆盖；备旧文件到 `/data/cp-unattended/` 便于回滚 |
 | 验证中杀进程后状态更乱 | 验证越界成排障 | 只读采样；确需重拉先征得同意，结束后重启恢复 |
 
 ---
@@ -286,4 +288,5 @@ adb shell 'rm -rf /mnt/usb/sda1; rm -f /data/cp-unattended/probe*'   # 客户包
 
 - 示例包：`~/customizationData/archive/雷沃/lovol_install_服务模式(JK01101020000a)_20250423.zip`（`unattended_installation.sh` + `data.tar.gz` + logo/bootlogo/动画/rcS/runqt/qt5.9/touchscreen.rules，末尾 `reboot`，无日志、无 md5）。
 - 示例里的 `data.tar.gz` 实际是未压缩 tar（首字节 `./`；`tar tzf` 报 not in gzip，`tar tvf` 可读），脚本里 `cp` 到 `/data` 后 `tar xvf`。
+- 现成素材：`vendor/MDM`（T3 Buildroot 的 `/mdm/MDM`，md5 与替换写法见 `vendor/README.md`）；`vendor/fw_cyw43438.bin` + `nvram_cyw43438.txt`（只用于**安卓** T3 的 WiFi，Buildroot 侧不要套）。
 - 平台差异与 OTG 处置：`../SKILL.md` §5.2、§7.3；T3 安卓见 `t3-android.md`；RK Debian 见 `rk-debian.md`。

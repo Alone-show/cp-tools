@@ -33,10 +33,11 @@ assets/generate-bootlogo.sh --image logo.png --chip T3 --system Linux --name <�
   - 还需 RK 安卓（`com.cpdevice.cpservice`）+ 屏幕 1024x600（`adb shell wm size`）。1280x800 / 客户品牌图 / T3 或 Debian / 要真多帧动画 / 调试轮免重启（`NO_REBOOT=1`）一律不用。
   - 组合需求（如装 apk + 中性 logo）只借 `logo.img` + `bootanimation.zip`，xml 按需求重写；用了就在交付说明里点明用的是预置包。
   - 设备侧触发：插盘 → `ACTION_MEDIA_MOUNTED` → 工具枚举真实卷 → 读卷根 `CpService.xml` → 顺序执行；`reboot` 后 adb 掉线按 SKILL §7.3 等回线。
-- **预置「中性」Linux logo**：`assets/presets/linux-neutral/` = `logo.png`（1024x600 源图）+ `logo`（bgra 2 帧，R180）+ `bootlogo.bmp`（R180），三件套已按现场方向出好。
+- **预置「中性」Linux logo**：`assets/presets/linux-neutral/` = 只有 `logo.png`（1024x600 源图），产物现出：`generate-bootlogo.sh --image <该 png> --chip T3 --system Linux --rotate --logo-frames 2 --no-video`（RK Linux / RK Debian 换 `--chip RK`、去掉 `--logo-frames`）。
+  - 库里不再存 `logo` / `bootlogo.bmp`：同一份 png 现出的 md5 与旧产物逐字节一致（`3e9b85b5…` / `0ab3d5d9…`，2026-11-12 验过），存三份只会「改了图忘了产物」。
   - 只在需求明确要「中性 / Linux 通用 logo」且客户没给品牌图时用；给了品牌图一律用客户的图走生成器。
-  - 只适用 Linux：T3 Linux 直接平铺进包根；RK Linux / RK Debian 用 `logo.png` 重出 `logo.img`。安卓用 `rk-android-neutral`。
-  - 不含 `video_demo.yuv`（215 MB）：要换开机动画从 `logo.png` 现出。
+  - 只适用 Linux：T3 Linux 产物平铺进包根；RK Linux / RK Debian 用同一张 `logo.png` 出 `logo.img`。安卓用 `rk-android-neutral`。
+  - 不含 `video_demo.yuv`（215 MB）：要换开机动画去掉 `--no-video` 一起出。
   - 用了就在交付说明里点明「中性 Linux logo」。
 - 图片只接受 **1024x600 / 1280x800**（ffprobe 判，与上游一致）；脚本末尾自检不通过就不会产出。
 - 生成的安装脚本是**最小版**：RK Linux 按 `/mnt/installUsb` 硬编码（工具窗口方式；要手动入口 `$1` 形式按 SKILL §4 C 改写）；T3 Linux 无日志、无 `NO_REBOOT`，正式包用 `assets/t3linux-setup-template.sh` 补齐。

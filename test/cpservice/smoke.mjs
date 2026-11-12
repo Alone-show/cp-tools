@@ -153,7 +153,7 @@ const facts = {
     'Buildroot', '/Launcher', '/mnt/usb/sda1', 'unattended_installation.sh',
     '/dev/mmcblk0p2', 'bootlogo.bmp', '/data/cp-unattended', 'udisk_setting.cpp',
     '静默安装', 'Permission denied', 'tar xf', 'bash 4.3', 'cwd',
-    '--logo-frames', 'hflip,vflip',
+    '--logo-frames', 'hflip,vflip', '/mdm/MDM', 'vendor/MDM',
   ],
   'SKILL.md': [
     'PATH', 'NO_REBOOT', 'YYYYMMDD', 'verify-report.md',
@@ -210,7 +210,7 @@ for (const [file, max] of Object.entries(budgets)) {
 // 13) 路径常量 + 可复用二进制（合并后从插件根移到 skill 目录，必须随包发布）
 assert.equal(__internals.SKILL_FILE, path.join(SKILL_DIR, 'SKILL.md'));
 const VENDOR_DIR = path.join(SKILL_DIR, 'vendor');
-for (const f of ['README.md', 'fw_cyw43438.bin', 'nvram_cyw43438.txt']) {
+for (const f of ['README.md', 'MDM', 'fw_cyw43438.bin', 'nvram_cyw43438.txt']) {
   assert.ok(fs.existsSync(path.join(VENDOR_DIR, f)), `缺少 vendor/${f}`);
 }
 assert.ok(fs.readdirSync(VENDOR_DIR).some((f) => /^VanCoreT3-.*\.apk$/.test(f)), '缺少 vendor/VanCoreT3-*.apk');
@@ -405,24 +405,39 @@ const presetCheck = spawnSync(DRIVER, ['--check', PRESET], { encoding: 'utf8' })
 assert.equal(presetCheck.status, 0, `预置包 --check 应通过：${presetCheck.stderr}`);
 console.log('  预置中性包: logo.img/bootanimation.zip/CpService.xml 结构与动作顺序 OK');
 
-// 15b) 预置「中性」Linux logo（源图 + T3 Linux 直用媒体，方向已是 R180）
+// 15b) 预置「中性」Linux 开机图：库里只留源图，产物由驱动现出（不存冗余产物）
 const LINUX_PRESET = path.join(SKILL_DIR, 'assets', 'presets', 'linux-neutral');
 const LINUX_PRESET_REL = 'assets/presets/linux-neutral';
-for (const f of ['logo.png', 'logo', 'bootlogo.bmp', 'README.md']) {
+for (const f of ['logo.png', 'README.md']) {
   assert.ok(fs.existsSync(path.join(LINUX_PRESET, f)), `缺少 ${LINUX_PRESET_REL}/${f}`);
+}
+for (const f of ['logo', 'bootlogo.bmp', 'logo.img']) {
+  assert.ok(!fs.existsSync(path.join(LINUX_PRESET, f)),
+    `${LINUX_PRESET_REL}/${f} 不应入库：产物用 generate-bootlogo.sh 从 logo.png 现出`);
 }
 {
   const png = fs.readFileSync(path.join(LINUX_PRESET, 'logo.png'));
   assert.equal(png.subarray(1, 4).toString('latin1'), 'PNG', 'logo.png 不是 PNG');
   assert.deepEqual([png.readUInt32BE(16), png.readUInt32BE(20)], [1024, 600], 'logo.png 应为 1024x600');
 }
-assert.equal(fs.statSync(path.join(LINUX_PRESET, 'logo')).size, 1024 * 600 * 4 * 2, '预置 logo 应为 2 帧 4,915,200 B');
-assert.equal(fs.statSync(path.join(LINUX_PRESET, 'bootlogo.bmp')).size, 54 + 1024 * 600 * 3, '预置 bootlogo.bmp 尺寸不对');
-const linuxPresetCheck = spawnSync(DRIVER, ['--check', LINUX_PRESET], { encoding: 'utf8' });
-assert.equal(linuxPresetCheck.status, 0, `Linux 中性预置 --check 应通过：${linuxPresetCheck.stderr}`);
+{
+  // 源图必须能现出 T3 Linux 产物（尺寸固定，不锁 md5：换 ffmpeg 版本字节可能变）
+  const out = fs.mkdtempSync(path.join(os.tmpdir(), 'linux-neutral-'));
+  try {
+    const gen = driver('--image', path.join(LINUX_PRESET, 'logo.png'), '--chip', 'T3', '--system', 'Linux',
+      '--rotate', '--logo-frames', '2', '--no-video', '--assets-only', '--name', 'linux-neutral', '--out', out);
+    assert.equal(gen.status, 0, `应由 logo.png 现出 T3 Linux 产物：${gen.stderr}`);
+    const dir = path.join(out, fs.readdirSync(out).find((d) => d.startsWith('T3_Linux_linux-neutral_')));
+    assert.equal(fs.statSync(path.join(dir, 'logo')).size, 1024 * 600 * 4 * 2, '现出 logo 应为 2 帧 4,915,200 B');
+    assert.equal(fs.statSync(path.join(dir, 'bootlogo.bmp')).size, 54 + 1024 * 600 * 3, '现出 bootlogo.bmp 尺寸不对');
+    assert.equal(driver('--check', dir).status, 0, '现出的 T3 Linux 产物 --check 应通过');
+  } finally {
+    fs.rmSync(out, { recursive: true, force: true });
+  }
+}
 assert.ok(skill.content.includes(LINUX_PRESET_REL), 'SKILL.md 应列出 linux-neutral 预置');
 assert.ok(/中性/.test(fs.readFileSync(path.join(LINUX_PRESET, 'README.md'), 'utf8')), '预置 README 应写清中性用途');
-console.log('  预置 Linux 中性 logo: 源图 + 2 帧 logo + bootlogo.bmp OK');
+console.log('  预置 Linux 中性图: 只有源图，产物由驱动现出 OK');
 
 
 // 16) merge-package.sh：往已有包里增量合资源（保持布局 + 引用校验 + 命名）

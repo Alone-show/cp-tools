@@ -247,7 +247,7 @@ else {
   }
 }
 const vendorDir = path.join(ROOT, 'src/cpservice/skills/cpservice/vendor');
-for (const f of ['README.md', 'fw_cyw43438.bin', 'nvram_cyw43438.txt']) {
+for (const f of ['README.md', 'MDM', 'fw_cyw43438.bin', 'nvram_cyw43438.txt']) {
   if (!fs.existsSync(path.join(vendorDir, f))) fail(`cpservice: 缺 vendor/${f}`);
 }
 if (!fs.existsSync(vendorDir) || !fs.readdirSync(vendorDir).some((f) => /^VanCoreT3-.*\.apk$/.test(f))) {

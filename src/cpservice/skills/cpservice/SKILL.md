@@ -295,11 +295,12 @@ adb shell 'rm -rf /mnt/usb/sda1; rm -f /data/cp-unattended/probe*'   # T3 Linux 
 | `assets/cpservice-setup-template.sh` / `assets/setup-template.sh` | Android 设备端脚本骨架（RK / T3） |
 | `assets/t3linux-setup-template.sh` / `assets/t3linux-trigger.sh` | T3 Linux 盘根脚本骨架 / 触发与取证（bootcheck / stage / run / stdin-run / probe / evidence / cleanup） |
 | `assets/probe-cpservice.xml` / `assets/probe-collect.sh` / `assets/probe.xml` / `assets/trigger.sh` / `assets/rk-virtual-disk.sh` | 探针与触发（RK 虚拟盘 / T3 假挂载） |
-| `assets/add-icon-device.sh` / `assets/verify-report.md` / `assets/update-mdm-wifi.sh` | 桌面图标 / 报告模板 / T3 MDM+WiFi；skill 目录 `vendor/` 只复用 `VanCoreT3-*.apk` |
+| `assets/add-icon-device.sh` / `assets/verify-report.md` / `assets/update-mdm-wifi.sh` | 桌面图标 / 报告模板 / T3 安卓 MDM+WiFi（脚本里的 `APK_LIST`/`FW_LIST` 按单改） |
+| `vendor/` | 现成二进制（按平台取，别整目录搬）：`MDM` = **T3 Buildroot** 的 `/mdm/MDM`；`VanCoreT3-*.apk` = 安卓 MDM；`fw_cyw43438.bin`+`nvram_cyw43438.txt` = T3 WiFi 固件对。md5 与用法见 `vendor/README.md` |
 | `assets/generate-bootlogo.sh` | logo 资源生成驱动（§8.4）：`--image`/`--chip`/`--system`/`--rotate`/`--logo-frames`/`--no-video`/`--assets-only` |
 | `assets/merge-package.sh` | 往**已有安装包**里增量合资源（保持内部布局与 xml 引用名）：`merge-package.sh <原包.zip> [--out DIR] <文件...>` |
 | `assets/presets/rk-android-neutral/` | 预置「中性」logo/动画包（RK 安卓，**仅在明确要求中性时用**）：`logo.img` + `bootanimation.zip` + `CpService.xml` + `README.md` |
-| `assets/presets/linux-neutral/` | 预置「中性」Linux 开机 logo（**仅明确要求中性时用**）：`logo.png`（源图）+ `logo`（2 帧 R180）+ `bootlogo.bmp`（R180）+ `README.md` |
+| `assets/presets/linux-neutral/` | 预置「中性」Linux 开机图（**仅明确要求中性时用**）：只有 `logo.png` 源图 + `README.md`；`logo` / `bootlogo.bmp` / `logo.img` 用 `generate-bootlogo.sh` 现出（不存冗余产物） |
 | `assets/vendor/generate_bootlogo.sh` | 上游 `CP_Generate_Bootlogo` 原样副本（交互式，输出写在自己目录）；驱动的一致性基准 |
 
 ## 10. 边界与拒绝项
