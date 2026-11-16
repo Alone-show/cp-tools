@@ -48,8 +48,8 @@ const ctx = {
 };
 apply(ctx);
 
-assert.deepEqual(tools.map((t) => t.name).sort(), ['firmware_find', 'firmware_models']);
-console.log('ok  只注册 2 个固件工具');
+assert.deepEqual(tools.map((t) => t.name).sort(), ['firmware_find', 'firmware_mcu', 'firmware_models']);
+console.log('ok  只注册 3 个固件工具（find / models / mcu）');
 
 const findTool = tools.find((t) => t.name === 'firmware_find');
 assert.ok(findTool.description.includes('同一份存储'), '工具描述也要写清 next 与 alist 内容同步');

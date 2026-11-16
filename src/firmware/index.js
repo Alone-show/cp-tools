@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createAlist, parseVersionDir, osNameByLetter } from './alist.js';
+import { mcuToolFor } from './mcu.js';
 import { nz, canonModel, equivCore, queryCores, scoreCore, splitVendor } from '../shared/model-core.js';
 import { readBundledSkill as readSkillFile } from '../shared/skill.js';
 import { candidateDirs, tokenDir, readCookie } from '../tb/auth.js';
@@ -1636,6 +1637,7 @@ export const inject = ['tools', 'skills'];
 export function apply(ctx) {
   ctx.effect(() => ctx.tools.register(findToolFor(ctx)));
   ctx.effect(() => ctx.tools.register(modelsToolFor(ctx)));
+  ctx.effect(() => ctx.tools.register(mcuToolFor(ctx)));
   try {
     const skill = readBundledSkill();
     ctx.effect(() => ctx.skills.register(skill));

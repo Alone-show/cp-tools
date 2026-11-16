@@ -80,11 +80,11 @@ function withIndex(prefix, fn) {
 
 const tool = (tools, toolName) => tools.find((t) => t.name === toolName);
 
-test('firmware 插件元信息与 2 个工具注册', () => {
+test('firmware 插件元信息与 3 个工具注册', () => {
   assert.equal(name, 'firmware-finder');
   assert.deepEqual(inject, ['tools', 'skills']);
   const tools = registry();
-  assert.deepEqual(tools.map((t) => t.name).sort(), ['firmware_find', 'firmware_models']);
+  assert.deepEqual(tools.map((t) => t.name).sort(), ['firmware_find', 'firmware_mcu', 'firmware_models']);
   for (const definition of tools) {
     assert.equal(typeof definition.description, 'string');
     assert.ok(definition.description.length > 20);

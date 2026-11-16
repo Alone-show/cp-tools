@@ -17,6 +17,7 @@ description: 查 CP 量产固件：先拉机型目录（规范名/别名/变体 
 |---|---|
 | `firmware_models` | 机型目录：规范名、同族别名、变体，每个尺寸的系统/客户/任务数/最新归档版本 |
 | `firmware_find` | 精确机型（+ `lcd`）+ 系统 + 客户 → 固件版本、构建日期、客户、线刷/OTA 直链 |
+| `firmware_mcu` | MCU 版本（OS 镜像之外的独立一条线）→ 版本、构建日期、TB 阶段/完成日期/任务页、下载地址 |
 
 ## 参数与默认值
 
@@ -28,6 +29,14 @@ description: 查 CP 量产固件：先拉机型目录（规范名/别名/变体 
 - 其它：`version`、`mainline`、`stage`、`limit`（默认 5，最大 20）、`verify`、`all`、`source(auto|tb|alist)`。
 - **DEV 构建默认不返回**：只给量产版（不带 `DEV-`/`DEV_`）。用户明确说要 DEV 时才传 `dev: true`，被过滤条数写在 `note` 里。
 - 用户说「最新的」→ `limit: 1`。
+
+### MCU 版本（`firmware_mcu`，与 OS 镜像两条线）
+
+- **别拿 `firmware_find` 查 MCU**：OS 镜像是 `CP_<机型>_<A|D|R>_V…_LCD…`，MCU 是 `<族>_MCU_APP_V1.0.7_260924_190041`，产物在 alist `/PROD/MCU/<机型>/<版本>/`，不走 `/PROD/<芯片>/<系统>/`。
+- **MCU 目录名 ≠ 机型规范名**：`SPRING2-10PRO` 的 MCU 目录是 `SPRING2-PRO`，而 `SPRING2 10 / 10S / 特别版` 才是 `SPRING2`；`APOLLO2` / `APOLLO2-PRO` / `APOLLO2-PLUS` 三族并存，`SPRING-12` 也被单列。工具按「族 + PRO/PLUS 变体」匹配，匹配不唯一会返回 `dirCandidates`，选定后再查。
+- **默认只给 APP 包**；`kind: BOOT|BURN` 查 BOOT/BURN 产物。默认按构建日期倒序，`limit` 默认 5。
+- **阶段与任务页来自 TB**（`liveChecked=false` 时只有 alist 结果，note 会说明）；`stage: "生产库归档"` 可只看已归档版本。
+- 订单/评审里填 MCU 版本时，直接取这里的**完整版本串**（带 `_YYMMDD_HHMMSS`），不要只写 `V1.0.7`。
 
 ## 链接怎么给
 
