@@ -5,7 +5,7 @@
 | 子插件 | 入口 | 能力 |
 |---|---|---|
 | 产品资料 | `/cp-docs` | 按机型返回本地全部资料（参数 / 接口与线束表 / 图内文字 / 编程节点 / 工作点），由模型定位作答 |
-| 固件查找 | `/firmware` | 量产固件与线刷/OTA 直链（alist 优先 + minio 备用）、机型族与写法归一；只做固件查找 |
+| 固件查找 | `/firmware` | 机型目录（规范名/别名/变体 + 系统/客户/尺寸）→ 选定后给量产固件与线刷/OTA 直链（alist 优先 + minio 备用）；只做固件查找 |
 | 工单与历史问题 | `/tickets` | 按现象查 TB 工单/任务号与子任务状态；历史 bug 是否修进客户正式版、跨机型/系统/芯片比对 |
 | U 盘升级 | `/cpservice` | RK 安卓 / T3 安卓 / RK Debian / T3 Linux 升级包生成与真机验证 |
 | 整机线刷 | `/flash` | 整机镜像覆盖烧写（RK / T3，安卓 / Debian / Buildroot），刷完只比版本号验收；**仅用户显式 `/flash` 触发** |
@@ -47,9 +47,9 @@ plugin_manager install_bundle target=/home/my/Documents/deepseek-harness/default
 ### `/firmware`
 
 ```text
-/firmware spring2pro 安卓
-/firmware apollo 12 pro debian --customer CP
-/firmware models
+/firmware models                    # 机型目录：规范名 / 别名 / 变体 + 尺寸 / 客户 / 最新版本
+/firmware RK / SPRING2-10PRO 安卓    # 规范名直接查
+/firmware APOLLO2 debian             # 跨尺寸先回目录，选 LCD7 / LCD12 再查
 ```
 
 默认只返回**量产版**（`DEV-` 构建需点名 `dev:true`）。只注册 2 个工具：

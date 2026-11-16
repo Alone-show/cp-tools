@@ -156,7 +156,7 @@ function makeFakeAlist() {
 {
   const fake = makeFakeAlist();
   const collected = await collectAlistRows(fake, {
-    cores: ['apollo7a'],
+    cores: ['apollo2', 'apollo7a'],
     vendor: 'rk',
     system: 'Debian',
     customer: 'CP',
@@ -187,15 +187,20 @@ function makeFakeAlist() {
   assert.ok(others.includes('SmartAG'), '应列出其它客户 SmartAG');
   ok('collectAlistRows 默认 CP 过滤 + 列出其它客户');
 
-  const onlyOne = await collectAlistRows(fake, { cores: ['apollo7a'], vendor: 'rk', system: 'Debian', customer: 'CP', limit: 1 });
+  const onlyOne = await collectAlistRows(fake, { cores: ['apollo2'], vendor: 'rk', system: 'Debian', customer: 'CP', limit: 1 });
   assert.equal(onlyOne.rows.length, 1);
   assert.equal(onlyOne.rows[0].version, CP_V112, '按构建日期倒序，最新在前');
   ok('collectAlistRows 尊重 limit 且按日期倒序');
 
-  const all = await collectAlistRows(fake, { cores: ['apollo7a'], vendor: 'rk', system: 'Debian', customer: '', limit: 5 });
+  const all = await collectAlistRows(fake, { cores: ['apollo2', 'apollo7a'], vendor: 'rk', system: 'Debian', customer: '', limit: 5 });
   assert.ok(all.rows.some((r) => r.version === YM_V107));
   assert.ok(all.rows.some((r) => r.version === SG_V103));
   ok('collectAlistRows customer=\'\' 时不限客户');
+
+  // 严格模式回归：查 APOLLO2-7A 不能把 CP 的 APOLLO2 目录一起扫进来
+  const strict = await collectAlistRows(fake, { cores: ['apollo7a'], vendor: 'rk', system: 'Debian', customer: '', limit: 5 });
+  assert.deepEqual(strict.rows.map((r) => r.version), [SG_V103]);
+  ok('collectAlistRows 严格匹配机型目录（APOLLO2-7A 不收 APOLLO2 的包）');
 }
 
 /* ------------------------------------------------------------------ *
@@ -310,7 +315,7 @@ function makeFakeAlist() {
         stage: '生产库归档',
         updated: '2024-10-28T00:00:00.000Z',
         isArchived: false,
-        fields: { 机型: ['RK / APOLLO2-7A'], 操作系统: ['Debian'], 客户ID: 'CP', 固件语言: 'CN' },
+        fields: { 机型: ['RK / APOLLO2'], 操作系统: ['Debian'], 客户ID: 'CP', 固件语言: 'CN' },
       },
     ],
   };
@@ -320,7 +325,7 @@ function makeFakeAlist() {
   const fake = makeFakeAlist();
   setAlistFactory(() => fake);
 
-  const auto = await search({}, {}, { model: 'APOLLO2-7', system: 'Debian' });
+  const auto = await search({}, {}, { model: 'RK / APOLLO2', system: 'Debian' });
   assert.equal(auto.status, 'ok');
   assert.equal(auto.alist?.ok, true);
   assert.equal(auto.rows[0].version, CP_V112);
@@ -330,12 +335,12 @@ function makeFakeAlist() {
   ok('search 自动兜底：Teambition 无链接时用 alist 返回 V1.12');
 
   fake.calls.length = 0;
-  const tbOnly = await search({}, {}, { model: 'APOLLO2-7', system: 'Debian', source: 'tb' });
+  const tbOnly = await search({}, {}, { model: 'RK / APOLLO2', system: 'Debian', source: 'tb' });
   assert.equal(tbOnly.status, 'empty');
   assert.equal(fake.calls.length, 0, 'source=tb 不应触碰 alist');
   ok('search(source=tb) 不访问 alist，保持旧行为');
 
-  const alistOnly = await search({}, {}, { model: 'APOLLO2-7', system: 'Debian', source: 'alist' });
+  const alistOnly = await search({}, {}, { model: 'RK / APOLLO2', system: 'Debian', source: 'alist' });
   assert.ok(alistOnly.rows.every((r) => r.source === 'alist'));
   ok('search(source=alist) 只返回 alist 行');
 
@@ -368,19 +373,35 @@ function makeFakeAlist() {
           固件下载地址: 'https://next.cpinnov.run/PROD/MCU/APOLLO2/APOLLO2_MCU_APP_V1.1.0_261020_145106',
         },
       },
+      {
+        id: 'cp-apollo2',
+        title: 'CP_APOLLO2_D_V1.06_LCD7',
+        url: 'https://www.teambition.com/task/cp-apollo2',
+        stage: '生产库归档',
+        updated: '2024-10-28T00:00:00.000Z',
+        isArchived: false,
+        fields: {
+          机型: ['RK / APOLLO2'],
+          操作系统: ['Debian'],
+          客户ID: 'CP',
+          固件语言: 'CN',
+          固件下载地址: 'https://next.cpinnov.run/PROD/RK/DEBIAN/APOLLO2/CP/LCD7/CP_APOLLO2_D_V1.06_LCD7',
+        },
+      },
     ],
   };
   fs.writeFileSync(path.join(tmp, `board-${PROJECT_ID}.json`), JSON.stringify(board));
   process.env.DSH_TBFW_DIR = tmp;
   setAlistFactory(() => makeFakeAlist());
 
-  const result = await search({}, {}, { model: 'APOLLO2-7', system: 'Debian', limit: 5 });
+  const result = await search({}, {}, { model: 'RK / APOLLO2', system: 'Debian', limit: 5 });
   assert.equal(result.status, 'ok');
   assert.ok(
     result.rows.some((r) => r.source === 'alist' && r.version === CP_V112),
     '只有 MCU 链接时也应兜底到 alist 的整机固件',
   );
-  assert.ok(result.rows.some((r) => r.version.startsWith('APOLLO2_MCU_APP')), 'MCU 行仍保留');
+  const mcu = await search({}, {}, { model: '瑞芯微 / APOLLO 7 二代', system: 'Debian', all: true });
+  assert.ok(mcu.rows.some((r) => r.version.startsWith('APOLLO2_MCU_APP')), 'MCU 行仍保留（挂在 7 寸族下）');
   ok('MCU 包不算整机固件，仍触发 alist 兜底');
 
   setAlistFactory((options) => createAlist(options));
@@ -452,7 +473,7 @@ function makeFakeAlist() {
   };
   setAlistFactory(() => fake);
 
-  const result = await search({}, {}, { model: 'SPRING2PRO', system: 'Debian', limit: 5 });
+  const result = await search({}, {}, { model: 'RK / SPRING2-10PRO', system: 'Debian', limit: 5 });
   assert.equal(result.resolvedModel, 'RK / SPRING2-10PRO');
   assert.equal(result.rows[0].version, V116);
   assert.equal(result.rows[0].source, 'both', '同为一份存储：TB 行应被 alist 行合并');

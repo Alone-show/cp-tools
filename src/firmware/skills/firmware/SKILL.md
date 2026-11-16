@@ -1,11 +1,11 @@
 ---
 name: firmware
-description: 查 CP 量产固件：按机型 + 系统 + 客户返回版本、构建日期、线刷/OTA 直链（alist 优先、minio 备用），并处理机型写法归一。只做固件查找；工单/子任务/历史 bug 走 tickets。整机线刷会清数据，由用户用 /flash 显式触发，不在本 skill。默认只给量产版（DEV 需点名）。
+description: 查 CP 量产固件：先拉机型目录（规范名/别名/变体 + 系统/客户/尺寸/最新版本），模型选定机型后再按 系统 + 客户返回版本、构建日期、线刷/OTA 直链（alist 优先、minio 备用）。只做固件查找；工单/子任务/历史 bug 走 tickets。整机线刷会清数据，由用户用 /flash 显式触发，不在本 skill。默认只给量产版（DEV 需点名）。
 ---
 
 # 固件查找
 
-本 skill 只负责「找固件」：可用 `/firmware` 显式触发，也可直接用自然语言问。按机型 / 系统 / 客户定位量产固件，给线刷与 OTA 直链，并处理机型写法归一等歧义。
+本 skill 只负责「找固件」：可用 `/firmware` 显式触发，也可直接用自然语言问。**机型不由工具猜**：先拿机型目录，由模型按证据（系统/客户/尺寸/最新版本）选定规范名，再查该机型的量产固件与线刷、OTA 直链。
 
 **不负责**：TB 工单/任务号/子任务状态、历史 bug 是否修进正式版、TB 登录与看板同步。这些统一走 `tickets` skill（`ticket_search` / `ticket_bug_check` / `ticket_sync`）。
 
@@ -15,12 +15,14 @@ description: 查 CP 量产固件：按机型 + 系统 + 客户返回版本、构
 
 | 工具 | 用途 |
 |---|---|
-| `firmware_find` | 机型 + 系统 + 客户 → 固件版本、构建日期、客户、线刷/OTA 直链 |
-| `firmware_models` | TB 看板里的机型族、同族别名、变体；机型写法拿不准时先查这里 |
+| `firmware_models` | 机型目录：规范名、同族别名、变体，每个尺寸的系统/客户/任务数/最新归档版本 |
+| `firmware_find` | 精确机型（+ `lcd`）+ 系统 + 客户 → 固件版本、构建日期、客户、线刷/OTA 直链 |
 
 ## 参数与默认值
 
-- 机型：自由写法均可（`spring2pro`、`SP2-10PRO`、`apollo 12 pro`、`瑞芯微 / APOLLO 12 PRO`、`T3 / SPRING2`）。
+- 机型：**只认机型目录里的规范名 / 别名 / 变体名**（整串相等，符号与大小写无关），如 `RK / APOLLO2`、`APOLLO2-MIX`、`SP2-10MIX`。空格/符号差异与去尾 `A` 视为同一机型（`APOLLO2-7` ≡ `APOLLO2-7A`、`apollo 12 pro` ≡ `APOLLO2-12PRO`）；省略尺寸段（`spring2pro`）或认不出的名字不猜，`firmware_find` 返回目录（`status=needs_confirmation` + `candidates`），由模型选定后带精确名字重试。
+- 尺寸（`lcd`）：机型跨多个屏幕尺寸时必须给（`APOLLO2` 同时有 `LCD7` / `LCD12`，`APOLLO2-7A` 是 `LCD7`）。接受 `LCD7`、`7`、`LCD7-12`；`LCD7` 能命中 `LCD7-12`，反之不行。
+- **共享固件（只开这两组）**：`APOLLO2-7A` ≡ `APOLLO2-7` ≡ `RK / APOLLO2` 的 7 寸固件；`APOLLO2-12A` ≡ `APOLLO2-12` ≡ `RK / APOLLO2` 的 12 寸固件。查其中任一个都会同时给出另一边的版本（结果带 `firmwareSharing`、行首标 `[共享]`、note 写明关系），可以互刷；**客户仍然不能混刷**。10 寸、12PRO、12PLUS 不参与共享。
 - 系统：安卓 / Android、Debian、BuildRoot；`linux` = Debian + BuildRoot。
 - 客户：缺省 **CP**；`*` 或「所有客户」不限。同一机型的不同客户固件不能混刷。**未点名客户就按 CP 出结果，不要弹确认**（设备/记录上出现别家客户也一样，只在 `otherCustomers` 里提一句）。
 - 其它：`version`、`mainline`、`stage`、`limit`（默认 5，最大 20）、`verify`、`all`、`source(auto|tb|alist)`。
@@ -38,15 +40,19 @@ description: 查 CP 量产固件：按机型 + 系统 + 客户返回版本、构
 
 ## 流程
 
-1. 查询直接调 `firmware_find`；每次调用都会实时核对 TB（补拉版本父任务详情）并实时扫描 alist `/PROD`，约 3–8 秒，不需要先同步。`liveChecked=false` 表示实时核对失败（如未登录），此时按 note 里的快照时间说明，不要当最新结果；`alist` 字段是本次 alist 扫描的实况（`ok/rows/requests/reason`）。
-2. 机型歧义（`status=needs_confirmation`）时列候选（含 variants），请用户确认后再查，不要猜。
-3. 链接按上面「链接怎么给」给（alist 优先 + minio/next 备用，两边都有就都列）；`stage=生产库归档` 才是量产归档。
-4. 输出：机型、系统、版本、构建日期、客户、线刷/OTA 链接，并标注来源（`[实时]` TB / `[alist]` / `[tb+alist]`）；转述 `note`、`otherCustomers`、`pending`。
-5. `firmware_models` 传 `alist: true` 可附 alist 产品目录概览；TB 看板索引由 tickets 维护，若提示找不到索引，让用户先 `/tickets sync`（只影响机型族与阶段，alist 结果仍可用）。
+1. **第一步：拿机型目录**。`firmware_models`（传用户说法做过滤，未命中会给相近候选），或直接 `firmware_find(model=<用户说法>)`——后者在不是规范名/别名/变体名时返回 `status=needs_confirmation` + `candidates`。目录条目自带 `systems`、`customers`、`lcds`、`latest`，**由模型按这些证据选**：系统对齐、客户对齐（缺省 CP）、尺寸对齐（7 寸看 `LCD7`，12 寸看 `LCD12`）。目录来自看板快照（`indexAgeHours` 给出快照年龄），不联网、秒回；刚归档的版本可能还没进快照，第二步会实时补上。
+2. **第二步：带精确机型查询**。`firmware_find(model="RK / APOLLO2", lcd="LCD7", system="Debian")`。这时才实时核对 TB（补拉版本父任务详情）并扫描 alist `/PROD`，约 3–8 秒，不需要先同步。`liveChecked=false` 表示实时核对失败（如未登录），按 note 里的快照时间说明；`alist` 字段是本次扫描实况（`ok/rows/requests/reason`）。
+3. 命中后按共享规则自动合并另一边的固件（`firmwareSharing` / `[共享]` 行）；汇报时说清「哪些行来自共享机型」，不要把共享行当成用户点名机型的原生版本。
+4. 只有**证据不足**（同名跨芯片、客户/尺寸都对不上、目录里两条都像）时才回问用户，列候选让他定；不要自行猜测。
+5. 链接按上面「链接怎么给」给（alist 优先 + minio/next 备用，两边都有就都列）；`stage=生产库归档` 才是量产归档。
+6. 输出：机型、系统、尺寸、版本、构建日期、客户、线刷/OTA 链接，并标注来源（`[实时]` TB / `[alist]` / `[tb+alist]`）；转述 `note`、`otherCustomers`、`pending`。`status=empty` 时会带 `candidates`（该机型其它尺寸/客户），换 `customer` 或 `lcd` 重试，不必再拉一次目录。
+7. `firmware_models` 传 `alist: true` 可附 alist 产品目录概览；TB 看板索引由 tickets 维护，若提示找不到索引，让用户先 `/tickets sync`（只影响机型族与阶段，alist 结果仍可用）。
 
 ## 数据与边界
 
 - 只看固件：不根据 TB 子任务或 commit log 判断「问题是否解决」；这类问题转 `tickets`。
+- 机型匹配是**语义判断**：看目录里的系统、客户、尺寸、最新版本做取舍；工具只保证「不猜」，猜错由模型负责。
+- 共享固件的边界是**写死的两组**（7A↔7、12A↔12），不要自行扩展到 10 寸或 12PRO/12PLUS。
 - 共享缓存：与 `tickets` 共用 `.tbfw`（`board-<projectId>.json`、`token.json`）与 alist 缓存；本 skill 只读，不写索引。
 - 不要用 bash 直接读 `.tbfw` 或手工拼 alist 路径；一律走工具。
 - alist 不可达时 `firmware_find` 会降级到 TB/本地快照，按返回的 `note` 说明。

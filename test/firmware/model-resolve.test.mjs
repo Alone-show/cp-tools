@@ -72,6 +72,21 @@ const board = {
           'https://next.cpinnov.run/PROD/RK/ANDROID/APOLLO2-MIX/SZ/LCD7-12/SZ_APOLLO2-MIX_A_V1.08_LCD7-12_B1_MDM_20260924',
       },
     ),
+    // SZ 的 APOLLO2-MIX：用于验证 customer:* 能带出别家客户
+    task(
+      't2b',
+      'SZ_APOLLO2-MIX_A_V1.09_LCD7-12_B1_MDM_20260924',
+      '生产库归档',
+      {
+        机型: ['RK / APOLLO2'],
+        操作系统: ['Android'],
+        客户ID: 'SZ',
+        固件语言: 'CN',
+        固件版本: 'SZ_APOLLO2-MIX_A_V1.09_LCD7-12_B1_MDM_20260924',
+        固件下载地址:
+          'https://next.cpinnov.run/PROD/RK/ANDROID/APOLLO2-MIX/SZ/LCD7-12/SZ_APOLLO2-MIX_A_V1.09_LCD7-12_B1_MDM_20260924',
+      },
+    ),
     task(
       't3',
       'CP_APOLLO2_A_V1.10_LCD10_B0_MDM_20261001',
@@ -138,6 +153,20 @@ const board = {
       },
       '2026-10-16T00:00:00.000Z',
     ),
+    // CP 的 7 寸 Debian 正式版本：机型写 RK / APOLLO2，尺寸只在版本号里
+    task('t12', 'CP_APOLLO2_D_V1.12_LCD7_B1_CN_20260805', '生产库归档', {
+      机型: ['RK / APOLLO2'],
+      操作系统: ['Debian'],
+      客户ID: 'CP',
+      固件语言: 'CN',
+      固件版本: 'CP_APOLLO2_D_V1.12_LCD7_B1_CN_20260805',
+      固件下载地址:
+        'https://next.cpinnov.run/PROD/RK/DEBIAN/APOLLO2/CP/LCD7/CP_APOLLO2_D_V1.12_LCD7_B1_CN_20260805',
+      'OSS 线刷地址':
+        'https://minio.cpuniverse.cn/prod/RK/DEBIAN/APOLLO2/CP/LCD7/CP_APOLLO2_D_V1.12_LCD7_B1_CN_20260805/CP_APOLLO2_D_V1.12_LCD7_B1_CN_20260805.img',
+      'OSS OTA地址':
+        'https://minio.cpuniverse.cn/prod/RK/DEBIAN/APOLLO2/CP/LCD7/CP_APOLLO2_D_V1.12_LCD7_B1_CN_20260805/CP_APOLLO2_D_V1.12_LCD7_B1_CN_20260805_OTA.img',
+    }),
     // 7 / 7A / 二代 的写法差异：CP 的 Debian 任务没有链接（V1.12 只在 alist）
     task('t8', 'CP_APOLLO2_D_V1.06_LCD7', '生产库归档', {
       机型: ['RK / APOLLO2-7A'],
@@ -213,7 +242,7 @@ try {
   const apollo = byName('RK / APOLLO2');
   assert.ok(apollo, '缺少 RK / APOLLO2 族');
   assert.equal(apollo.variants.get('apollo2mix')?.label, 'APOLLO2-MIX');
-  assert.deepEqual(variantList(apollo), [{ label: 'APOLLO2-MIX', tasks: 2 }]);
+  assert.deepEqual(variantList(apollo), [{ label: 'APOLLO2-MIX', tasks: 3 }]);
   ok('APOLLO2-MIX 作为变体挂在 RK / APOLLO2 下');
 
   assert.ok(byName('RK / SPRING2-10MIX').aliases.includes('SP2-10MIX'), 'SP2-10MIX 未成为别名');
@@ -264,7 +293,7 @@ try {
   assert.equal(cp.variant, 'APOLLO2-MIX');
   assert.equal(cp.resolvedModel, 'RK / APOLLO2');
   assert.equal(cp.customerDefaulted, true);
-  assert.ok(cp.note?.includes('SZ'), 'note 应提示其他客户还有 SZ');
+  assert.ok(cp.note?.includes('默认按 CP'), 'note 应说明已按 CP 过滤');
   assert.ok(cp.rows.length >= 1);
   assert.ok(cp.rows.every((r) => r.version.includes('APOLLO2-MIX')));
   assert.ok(cp.rows.every((r) => r.variant === 'APOLLO2-MIX'));
@@ -274,9 +303,22 @@ try {
   assert.ok(all.rows.some((r) => r.version.startsWith('SZ_')), 'customer:* 应带出 SZ 行');
   ok('search(APOLLO2MIX, customer:*) 带出其他客户');
 
+  // 严格两步：族名跨尺寸（LCD7-12 / LCD10）时先返回目录，不再自动挑尺寸
   const famQuery = await search({}, {}, { model: 'apollo2', limit: 10 });
-  assert.ok(famQuery.rows.some((r) => r.version.includes('LCD10')), '族查询应仍返回 LCD10 版本');
-  ok('search(apollo2) 仍是族查询（含 LCD10），未被变体收窄');
+  assert.equal(famQuery.status, 'needs_confirmation');
+  assert.equal(famQuery.reason, 'lcd_not_specified');
+  assert.ok(
+    famQuery.candidates.some((c) => c.model === 'RK / APOLLO2' && c.lcd === 'LCD10'),
+    '目录里应能看到 APOLLO2 的 LCD10 条目',
+  );
+  ok('search(apollo2) 跨尺寸时返回机型目录，不再模糊选尺寸');
+
+  const lcdQuery = await search({}, {}, { model: 'RK / APOLLO2', lcd: 'LCD10', limit: 10 });
+  assert.equal(lcdQuery.status, 'ok');
+  assert.equal(lcdQuery.lcd, 'LCD10');
+  assert.ok(lcdQuery.rows.length >= 1);
+  assert.ok(lcdQuery.rows.every((r) => r.version.includes('LCD10')), '指定尺寸后只出该尺寸版本');
+  ok('search(RK / APOLLO2, lcd:LCD10) 只出 LCD10 行');
 
   assert.ok(elapsed < 200, `fixture 检索过慢: ${elapsed}ms`);
   ok(`检索耗时 ${elapsed}ms（fixture）`);
@@ -308,15 +350,53 @@ try {
   assert.notEqual(resolveModel('APOLLO2-12A', groups).hit?.name, 'RK / APOLLO2-12PRO');
   ok('12 / 12A 合并，12PRO 保持独立');
 
+  // 共享固件规则：APOLLO2-7 ≡ APOLLO2-7A，且与 APOLLO2 的 7 寸固件通用
   const sevenRows = await search({}, {}, { model: 'apollo2_7', system: 'Debian', all: true });
   assert.equal(sevenRows.status, 'ok');
-  assert.ok(sevenRows.matchedFamilies?.length >= 2, '结果应标注等价族');
+  assert.equal(sevenRows.resolvedModel, 'RK / APOLLO2-7A');
+  assert.equal(sevenRows.matchedBy, 'equivalent-name');
+  assert.deepEqual(
+    sevenRows.firmwareSharing?.map((x) => x.model).sort(),
+    ['RK / APOLLO2', 'RK / APOLLO2-7A'],
+    '结果要标注共享固件的机型',
+  );
+  assert.ok(sevenRows.note?.includes('共享固件'), 'note 要说明共享关系');
+  assert.ok(
+    sevenRows.rows.some((r) => r.version.includes('CP_APOLLO2_D_V1.12')),
+    '共享后要看得到 CP 写在 APOLLO2 下的 7 寸固件',
+  );
   assert.ok(
     sevenRows.rows.some((r) => r.version.includes('CP_APOLLO2_D_V1.06')),
-    'all=true 应能看到 CP 的无链接 Debian 任务',
+    '7A 自己的任务也要保留',
   );
   assert.equal(sevenRows.alist, undefined, 'DSH_ALIST_DISABLE=1 时不应访问 alist');
-  ok('search(apollo2_7, debian, all) 命中 CP Debian 任务且未触发 alist');
+  ok('search(apollo2_7) 按共享规则同时给出 APOLLO2 与 7A 的 7 寸固件');
+
+  const sevenExact = await search({}, {}, { model: 'RK / APOLLO2', lcd: 'LCD7', system: 'Debian', all: true });
+  assert.equal(sevenExact.status, 'ok');
+  assert.equal(sevenExact.lcd, 'LCD7');
+  assert.ok(
+    sevenExact.rows.every((r) => !r.lcd || /^LCD7/.test(r.lcd)),
+    '指定机型 + 尺寸后，不能再混进 LCD10/LCD12 的行（无尺寸的 MCU 行保留）',
+  );
+  ok('search(RK / APOLLO2, lcd:LCD7) 只出 7 寸行');
+
+  const altSeven = await search({}, {}, { model: 'RK / APOLLO2-7A', system: 'Debian', all: true });
+  assert.equal(altSeven.status, 'ok');
+  assert.ok(altSeven.rows.some((r) => r.version.includes('CP_APOLLO2_D_V1.06')));
+  assert.ok(
+    altSeven.rows.some((r) => r.version.includes('CP_APOLLO2_D_V1.12')),
+    '反查 7A 也要带出 APOLLO2 的 7 寸固件',
+  );
+  ok('search(RK / APOLLO2-7A) 命中 7A 族并共享 APOLLO2 的 7 寸固件');
+
+  // 边界：10 寸不参与共享；12PRO 不会被 12 寸共享带进来
+  const tenInch = await search({}, {}, { model: 'RK / APOLLO2', lcd: 'LCD10', system: 'Debian', all: true });
+  assert.equal(tenInch.firmwareSharing, undefined, '10 寸不应触发共享');
+  const twelvePro = await search({}, {}, { model: 'RK / APOLLO2-12PRO', lcd: 'LCD12', system: 'Debian', all: true });
+  assert.equal(twelvePro.firmwareSharing, undefined, '12PRO 不参与共享');
+  assert.ok(twelvePro.rows.every((r) => r.version.includes('12PRO')));
+  ok('共享只对 7A↔7、12A↔12 两组开放，10 寸与 12PRO 不受影响');
 } finally {
   fs.rmSync(dir, { recursive: true, force: true });
 }

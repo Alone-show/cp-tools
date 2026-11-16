@@ -38,7 +38,8 @@ adb -s <序列号> shell 'cat /Configs/system_info/system_info.ini'        # T3 
 ## 1. 刷前必须核对的 5 件事（缺一件就停，但不问用户）
 
 1. **目标版本**：**优先取订单 `软件需求信息/OS版本`**（`/bpms` 递过来的那个串，去掉 `.img` 后缀），它是唯一权威版本——不要换成「最新量产」或别的版本。
-   拿这个版本串去 `firmware_find`（`version=<串>`，`model`/`system`/`customer` 按订单归一）**只取线刷直链 `.img`**，不要 `_OTA.zip`；此时 `firmware_find` 只负责给链接，不参与选版本。
+   拿这个版本串去 `firmware_find`（`version=<串>`，`model` 用**机型目录里的规范名或别名**、需要时带 `lcd`，`system`/`customer` 按订单对齐）**只取线刷直链 `.img`**，不要 `_OTA.zip`；此时 `firmware_find` 只负责给链接，不参与选版本。
+   机型写法不确定就先 `firmware_models`（或看 `firmware_find` 返回的 `candidates`）拿规范名——自由写法不会再被自动归一。
    订单里没有 `OS版本`、或该版本查不到直链（客户定制版）→ **停**，问清楚，不拿别的版本顶。
    同一版本会给两条链接：**`alist 线刷地址`（下载优先）** 和 **`OSS 线刷地址`（minio，备用）**；**汇报时两条都写出来**（alist 在前）。alist 上没有该版本时只给 minio，并说明一句。
    用户口头点名版本 / 明确说「最新」时，才用 `firmware_find` 直接取（`limit:1`）；**默认只取量产版（不带 `DEV-` 标识）**，只有用户明确说「要 DEV」时才传 `dev:true`。
@@ -53,7 +54,7 @@ adb -s <序列号> shell 'cat /Configs/system_info/system_info.ini'        # T3 
 
 ```bash
 # S1 取最新量产版本 + 两条线刷直链
-#    工具：firmware_find(model="SPRING2PRO", system="Debian", limit=5)
+#    工具：firmware_find(model="RK / SPRING2-10PRO", system="Debian", limit=5)   # 规范名，自由写法会先返回目录
 #    记录：版本串、构建日期、alist 线刷地址（优先）与 OSS 线刷地址（minio 备）
 
 # S2 预检（只读：报平台、当前版本、期望版本、候选顺序、将执行的命令）

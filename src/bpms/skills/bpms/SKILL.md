@@ -38,7 +38,7 @@ description: 登录 BPMS（CPSales）并读写订单需求表：查记录、按�
 - **状态门**：`status === 0`（暂存）才上传。`1 待审核 / 2 打回修改 / 3 已审核 / 4 需求完结` → **包照做、验证照跑，但不上传**，回复里明确提醒（例：「状态 3=已审核，按约定只出包不上传」）。
 - **确认门**：`bpms_update` 默认 dry-run 就是第一道闸；用户没明确说「传 / 上传」就不 `apply`。
 - **版本只认订单 `OS版本`**：去掉 `.img` 后缀；`firmware_find(version=<该串>)` 只用来取线刷直链，不参与选版本。查不到直链（客户定制版）→ 停，不拿「最新量产」顶。
-- **平台映射**（交给 cpservice 选 reference）：`Android 6.0` → T3 安卓；`Android 11.x` → RK 安卓；`Debian` → RK Debian；`Buildroot` → T3 Linux。机型/客户用 `firmware_models` / `firmware_find` 归一，有多解就停下来问。
+- **平台映射**（交给 cpservice 选 reference）：`Android 6.0` → T3 安卓；`Android 11.x` → RK 安卓；`Debian` → RK Debian；`Buildroot` → T3 Linux。机型/客户先用 `firmware_models` 拿机型规范名（`firmware_find` 不再模糊归一，自由写法只回目录），再带精确 `model`（跨尺寸加 `lcd`）查；有多解就停下来问。
 - **已有包 = 增量**：`预装软件文件上传` 非空时，先下载原包（`mdmobs.cpuniverse.cn` 直链可匿名 GET；403/过期就重拉详情取新 url），再用 `merge-package.sh` 合资源——**保持包内布局与 xml 引用名**，分辨率/logo 帧数以包内既有资源为准（如 `video_demo.yuv` 215,654,400 B = 1024x600、`logo` 4,915,200 B = 2 帧）。
 - **上传写法**：`patch: { "软件需求信息/预装软件文件上传": [{ path: "/abs/…zip", name: "原包名_20261112.zip" }] }`，只留合并后的新包（`attachmentMode` 默认 replace，别用 append 把旧包留着）。`apply:false` 时只校验文件、不上传。
 - **SN 写入手动确认**：刷机清数据后，订单 `SN写入=是` + `序列号范围-SN` 不在本链路代做，提示用户单独处理。

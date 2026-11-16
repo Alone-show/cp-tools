@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createAlist, parseVersionDir, osNameByLetter } from './alist.js';
-import { nz, canonModel, equivCore, queryCores, scoreCore } from '../shared/model-core.js';
+import { nz, canonModel, equivCore, queryCores, scoreCore, splitVendor } from '../shared/model-core.js';
 import { readBundledSkill as readSkillFile } from '../shared/skill.js';
 import { candidateDirs, tokenDir, readCookie } from '../tb/auth.js';
 import { readBoardFromDirs } from '../tb/board.js';
@@ -22,6 +22,17 @@ import {
   isVersionTask,
 } from '../tb/models.js';
 import { PROJECT_ID, UA, LINK_FIELDS, asList } from '../tb/constants.js';
+import {
+  buildCatalog,
+  resolveExact,
+  suggestMatches,
+  taskMatchesEntry,
+  firmwareSharingScope,
+  lcdOf,
+  lcdMatch,
+  normalizeLcd,
+  versionDate,
+} from './catalog.js';
 
 /** 可替换的 alist 客户端工厂（离线测试用；运行时就是 createAlist）。 */
 let alistFactory = createAlist;
@@ -62,22 +73,6 @@ function linksOf(task) {
     if (v) out[k] = String(v);
   }
   return out;
-}
-
-/** 构建日期：字段缺版本号时，从标题或下载地址里捞（在制版本常常只有链接） */
-function versionDate(task) {
-  const f = task.fields ?? {};
-  const sources = [
-    String(f['固件版本'] || ''),
-    String(task.title || ''),
-    String(f['固件下载地址'] || ''),
-    String(f['OSS 线刷地址'] || ''),
-  ];
-  for (const src of sources) {
-    const m = src.match(/_(20\d{6})(?:_|\.|\/|$)/);
-    if (m) return m[1];
-  }
-  return '';
 }
 
 /** 阶段优先级：只有「生产库归档」才算正式归档；「自归档」「归档-下架」不算 */
@@ -148,6 +143,22 @@ function lcdFromCores(cores) {
     if (size >= 7 && size <= 15) return `LCD${size}`;
   }
   return '';
+}
+
+/**
+ * 严格模式下的 alist 机型目录匹配：目录 core 必须与查询 core 等价
+ * （SP2↔SPRING2 缩写、尾部 A 折叠），不接受 70 分的模糊族目录——
+ * 否则查 APOLLO2-7A 会把 CP 的 APOLLO2 目录一起扫进来。
+ */
+function matchModelDirStrict(name, cores) {
+  const dirCore = canonModel(name).core;
+  if (!dirCore) return false;
+  const forms = new Set([equivCore(dirCore), ...queryCores(dirCore).map(equivCore)]);
+  for (const core of cores ?? []) {
+    const wanted = new Set([equivCore(core), ...queryCores(core).map(equivCore)]);
+    for (const value of wanted) if (value && forms.has(value)) return true;
+  }
+  return false;
 }
 
 /** alist 机型目录名 vs 查询族 core 的匹配分（>=70 采用） */
@@ -224,9 +235,9 @@ async function alistArtifacts(alist, dirPath, dirName, verify) {
  * 绝不影响 Teambition 主路径。
  */
 async function collectAlistRows(alist, options) {
-  const { cores, vendor, system, customer, version, limit = 5, verify = false } = options;
+  const { cores, lcd: lcdOption, vendor, system, customer, version, limit = 5, verify = false } = options;
   const wantedOs = wantedOsSegments(system);
-  const lcd = lcdFromCores(cores);
+  const lcd = normalizeLcd(lcdOption) || lcdFromCores(cores);
   const others = new Map();
   const candidates = [];
 
@@ -245,7 +256,7 @@ async function collectAlistRows(alist, options) {
       const modelDirs = await alist.list(modelPath);
       if (!modelDirs) continue;
       for (const modelDir of modelDirs.filter((e) => e.isDir)) {
-        if (matchModelDir(modelDir.name, cores) < 70) continue;
+        if (!matchModelDirStrict(modelDir.name, cores)) continue;
         const productPath = `${modelPath}/${modelDir.name}`;
         const customerDirs = await alist.list(productPath);
         if (!customerDirs) continue;
@@ -259,7 +270,7 @@ async function collectAlistRows(alist, options) {
           const lcdDirs = await alist.list(customerPath);
           if (!lcdDirs) continue;
           for (const lcdDir of lcdDirs.filter((e) => e.isDir)) {
-            if (lcd && lcdDir.name.toUpperCase() !== lcd) continue;
+            if (lcd && !lcdMatch(lcdDir.name, lcd)) continue;
             const lcdPath = `${customerPath}/${lcdDir.name}`;
             const versionDirs = await alist.list(lcdPath);
             if (!versionDirs) continue;
@@ -447,28 +458,48 @@ async function searchFromAlist(ctx, exec, args) {
       rows: [],
     };
   }
-  const { hit, hits, scored, variant } = resolveModel(query, catalog.groups);
-  if (!hit) {
+  // 目录条目：alist 只有机型目录名与系统，没有尺寸/客户聚合，够做严格匹配即可
+  const entries = catalog.groups.map((group) => ({
+    model: group.name,
+    rest: splitVendor(group.name).rest,
+    vendor: group.vendor,
+    core: group.core,
+    aliases: group.aliases ?? [],
+    variants: [],
+    tasks: group.count,
+    systems: [...(group.osList ?? [])],
+    customers: [],
+    latest: null,
+    lcds: [],
+  }));
+  const resolved = resolveExact(entries, query);
+  if (resolved.status !== 'hit') {
+    const picked =
+      resolved.matches.length > 0
+        ? resolved.matches.map((m) => m.entry)
+        : suggestMatches(entries, query, 12).map((x) => x.entry);
     return {
       status: 'needs_confirmation',
       query,
-      note: '本地没有 TB 看板索引，已改用 alist /PROD 机型目录；机型无法唯一确定。',
-      hint: '候选来自 /PROD 机型目录；用户说法里的 MIX/PLUS/PRO/A 后缀可以直接作为变体重试。',
-      candidates: scored.slice(0, 8).map(([score, group]) => ({
-        model: group.name,
-        score,
-        tasks: group.count,
-        aliases: group.aliases,
+      reason: resolved.status === 'ambiguous' ? 'model_ambiguous' : 'model_not_exact',
+      note: '本地没有 TB 看板索引，已改用 alist /PROD 机型目录；机型只认目录里的名字。',
+      hint:
+        '按 candidates 的 systems 选定后，带精确 model 重试（跨尺寸时加 lcd）；' +
+        '要 TB 阶段/任务链接/客户聚合请先 /tickets sync。',
+      candidates: picked.slice(0, 12).map((entry) => ({
+        model: entry.model,
+        tasks: entry.tasks,
+        systems: entry.systems,
+        aliases: entry.aliases,
         variants: [],
       })),
       rows: [],
     };
   }
-
-  const families = variant ? [hit.name] : hits?.length ? hits.map((group) => group.name) : [hit.name];
-  const cores = variant
-    ? [variant.core]
-    : [...new Set(families.map((name) => canonModel(name).core))].filter(Boolean);
+  const { entry: hit, variant = null, matchedBy } = resolved.matches[0];
+  const families = [hit.model];
+  const cores = variant ? [nz(variant.label)] : [hit.core].filter(Boolean);
+  const wantLcd = normalizeLcd(args.lcd);
   const requested = String(args.customer ?? '').trim();
   const customerDefaulted = !requested;
   const effective = customerDefaulted ? 'CP' : requested;
@@ -477,6 +508,7 @@ async function searchFromAlist(ctx, exec, args) {
 
   const collected = await collectAlistRows(catalog.alist, {
     cores,
+    lcd: wantLcd,
     vendor: hit.vendor,
     system: args.system,
     customer: unlimited ? '' : effective,
@@ -496,7 +528,9 @@ async function searchFromAlist(ctx, exec, args) {
       : '';
   return {
     status: rows.length ? 'ok' : 'empty',
-    resolvedModel: hit.name,
+    resolvedModel: hit.model,
+    matchedBy,
+    ...(effectiveLcd ? { lcd: effectiveLcd } : {}),
     ...(variant ? { variant: variant.label } : {}),
     aliases: hit.aliases ?? [],
     matchedFamilies: families.length > 1 ? families : [],
@@ -515,9 +549,11 @@ async function searchFromAlist(ctx, exec, args) {
 
 /** TB 任务 -> 输出行 */
 function taskRow(task, variantLabel = '') {
+  const lcd = lcdOf(task);
   return {
     id: task.id,
     version: String(task.fields?.['固件版本'] ?? '') || task.title,
+    ...(lcd ? { lcd } : {}),
     buildDate: versionDate(task),
     models: asList(task.fields?.['机型']).join(', '),
     system: asList(task.fields?.['操作系统']).join(', '),
@@ -588,25 +624,94 @@ function mergeLiveRows(baseRows, liveRows) {
 }
 
 /** 探测候选的机型/系统/客户过滤（操作系统字段为空时不排除，交由结果里标注） */
-function probedMatch(task, { needles, system, customer, unlimited }) {
-  if (!hitModel(task, needles)) return false;
+function probedMatch(task, { needles, entry, entries, system, customer, unlimited, version, stage }) {
+  const list = entries ?? (entry ? [entry] : null);
+  const modelOk = list ? list.some((e) => taskMatchesEntry(task, e)) : hitModel(task, needles);
+  if (!modelOk) return false;
   const osList = asList(task.fields?.['操作系统']).map(String);
   if (system && osList.length && !hitSystem(task, system)) return false;
   if (!unlimited) {
     const cust = asList(task.fields?.['客户ID']).map(String).join(',');
     if (!cust.toUpperCase().includes(String(customer).toUpperCase())) return false;
   }
+  if (version && !versionHay(task).includes(nz(version))) return false;
+  if (stage && !String(task.stage ?? '').includes(String(stage))) return false;
   return true;
 }
 
+/** 目录候选（按 机型 × 尺寸 展开），交给模型挑选 */
+function catalogCandidates(entries, limit = 12) {
+  const out = [];
+  for (const entry of entries) {
+    const cells = entry.lcds?.length
+      ? entry.lcds
+      : [{ lcd: '', tasks: entry.tasks, systems: entry.systems, customers: entry.customers, latest: entry.latest }];
+    for (const cell of cells) {
+      out.push({
+        model: entry.model,
+        ...(cell.lcd ? { lcd: cell.lcd } : {}),
+        tasks: cell.tasks,
+        systems: cell.systems,
+        customers: cell.customers,
+        latest: cell.latest,
+        ...(entry.aliases?.length ? { aliases: entry.aliases } : {}),
+        ...(entry.variants?.length ? { variants: entry.variants } : {}),
+      });
+    }
+  }
+  return out.slice(0, limit);
+}
+
 /**
- * 实时探测：每次 firmware_find 都按机型搜 TB，补拉版本父任务详情（搜索行不带阶段），
+ * 「请先选机型」的返回：不查 TB / 不扫 alist，秒回。
+ * 目录里的 systems / customers / lcds.latest 就是给模型做匹配的证据。
+ */
+function modelDirectory(query, catalog, { reason, matched = [], customerDefaulted, effective, indexSyncedAt = '', indexAgeHours = null }) {
+  const candidates = catalogCandidates(catalog);
+  const notes = {
+    model_not_exact: `「${query}」不是机型目录里的规范名/别名，未做模糊猜测`,
+    model_ambiguous: `「${query}」同时对应 ${matched.length} 个机型，需要先选定`,
+    lcd_not_specified: `「${query}」有多个屏幕尺寸，需要指定 lcd 再查`,
+  };
+  const example = candidates[0]
+    ? `firmware_find(model="${candidates[0].model}"${candidates[0].lcd ? `, lcd="${candidates[0].lcd}"` : ''})`
+    : 'firmware_find(model="RK / APOLLO2", lcd="LCD7")';
+  return {
+    status: 'needs_confirmation',
+    query,
+    reason,
+    note: notes[reason] ?? '机型需要先从目录里选定',
+    liveChecked: false,
+    ...(indexSyncedAt ? { indexSyncedAt } : {}),
+    ...(indexAgeHours != null ? { indexAgeHours: Math.round(indexAgeHours * 10) / 10 } : {}),
+    hint:
+      '机型只认规范名 / 别名 / 变体名；按 candidates 的 systems、customers、latest 选定后，' +
+      `带精确 model（跨尺寸时加 lcd）重试，例如 ${example}；不要自行猜测`,
+    candidates,
+    ...(customerDefaulted ? { customerDefaulted: true, customer: effective } : {}),
+    rows: [],
+  };
+}
+
+/**
+ * 实时探测：每次 firmware_find 都按精确机型搜 TB，补拉版本父任务详情（搜索行不带阶段），
  * 返回最新的若干条「已归档/在制」任务行。失败抛出，由 search 静默降级。
  */
-async function defaultVersionProbe({ ctx, exec, queries, needles, system, customer, unlimited, limit = 3 }) {
-  const cores = [...new Set(queries.filter((q) => q && String(q).trim().length >= 3))].slice(0, 2);
-  // 版本父任务在纯机型搜索里排名常常靠后，补一条「<机型> 版本迭代」把迭代任务提上来
-  const list = [...new Set(cores.flatMap((q) => [q, `${q} 版本迭代`]))];
+async function defaultVersionProbe({
+  ctx,
+  exec,
+  queries,
+  needles,
+  entry,
+  entries,
+  system,
+  customer,
+  unlimited,
+  version,
+  stage,
+  limit = 3,
+}) {
+  const list = [...new Set(queries.map((q) => String(q ?? '').trim()).filter((q) => q.length >= 3))].slice(0, 4);
   if (!list.length) return [];
   const dir = await tokenDir(ctx, exec);
   const tokFile = path.join(dir, 'token.json');
@@ -626,9 +731,10 @@ async function defaultVersionProbe({ ctx, exec, queries, needles, system, custom
   }
   if (!hits.length) return [];
   const defs = await client.defs(PROJECT_ID);
+  const matchOpts = { needles, entry, entries, system, customer, unlimited, version, stage };
   const candidates = hits
     .map((row) => normalizeTask(row, defs))
-    .filter((task) => isVersionTask(task) && probedMatch(task, { needles, system, customer, unlimited }));
+    .filter((task) => isVersionTask(task) && probedMatch(task, matchOpts));
   if (!candidates.length) return [];
   const detailed = await Promise.all(
     candidates.slice(0, 12).map(async (task) => {
@@ -640,7 +746,7 @@ async function defaultVersionProbe({ ctx, exec, queries, needles, system, custom
     }),
   );
   return detailed
-    .filter((task) => probedMatch(task, { needles, system, customer, unlimited }))
+    .filter((task) => probedMatch(task, matchOpts))
     .sort((a, b) => Number(versionDate(b) || 0) - Number(versionDate(a) || 0))
     .slice(0, Math.max(1, limit))
     .map((task) => ({ ...taskRow(task), source: 'tb-live' }));
@@ -656,36 +762,83 @@ async function search(ctx, exec, args) {
     }
     throw e;
   }
-  const groups = modelGroups(board);
   const query = String(args.model ?? '').trim();
-  const { hit, hits, scored, variant } = resolveModel(query, groups);
-  if (!hit) {
-    return {
-      status: 'needs_confirmation',
-      query,
-      note: '机型无法唯一确定，请让用户在候选里选一个，不要自行猜测',
-      hint:
-        '候选里的 variants 是归档链接中的机型目录名（如 APOLLO2-MIX）；' +
-        '用户说法里的 MIX/PLUS/PRO/A 后缀可以直接作为变体重试，不必换其它工具或数据源',
-      candidates: scored.slice(0, 8).map(([score, g]) => ({
-        model: g.name,
-        score,
-        tasks: g.count,
-        aliases: g.aliases,
-        variants: variantList(g),
-      })),
-      rows: [],
-    };
+  const requested = String(args.customer ?? '').trim();
+  const customerDefaulted = !requested;
+  const effective = customerDefaulted ? 'CP' : requested;
+  const unlimited = /^(all|\*|不限)$/i.test(effective);
+  const wantLcd = normalizeLcd(args.lcd);
+
+  // 机型目录是唯一入口：只认规范名 / 别名 / 变体名（整串相等），不做模糊猜测
+  const indexSyncedAt = String(board.syncedAt ?? '');
+  const indexAgeHours = ageHoursOf(indexSyncedAt);
+  const catalog = buildCatalog(board, { system: args.system ?? '' });
+  const resolved = resolveExact(catalog, query);
+  if (resolved.status === 'ambiguous') {
+    return modelDirectory(query, resolved.matches.map((m) => m.entry), {
+      reason: 'model_ambiguous',
+      matched: resolved.matches,
+      customerDefaulted,
+      effective,
+      indexSyncedAt,
+      indexAgeHours,
+    });
+  }
+  if (resolved.status === 'miss') {
+    let suggestions = suggestMatches(catalog, query, 12).map((x) => x.entry);
+    // 该系统下没记录时也不要把机型藏起来：放宽到全系统再解析一次
+    if (!suggestions.length && args.system) {
+      const wide = buildCatalog(board, {});
+      const alt = resolveExact(wide, query);
+      suggestions = alt.matches.length
+        ? alt.matches.map((m) => m.entry)
+        : suggestMatches(wide, query, 12).map((x) => x.entry);
+    }
+    const result = modelDirectory(query, suggestions, {
+      reason: 'model_not_exact',
+      customerDefaulted,
+      effective,
+      indexSyncedAt,
+      indexAgeHours,
+    });
+    if (!result.candidates.length) {
+      result.note += '；目录里也没有相近机型，先 /tickets sync 或换成「机型 + 尺寸」的写法';
+    }
+    return result;
+  }
+  const { entry: hit, variant = null, matchedBy } = resolved.matches[0];
+  // 变体（如 APOLLO2-MIX）本身就是具体产品，尺寸写在版本号里，不再强制要 lcd
+  if (!wantLcd && !variant && !args.version && hit.lcds.length > 1) {
+    return modelDirectory(query, [hit], {
+      reason: 'lcd_not_specified',
+      customerDefaulted,
+      effective,
+      indexSyncedAt,
+      indexAgeHours,
+    });
   }
 
-  // 变体查询只按变体名过滤；族查询维持原行为（含同族写法 + 7/7A、12/12A 等价写法）
-  const families = variant ? [hit.name] : (hits?.length ? hits.map((g) => g.name) : [hit.name]);
-  const needles = variant
-    ? [variant.core]
-    : [...new Set(families.flatMap((name) => modelVariants(name)))];
+  // 明确给了机型（和尺寸）后，才按它过滤看板记录：尺寸只做行级过滤，不再进 needle
+  const effectiveLcd =
+    wantLcd || (hit.lcds.length === 1 ? hit.lcds[0].lcd : '') || (variant ? '' : lcdFromCores([hit.core]));
+  // 共享固件规则（仅 7A↔7、12A↔12 两组）：同尺寸的相邻机型一起出结果
+  const scope = variant ? [hit] : firmwareSharingScope(catalog, hit, effectiveLcd);
+  const sharingOthers = scope.filter((entry) => entry !== hit);
+  const families = [hit.model];
+  const variantKey = variant ? nz(variant.label) : '';
+  const needles = variant ? [variantKey] : modelVariants(hit.model);
   let cands = board.items.filter(
-    (t) => hitModel(t, needles) && hitSystem(t, args.system, args.mainline),
+    (t) => scope.some((entry) => taskMatchesEntry(t, entry)) && hitSystem(t, args.system, args.mainline),
   );
+  if (variantKey) cands = cands.filter((t) => versionHay(t).includes(variantKey));
+  if (effectiveLcd) {
+    // 没有尺寸信息的任务（如 MCU 包）不按尺寸过滤，只过滤明确属于其它尺寸的
+    cands = cands.filter((t) => {
+      const lcd = lcdOf(t);
+      return !lcd || lcdMatch(lcd, effectiveLcd);
+    });
+  }
+
   // 客户维度：未指定时默认 CP，但必须把「其他客户还有什么」讲出来
   const customerPool = new Map();
   for (const t of cands) {
@@ -694,10 +847,6 @@ async function search(ctx, exec, args) {
       customerPool.set(key, (customerPool.get(key) ?? 0) + 1);
     }
   }
-  const requested = String(args.customer ?? '').trim();
-  const customerDefaulted = !requested;
-  const effective = customerDefaulted ? 'CP' : requested;
-  const unlimited = /^(all|\*|不限)$/i.test(effective);
   if (!unlimited) {
     cands = cands.filter((t) =>
       String(t.fields?.['客户ID'] ?? '').toUpperCase().includes(effective.toUpperCase()),
@@ -733,8 +882,6 @@ async function search(ctx, exec, args) {
   const sourceMode = ['auto', 'tb', 'alist'].includes(String(args.source ?? '').toLowerCase())
     ? String(args.source).toLowerCase()
     : 'auto';
-  const indexSyncedAt = String(board.syncedAt ?? '');
-  const indexAgeHours = ageHoursOf(indexSyncedAt);
   const refreshedAt = new Date().toISOString();
 
   // 快照里的「更新在制版本」先记下来；实时/兜底核对到归档结果后会把它替换掉
@@ -766,10 +913,13 @@ async function search(ctx, exec, args) {
   const probePending = [];
   if (!probeDisabled && sourceMode !== 'alist') {
     try {
+      // TB 全文检索按词匹配：用精确机型文本（去掉厂商前缀）+ 版本迭代，带 version 时补版本字面串
+      const base = hit.rest || hit.model;
       const queries = [
-        ...(hits?.length ? hits.map((g) => canonModel(g.name).core) : [canonModel(hit.name).core]),
-        variant?.core,
-        ...needles,
+        base,
+        `${base} 版本迭代`,
+        variant?.label,
+        ...(args.version ? [String(args.version), `${base} ${String(args.version)}`] : []),
       ].filter(Boolean);
       const probeFn = versionProbe ?? defaultVersionProbe;
       const probed = await probeFn({
@@ -777,15 +927,21 @@ async function search(ctx, exec, args) {
         exec,
         queries,
         needles,
+        entry: hit,
+        entries: scope,
+        variant,
         system: args.system,
         customer: effective,
         unlimited,
+        version: args.version,
+        stage: args.stage,
         limit: 3,
       });
       liveChecked = true;
       // 探测结果也要遵守用户给的 version / stage 过滤
       const versionNeedle = args.version ? nz(args.version) : '';
       const liveRows = probed.filter((row) => {
+        if (effectiveLcd && row.lcd && !lcdMatch(row.lcd, effectiveLcd)) return false;
         if (versionNeedle && !nz(`${row.version} ${Object.values(row.links ?? {}).join(' ')}`).includes(versionNeedle)) {
           return false;
         }
@@ -816,13 +972,14 @@ async function search(ctx, exec, args) {
       const alist = alistFactory({ cacheFile: path.join(cacheDir, 'alist-cache.json'), ttlMs: 0 });
       const cores = [
         ...new Set(
-          (variant ? [variant.core] : (hits?.length ? hits : [hit]).map((g) => canonModel(g.name).core)).filter(
-            Boolean,
-          ),
+          (variant ? [nz(variant.label)] : scope)
+            .map((g) => (typeof g === 'string' ? g : canonModel(g.model).core))
+            .filter(Boolean),
         ),
       ];
       const collected = await collectAlistRows(alist, {
         cores,
+        lcd: wantLcd || (hit.lcds.length === 1 ? hit.lcds[0].lcd : ''),
         vendor: hit.vendor,
         system: args.system,
         customer: unlimited ? '' : effective,
@@ -919,7 +1076,9 @@ async function search(ctx, exec, args) {
   const result = {
     status: finalRows.length ? 'ok' : 'empty',
     query,
-    resolvedModel: hit.name,
+    resolvedModel: hit.model,
+    matchedBy,
+    ...(wantLcd ? { lcd: wantLcd } : {}),
     aliases: hit.aliases,
     ...(families.length > 1 ? { matchedFamilies: families } : {}),
     customer: unlimited ? '*' : effective,
@@ -935,6 +1094,17 @@ async function search(ctx, exec, args) {
     ...(alistInfo ? { alist: alistInfo } : {}),
   };
   if (variant) result.variant = variant.label;
+  if (sharingOthers.length) {
+    result.firmwareSharing = [
+      { model: hit.model, lcd: effectiveLcd },
+      ...sharingOthers.map((entry) => ({ model: entry.model, lcd: effectiveLcd })),
+    ];
+  }
+  if (!finalRows.length) {
+    // 空结果也要给出路：该机型所有尺寸 × 客户，模型可换 customer / lcd 直接重试
+    result.reason = 'no_rows_for_filter';
+    result.candidates = catalogCandidates([hit], 12);
+  }
   const noteParts = [];
   if (probeDisabled) {
     noteParts.push('已按 DSH_FIRMWARE_NO_PROBE=1 关闭实时核对，结果来自本地索引快照，可能漏掉新归档');
@@ -956,6 +1126,13 @@ async function search(ctx, exec, args) {
   } else if (alistInfo && !alistInfo.ok) {
     noteParts.push(
       `alist /PROD 实时扫描失败（${alistInfo.reason ?? '不可达'}），本次链接全部来自 Teambition；不要据此推断 alist 没有该版本`,
+    );
+  }
+  if (sharingOthers.length) {
+    noteParts.push(
+      `按共享固件规则：${hit.model} 与 ${sharingOthers.map((e) => e.model).join('、')} 在 ${
+        effectiveLcd || '同尺寸'
+      } 上通用（同一份固件，可互刷；客户仍不可混刷）`,
     );
   }
   if (devHidden > 0) {
@@ -1006,13 +1183,27 @@ function findToolFor(ctx) {
   return {
     name: 'firmware_find',
     description:
-      '按机型和操作系统定位量产固件，返回固件版本、构建日期、客户，以及线刷/OTA 直链（同版本两边都有时给两条：alist 优先 + minio/next 备用）。next 与 alist 是同一份存储的两个入口、内容同步：链接指向 next 不代表 alist 没有该版本，不要说成「alist 未收录」。默认只返回量产版（不带 DEV 标识）：DEV-xxxx 构建默认被过滤，需要时传 dev:true 或在需求里点名 DEV；过滤数量会写在 note 里。每次调用都会实时核对 Teambition（补拉版本父任务详情，索引快照只作兜底）并实时扫描 alist /PROD 目录（不复用旧缓存），因此刚归档的版本也能立刻查到；单次约 3–8 秒。结果来源标注：source=tb-live 为实时 TB、alist 为 alist /PROD、both 为两边都有。liveChecked=false 表示实时核对失败（如未登录），此时 note 会说明快照时间，回答时应转述。机型支持自由写法（如 apollo 12 pro、SP2-10PRO），7/7A、12/12A 等价写法会合并命中。机型存在歧义时返回 status=needs_confirmation 和候选列表，必须先向用户确认再继续。未指定客户时默认按 CP 过滤，并在 note/otherCustomers 里列出其他客户，不要忽略这部分信息。',
+      '按机型 + 系统 + 客户定位量产固件，返回版本、构建日期、线刷/OTA 直链（同版本两边都有时给两条：alist 优先 + minio/next 备用）。'
+      + '机型只认「规范名 / 别名 / 变体名」整串相等（如 "RK / APOLLO2"、"APOLLO2-MIX"），不做模糊猜测：'
+      + '查询不是这些写法时返回 status=needs_confirmation，candidates 里是该机型目录（含 systems / customers / lcds / latest），'
+      + '按证据选一个后带精确 model 重试；机型有多个屏幕尺寸时必须同时给 lcd（如 "LCD7"）。'
+      + '第一次调用（目录模式）不联网、秒回；第二次精确调用才会实时核对 Teambition 并扫描 alist /PROD，约 3–8 秒。'
+      + '默认只返回量产版（不带 DEV 标识），dev:true 才含 DEV；next 与 alist 是同一份存储的两个入口、内容同步，'
+      + '链接指向 next 不代表 alist 没有该版本，不要说成「alist 未收录」。结果来源：tb-live=实时 TB、alist=alist /PROD、both=两边都有；'
+      + 'liveChecked=false 表示实时核对失败，note 会说明快照时间。未指定客户时默认 CP，其他客户列在 otherCustomers。',
     parameters: {
       type: 'object',
       properties: {
         model: {
           type: 'string',
-          description: '机型，接受自由写法：APOLLO2-12PRO、apollo 12 pro、SP2-10PRO、spring2 等',
+          description:
+            '机型：机型目录里的规范名/别名/变体名（如 "RK / APOLLO2"、"APOLLO2-MIX"、"SP2-10MIX"）。'
+            + '去尾 A 与空格/符号差异视为同一机型（APOLLO2-7 ≡ APOLLO2-7A、apollo 12 pro ≡ APOLLO2-12PRO）；'
+            + '省略尺寸段的写法（spring2pro）或认不出的名字会返回目录（needs_confirmation），不会自动猜',
+        },
+        lcd: {
+          type: 'string',
+          description: '屏幕尺寸，如 "LCD7"、"7"、"LCD7-12"。机型跨多个尺寸时必须给（APOLLO2 同时有 LCD7 / LCD12）',
         },
         system: { type: 'string', description: '操作系统：Android、Debian、BuildRoot。省略则不按系统过滤' },
         customer: { type: 'string', description: '客户ID，如 CP、SZ、QX、VR。省略时默认 CP；传 * 表示不限客户。同一机型的不同客户固件不能混刷' },
@@ -1036,8 +1227,21 @@ function findToolFor(ctx) {
         type: 'object',
         properties: {
           status: { type: 'string', enum: ['ok', 'empty', 'needs_confirmation', 'needs_setup'] },
+          reason: { type: 'string' },
           query: { type: 'string' },
           resolvedModel: { type: 'string' },
+          matchedBy: {
+            type: 'string',
+            enum: ['exact-name', 'name-without-vendor', 'alias', 'variant', 'equivalent-name'],
+          },
+          firmwareSharing: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: { model: { type: 'string' }, lcd: { type: 'string' } },
+            },
+          },
+          lcd: { type: 'string' },
           variant: { type: 'string' },
           aliases: { type: 'array', items: { type: 'string' } },
           matchedFamilies: { type: 'array', items: { type: 'string' } },
@@ -1085,8 +1289,28 @@ function findToolFor(ctx) {
               type: 'object',
               properties: {
                 model: { type: 'string' },
+                lcd: { type: 'string' },
                 score: { type: 'number' },
                 tasks: { type: 'integer' },
+                systems: { type: 'array', items: { type: 'string' } },
+                customers: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: { id: { type: 'string' }, tasks: { type: 'integer' } },
+                  },
+                },
+                latest: {
+                  type: 'object',
+                  properties: {
+                    version: { type: 'string' },
+                    buildDate: { type: 'string' },
+                    system: { type: 'string' },
+                    customer: { type: 'string' },
+                    stage: { type: 'string' },
+                    task: { type: 'string' },
+                  },
+                },
                 aliases: { type: 'array', items: { type: 'string' } },
                 variants: {
                   type: 'array',
@@ -1137,33 +1361,63 @@ function findToolFor(ctx) {
 
 function renderFind(v) {
   if (v.status === 'needs_confirmation') {
-    const lines = [`机型「${v.query}」无法唯一确定，需要用户确认：`, ''];
-    for (const c of v.candidates) {
-      const alias = c.aliases?.length ? `  (同族写法: ${c.aliases.join(' / ')})` : '';
-      const vs = c.variants?.length
-        ? `  变体: ${c.variants.map((x) => `${x.label}(${x.tasks})`).join(' / ')}`
+    const lines = ['机型需要先选定（firmware_find 只认目录里的规范名 / 别名 / 变体名）：', ''];
+    if (v.note) lines.push(`· ${v.note}`, '');
+    for (const c of v.candidates ?? []) {
+      const cust = (c.customers ?? [])
+        .slice(0, 4)
+        .map((x) => `${x.id}(${x.tasks})`)
+        .join('、');
+      const sys = (c.systems ?? []).join('/');
+      const latest = c.latest?.version
+        ? `最新 ${c.latest.version}${c.latest.buildDate ? ` ${c.latest.buildDate}` : ''}${
+            c.latest.customer ? ` ${c.latest.customer}` : ''
+          }`
         : '';
-      lines.push(`- ${c.model}  [${c.score} 分, ${c.tasks} 个任务]${alias}${vs}`);
+      const alias = c.aliases?.length ? `  别名: ${c.aliases.join(' / ')}` : '';
+      lines.push(
+        `- ${c.model}${c.lcd ? `  ${c.lcd}` : ''}  [${c.tasks} 个任务]${sys ? `  ${sys}` : ''}${
+          cust ? `  客户 ${cust}` : ''
+        }${latest ? `  ${latest}` : ''}${alias}`.trimEnd(),
+      );
+    }
+    if (v.indexAgeHours != null) {
+      lines.push(
+        '',
+        `目录来自看板快照（${v.indexAgeHours} 小时前）；选好机型后的第二步才会实时核对 TB 与 alist。`,
+      );
     }
     if (v.hint) lines.push('', `提示：${v.hint}`);
-    lines.push('', '请让用户选定一个后再调用，不要自行猜测。');
     return lines.join('\n');
   }
   if (v.status === 'needs_setup') {
     return `还没有本地索引。${v.hint ?? '先运行 /tickets sync。'}`;
   }
   if (v.status === 'empty') {
-    const base = `没有匹配的固件（机型=${v.resolvedModel}${
+    const base = `没有匹配的固件（机型=${v.resolvedModel}${v.lcd ? ` ${v.lcd}` : ''}${
       v.variant ? ` · 变体 ${v.variant}` : ''
     }）。`;
-    return v.note ? `${base}\n· ${v.note}` : `${base}可放宽 system/customer/stage。`;
+    const lines = [v.note ? `${base}\n· ${v.note}` : `${base}可放宽 system/customer/stage。`];
+    if (v.candidates?.length) {
+      lines.push('', '该机型可选的范围（换客户或尺寸后可重试）：');
+      for (const c of v.candidates.slice(0, 8)) {
+        const cust = (c.customers ?? []).map((x) => `${x.id}(${x.tasks})`).join('、');
+        lines.push(`  · ${c.model}${c.lcd ? ` ${c.lcd}` : ''}  ${cust || '无记录'}`);
+      }
+    }
+    return lines.join('\n');
   }
 
+  const sharingModels = new Set(
+    (v.firmwareSharing ?? []).map((x) => x.model).filter((m) => m && m !== v.resolvedModel),
+  );
   const head = `命中 ${v.total} 条，显示 ${v.rows.length} 条（机型=${v.resolvedModel}${
-    v.variant ? ` · 变体 ${v.variant}` : ''
-  }${v.matchedFamilies?.length > 1 ? `，等价写法 ${v.matchedFamilies.join(' / ')}` : ''}${
-    v.aliases?.length ? `，同族写法 ${v.aliases.join('/')}` : ''
-  }）`;
+    v.lcd ? ` ${v.lcd}` : ''
+  }${v.variant ? ` · 变体 ${v.variant}` : ''}${
+    v.matchedFamilies?.length > 1 ? `，等价写法 ${v.matchedFamilies.join(' / ')}` : ''
+  }${v.aliases?.length ? `，同族写法 ${v.aliases.join('/')}` : ''}）${
+    v.matchedBy ? ` [匹配: ${v.matchedBy}]` : ''
+  }${sharingModels.size ? `\n· 共享固件：${[...sharingModels].join(' / ')}（同尺寸，同一份固件可互刷）` : ''}`;
   const lines = [head, ''];
   if (v.note) lines.push(`· ${v.note}`, '');
   if (v.pending?.length) {
@@ -1176,7 +1430,8 @@ function renderFind(v) {
   v.rows.forEach((r, i) => {
     const tag =
       r.source === 'alist' ? '[alist] ' : r.source === 'both' ? '[tb+alist] ' : r.source === 'tb-live' ? '[实时] ' : '';
-    lines.push(`[${i + 1}] ${tag}${r.version}`);
+    const shared = sharingModels.size && [...sharingModels].some((m) => String(r.models ?? '').includes(m));
+    lines.push(`[${i + 1}] ${tag}${shared ? '[共享] ' : ''}${r.version}`);
     const extra = [r.lcd, r.size ? fmtSize(r.size) : ''].filter(Boolean).join(' | ');
     lines.push(
       `    ${r.buildDate || '无构建日期'}${extra ? ` | ${extra}` : ''} | ${r.models} | ${r.system} | 客户 ${r.customer || '-'} | ${r.language} | ${r.stage} | 更新 ${r.updated}`,
@@ -1197,11 +1452,14 @@ function modelsToolFor(ctx) {
   return {
     name: 'firmware_models',
     description:
-      '列出 Teambition 发版看板里出现过的机型族，含规范写法、同族别名（含归档链接目录里的缩写写法，如 SP2-10MIX）、变体（如 APOLLO2-MIX）和任务数。传 model 时只返回匹配的族。传 alist=true 时附带 alist 产品目录里的机型目录概览（兜底数据源，如 CP 的 Debian 只在 alist）。机型写法不确定时先查这里，不要用其它插件的数据源。',
+      '机型目录（先查这里拿规范名）：列出看板里的机型族，含规范写法、同族别名（含归档目录缩写，如 SP2-10MIX）、'
+      + '变体（如 APOLLO2-MIX），以及每个尺寸（lcd）的系统、客户、任务数与最新归档版本。'
+      + '机型写法不确定、或 firmware_find 返回 needs_confirmation 时用它按证据选，再把精确 model（跨尺寸时加 lcd）交给 firmware_find。'
+      + '传 model 时只返回严格匹配的族（未命中则给相近候选）；alist=true 附带 alist 产品目录概览。',
     parameters: {
       type: 'object',
       properties: {
-        model: { type: 'string', description: '可选。只看与这个写法相关的族/变体，如 APOLLO2MIX、SP2-10MIX' },
+        model: { type: 'string', description: '可选。只显示与这个写法相关的族/变体（规范名、别名或变体名）' },
         alist: { type: 'boolean', description: '可选。附带 alist 产品目录概览（chip/os/机型目录），默认 false' },
       },
     },
@@ -1217,6 +1475,43 @@ function modelsToolFor(ctx) {
                 model: { type: 'string' },
                 tasks: { type: 'integer' },
                 aliases: { type: 'array', items: { type: 'string' } },
+                systems: { type: 'array', items: { type: 'string' } },
+                customers: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: { id: { type: 'string' }, tasks: { type: 'integer' } },
+                  },
+                },
+                lcds: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      lcd: { type: 'string' },
+                      tasks: { type: 'integer' },
+                      systems: { type: 'array', items: { type: 'string' } },
+                      customers: {
+                        type: 'array',
+                        items: {
+                          type: 'object',
+                          properties: { id: { type: 'string' }, tasks: { type: 'integer' } },
+                        },
+                      },
+                      latest: {
+                        type: 'object',
+                        properties: {
+                          version: { type: 'string' },
+                          buildDate: { type: 'string' },
+                          system: { type: 'string' },
+                          customer: { type: 'string' },
+                          stage: { type: 'string' },
+                          task: { type: 'string' },
+                        },
+                      },
+                    },
+                  },
+                },
                 variants: {
                   type: 'array',
                   items: {
@@ -1242,12 +1537,22 @@ function modelsToolFor(ctx) {
         },
       },
       render: (_a, v) => {
-        const lines = v.families.map(
-          (f) =>
-            `${f.model}  (${f.tasks})${f.aliases.length ? `  = ${f.aliases.join(' / ')}` : ''}${
-              f.variants?.length ? `  变体: ${f.variants.map((x) => `${x.label}(${x.tasks})`).join(' / ')}` : ''
+        const lines = [];
+        for (const f of v.families) {
+          lines.push(
+            `${f.model}  (${f.tasks})${f.aliases?.length ? `  = ${f.aliases.join(' / ')}` : ''}${
+              f.systems?.length ? `  ${f.systems.join('/')}` : ''
             }`,
-        );
+          );
+          for (const cell of f.lcds ?? []) {
+            const cust = (cell.customers ?? []).map((x) => `${x.id}(${x.tasks})`).join('、');
+            const latest = cell.latest?.version ? `最新 ${cell.latest.version}` : '';
+            lines.push(`  · ${cell.lcd}  [${cell.tasks}]  ${cust}  ${latest}`.trimEnd());
+          }
+          if (f.variants?.length) {
+            lines.push(`  变体: ${f.variants.map((x) => `${x.label}(${x.tasks})`).join(' / ')}`);
+          }
+        }
         if (v.alistProducts?.length) {
           lines.push('', 'alist 产品目录：');
           for (const item of v.alistProducts) {
@@ -1258,20 +1563,26 @@ function modelsToolFor(ctx) {
       },
     },
     async execute(args, exec) {
-      const groups = modelGroups(await readBoard(ctx, exec));
+      const catalog = buildCatalog(await readBoard(ctx, exec));
       const query = String(args?.model ?? '').trim();
-      let picked = groups;
+      let picked = catalog;
       if (query) {
-        const { hit, scored } = resolveModel(query, groups);
-        picked = hit ? [hit] : scored.slice(0, 5).map(([, g]) => g);
+        const resolved = resolveExact(catalog, query);
+        picked =
+          resolved.matches.length > 0
+            ? resolved.matches.map((m) => m.entry)
+            : suggestMatches(catalog, query, 8).map((x) => x.entry);
       }
-      picked = [...picked].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+      picked = [...picked].sort((a, b) => b.tasks - a.tasks || a.model.localeCompare(b.model));
       const result = {
-        families: picked.map((g) => ({
-          model: g.name,
-          tasks: g.count,
-          aliases: g.aliases,
-          variants: variantList(g, 20),
+        families: picked.map((entry) => ({
+          model: entry.model,
+          tasks: entry.tasks,
+          aliases: entry.aliases,
+          systems: entry.systems,
+          customers: entry.customers,
+          lcds: entry.lcds,
+          variants: entry.variants,
         })),
       };
       if (args?.alist && process.env.DSH_ALIST_DISABLE !== '1') {
@@ -1348,6 +1659,16 @@ export const __internals = {
   foldModelDirs,
   resolveModel,
   variantList,
+  // 机型目录（严格两步匹配）
+  buildCatalog,
+  resolveExact,
+  suggestMatches,
+  taskMatchesEntry,
+  firmwareSharingScope,
+  lcdOf,
+  lcdMatch,
+  normalizeLcd,
+  versionDate,
   linkModelDir,
   taskModelDir,
   hitModel,
@@ -1356,6 +1677,7 @@ export const __internals = {
   // alist 兜底
   mapCustomerDir,
   matchModelDir,
+  matchModelDirStrict,
   lcdFromCores,
   collectAlistRows,
   mergeAlistRows,
