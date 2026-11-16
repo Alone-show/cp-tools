@@ -112,6 +112,23 @@ description: 登录 BPMS（CPSales）并读写订单需求表：查记录、按�
 - 同一路径命中多个字段时工具返回 `ambiguous` + `candidates`，用更完整的路径重试，不要猜。
 - 解析不到就停下并提示「模板可能已变更」，不要退回按下标硬改。
 
+## 合同 → 评审表 → 需求表校对
+
+用户给一份销售合同（PDF）+ 一张订单需求表链接，要求「按合同出评审表 / 按这个改」时按这条走。
+
+1. **先读合同、再读单**：`pdftotext -layout` 取全文（品名/内存/硬盘/4G/WiFi/系统/logo/数量/交期/金额/税点/质保）；`bpms_get` 看状态与交期，`bpms_fields` 拉全字段。
+2. **每个值标来源**，三分法：
+   - **合同明确**（内存 8G、硬盘 128G、系统 Debian）→ 按合同改；
+   - **模板继承**（模板默认带过来的 4G 模块、摄像头路数、CAN/IO、定位模块…）→ **不直接沿用**，列进「待确认清单」一次问；
+   - **业务口述**（用户后续说「要 4G / 不要定位模块」）→ 以口述为准，并在评审表记下与合同的偏差（例如合同写「4G/5G 不需要」，实际配 EC200A）。
+3. **冲突写进风险，不静默取舍**：合同与 BOM 不一致时照办业务决定，同时在评审表风险条写明「合同写 X，实际配 Y，需确认改合同/补差价/退回」。
+4. **版本字段（OS/MCU）不得推断**：①用户给的值；②`firmware_find` / `firmware_mcu` 查到的量产版；③同品名最近单据的众数（必须标注「众数来源，待软件确认」）。三条都不成立就留空挂待确认，别拿「最新量产」顶替。**MCU 与 OS 是两条线，MCU 走 `firmware_mcu`**。
+5. **备注/说明类字段 ≤20 字**：只写结论或差异（「中性Linux开机图」），实现过程（dd 哪个分区、分辨率、验证结论）只进 `*_verify_report.md`。
+6. **写库与交付**：`bpms_update` dry-run → 用户确认 → `apply`（备份路径必须回报）；评审表用 `assets/order-review-template.html` + `assets/render-review.mjs` 出 A4 PDF，并 `pdftoppm` 目视首末页（表格边框、签核栏）。
+7. **去品牌图样**：订单要「不带品牌 logo」但附件还是 CP 旧图时，用 `assets/whiten-brand.py`（先 `--probe` 拿 ink 行带，再按 `--box` 涂白，出 `_compare.png` 目视）——比手算坐标稳，本次现场手涂就漏了 1 像素竖条。
+
+已知缺口：本模块**没有新建订单需求表**的接口，只能改已有记录；合同触发的第一轮先问清是要「新建 / 改哪张 / 只出文档」。
+
 ## 保存规则（踩过的坑）
 
 1. **整包回写**：`update` 的 body 与 UI 抓包一致，`parameters` 必须重新序列化成字符串；只回传详情里那几个可写字段，`createTime/updateTime` 不回写。
@@ -122,7 +139,10 @@ description: 登录 BPMS（CPSales）并读写订单需求表：查记录、按�
 6. **权限 toast 是噪音**：编辑页会一直弹「没有该操作权限」，实际可以保存。以接口返回值为准，toast 只记日志。
 7. **回滚**：`bpms_update` 传 `restoreFrom: <备份文件>`，用备份里的 parameters 原样写回。
 8. **附件字段可以给本地文件**：`[{path:"/abs/x.zip"}]` 会在 apply 时先上传再写 URL；上传失败整次中止（不写库）；上传成功但保存失败会留下孤儿文件，报告里写清。
+8.1 **清空附件字段**：直接给 `[]`（`replace` 模式）= 把该字段的 `value` 置空；`append` 模式下 `[]` 视为不动。替换前先把原附件下载留档（`mdmobs.cpuniverse.cn` 可匿名 GET），报告里写清新旧文件名。
+8.2 **记录级（顶层）字段走 `record`**：`{"record": {"expectedDeliveryDate": "2026-11-24", "name": "…"}}`。这两个字段不在 `parameters` 里、按「分区/字段名」寻址找不到；白名单只有交期与名称，`status`/`contractStatus`/`dingtalk*` 一律拒绝（改状态会触发流程）。
 9. **状态门用 `expectStatus`**：上传安装包一律带 `expectStatus:0`；不符时工具返回 `status_mismatch`，既不备份也不上传。
+10. **id 寻址**：`bpms_get` 与 `bpms_fields` 都接受需求编号（`CPS-SY…`），内部先解析成数字主键；`bpms_update` 只认主键。
 
 ## 红线
 
@@ -132,6 +152,8 @@ description: 登录 BPMS（CPSales）并读写订单需求表：查记录、按�
 - 白名单外的改动一律拒绝执行，不做「顺便帮你改一下」。
 - 模板级元素（表头 logo、模板字段定义）只报告不改；改模板会影响所有用该模板的订单。
 - 不把整包详情 JSON 丢进对话上下文；要细节用 `bpms_fields` / `bpms_get` 按需取。
+- **能力边界以代码为准**：确认是工具缺口（读 `tools.js` / 跑 dry-run）就当场修或给可执行 fallback（备份 + `updateTime` + 白名单 diff），不把「工具做不到」当结论甩给用户。
+- **破坏性动作先说一句**：重启设备、`dd` 写分区、替换已有附件，执行前一行说明；替换附件前先把原附件下载留档。
 
 ## 故障排查
 
@@ -142,4 +164,5 @@ description: 登录 BPMS（CPSales）并读写订单需求表：查记录、按�
 | `not_found` | 确认 id 是数字主键，或直接给需求编号让工具查 |
 | `ambiguous` | 用 `bpms_fields` 看完整 key 后重试 |
 | `conflict` | 有人先改了：重新 `bpms_get` 后再决定是否重试 |
-| `rejected` | 有越界改动，检查 patch 的 key 是否写错 |
+| `rejected` | 有越界改动，检查 patch 的 key 是否写错；`record` 只允许 `expectedDeliveryDate` / `name` |
+| 附件清不掉 | 用 `"字段": []`（不要传 `[{path:…}]` 想要「删掉」）；`append` 模式下 `[]` 不生效 |

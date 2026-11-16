@@ -6,3 +6,7 @@ node_modules/
 *.log
 .DS_Store
 bpms_config.json
+
+# Python 缓存（whiten-brand.py 等资产运行后产生）
+__pycache__/
+*.pyc

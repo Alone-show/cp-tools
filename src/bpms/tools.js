@@ -85,13 +85,16 @@ function fail(error) {
               ? 'ambiguous'
               : error.code === 'conflict'
                 ? 'conflict'
-                : 'error'
+                : error.code === 'rejected'
+                  ? 'rejected'
+                  : 'error'
       : 'error';
   return {
     status,
     message: error?.message ?? String(error),
     ...(error?.paths ? { paths: error.paths } : {}),
     ...(error?.template ? { template: configTemplateForTool() } : {}),
+    ...(error?.rejected ? { rejected: error.rejected } : {}),
     ...(error?.candidates ? { candidates: error.candidates } : {}),
     ...(error?.hint ? { hint: error.hint } : {}),
     ...(error?.uploaded ? { uploaded: error.uploaded } : {}),
@@ -291,8 +294,9 @@ export function fieldsTool() {
     ),
     async execute(args = {}) {
       try {
-        const id = String(args.id ?? '').trim();
-        if (!id) throw new BpmsError('bad_query', '需要 id');
+        const raw = String(args.id ?? '').trim();
+        if (!raw) throw new BpmsError('bad_query', '需要 id');
+        const id = await resolveId(raw);
         const { client } = makeClient();
         const detail = await client.request(DETAIL(id));
         const parameters = parseParameters(detail);
@@ -439,6 +443,12 @@ export function updateTool() {
           enum: ['replace', 'append'],
           description: '附件字段写入方式：replace=整字段替换（默认），append=在现有附件后按 url 去重追加',
         },
+        record: {
+          type: 'object',
+          description:
+            '记录级（顶层）字段，不在「分区/字段名」里：目前只允许 {expectedDeliveryDate: "YYYY-MM-DD", name: "…"}。'
+            + '和 patch 可以同时用；只用 record 时 patch 可省略。dry-run 会一起出现在 changes（key 形如 record/expectedDeliveryDate）',
+        },
         restoreFrom: { type: 'string', description: '可选。用备份文件恢复该记录（忽略 patch）' },
       },
       required: ['id'],
@@ -494,8 +504,10 @@ export function updateTool() {
         if (args.restoreFrom) return await restore(client, id, String(args.restoreFrom));
 
         const patch = args.patch ?? {};
-        if (typeof patch !== 'object' || Array.isArray(patch) || Object.keys(patch).length === 0) {
-          throw new BpmsError('bad_query', 'patch 不能为空');
+        const recordPatch = normalizeRecordPatch(args.record);
+        const patchEmpty = typeof patch !== 'object' || Array.isArray(patch) || Object.keys(patch).length === 0;
+        if (patchEmpty && Object.keys(recordPatch).length === 0) {
+          throw new BpmsError('bad_query', 'patch 与 record 不能同时为空');
         }
 
         const before = await client.request(DETAIL(id));
@@ -521,7 +533,7 @@ export function updateTool() {
         const changes = [];
         const mode = args.attachmentMode === 'append' ? 'append' : 'replace';
         const pending = [];
-        for (const [key, value] of Object.entries(patch)) {
+        for (const [key, value] of Object.entries(patchEmpty ? {} : patch)) {
           const entry = resolveField(index, key);
           const target = resolveField(nextIndex, entry.key);
           const prev = target.item?.value;
@@ -537,8 +549,17 @@ export function updateTool() {
           });
         }
 
+        for (const [key, value] of Object.entries(recordPatch)) {
+          changes.push({
+            key: `record/${key}`,
+            path: key,
+            before: recordLabel(key, before[key]),
+            after: recordLabel(key, value),
+          });
+        }
+
         const diffs = diffPaths(beforeParams, next);
-        const allowed = changes.map((c) => c.path);
+        const allowed = changes.filter((c) => !c.key.startsWith('record/')).map((c) => c.path);
         const rejected = diffs.filter((diff) => !onlyInside([diff], allowed));
         if (rejected.length > 0) {
           return { status: 'rejected', id, message: '有超出 patch 范围的改动，已中止', rejected };
@@ -574,7 +595,7 @@ export function updateTool() {
         }
 
         const backupPath = writeBackup(id, before);
-        await client.request(UPDATE, { method: 'POST', body: buildUpdateBody(before, next) });
+        await client.request(UPDATE, { method: 'POST', body: buildUpdateBody({ ...before, ...recordPatch }, next) });
 
         const after = await client.request(DETAIL(id));
         const afterParams = parseParameters(after);
@@ -590,6 +611,24 @@ export function updateTool() {
             backupPath,
             uploaded: uploaded.length ? uploaded : undefined,
             rejected: unexpected,
+          };
+        }
+
+        const recordUnexpected = Object.keys(RECORD_FIELDS)
+          .filter((key) => {
+            const want = key in recordPatch ? recordPatch[key] : before[key];
+            return String(after[key] ?? '') !== String(want ?? '');
+          })
+          .map((key) => ({ path: `record/${key}`, before: recordLabel(key, before[key]), after: recordLabel(key, after[key]) }));
+        if (recordUnexpected.length > 0) {
+          return {
+            status: 'error',
+            id,
+            message: '保存成功，但记录级字段与预期不符，请用备份恢复后复核',
+            applied: true,
+            changes,
+            backupPath,
+            rejected: recordUnexpected,
           };
         }
 
@@ -609,12 +648,76 @@ export function updateTool() {
   });
 }
 
+/**
+ * 记录级（顶层）字段：这些不在 parameters 里，按「分区/字段名」寻址找不到，只能单独放开。
+ * 白名单刻意只留交期与名称：status / contractStatus / dingtalk* 属于流程字段，误改会触发审批流。
+ */
+export const RECORD_FIELDS = {
+  expectedDeliveryDate: { label: '交期', parse: parseRecordDate },
+  name: { label: '需求名称', parse: parseRecordName },
+};
+
+function parseRecordDate(value) {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  const text = String(value ?? '').trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+    throw new BpmsError('bad_query', 'record.expectedDeliveryDate 只接受 YYYY-MM-DD 或毫秒数');
+  }
+  const ms = Date.parse(`${text}T00:00:00.000Z`);
+  if (!Number.isFinite(ms)) throw new BpmsError('bad_query', `交期不是合法日期：${text}`);
+  return ms;
+}
+
+function parseRecordName(value) {
+  const text = String(value ?? '').trim();
+  if (!text) throw new BpmsError('bad_query', 'record.name 不能为空');
+  if (text.length > 200) throw new BpmsError('bad_query', 'record.name 超过 200 字');
+  return text;
+}
+
+/** 校验并归一 record 参数；出现白名单外的键直接报 rejected，不写库。 */
+export function normalizeRecordPatch(record) {
+  if (record === undefined || record === null) return {};
+  if (typeof record !== 'object' || Array.isArray(record)) throw new BpmsError('bad_query', 'record 必须是对象');
+  const out = {};
+  const rejected = [];
+  for (const [key, raw] of Object.entries(record)) {
+    const spec = RECORD_FIELDS[key];
+    if (!spec) {
+      rejected.push(key);
+      continue;
+    }
+    out[key] = spec.parse(raw);
+  }
+  if (rejected.length) {
+    throw new BpmsError('rejected', `record 只允许改 ${Object.keys(RECORD_FIELDS).join(' / ')}；收到 ${rejected.join(', ')}`, {
+      rejected: rejected.map((key) => ({ path: key, reason: '不在 record 白名单内' })),
+    });
+  }
+  return out;
+}
+
+function recordLabel(key, value) {
+  if (value === null || value === undefined) return '(空)';
+  if (key === 'expectedDeliveryDate') {
+    const ms = Number(value);
+    return Number.isFinite(ms) ? new Date(ms).toISOString().slice(0, 10) : String(value);
+  }
+  return String(value);
+}
+
 /** 附件字段的值规划：{path} 先用 local: 占位，apply 时再替换成真实 url。 */
 function planAttachmentValue({ entry, raw, prev, mode, pending }) {
+  const current = () => cloneValue(Array.isArray(prev) ? prev : []);
+  // 显式传 [] / null / '' = 清空该附件字段；append 模式下视为「不动」
+  if (raw === null || raw === undefined || (Array.isArray(raw) && raw.length === 0) || raw === '') {
+    return mode === 'append' ? current() : [];
+  }
   const incoming = (Array.isArray(raw) ? raw : [raw]).filter((item) => item !== null && item !== undefined && item !== '');
+  if (incoming.length === 0) return mode === 'append' ? current() : [];
   const items = incoming.map(normalizeAttachmentItem);
-  if (items.length === 0 || items.some((item) => !item)) {
-    throw new BpmsError('bad_query', `${entry.key}：附件项要写 {path:"本地文件"} 或 {name,url}`);
+  if (items.some((item) => !item)) {
+    throw new BpmsError('bad_query', `${entry.key}：附件项要写 {path:"本地文件"} 或 {name,url}；清空请传 []`);
   }
   const planned = [];
   for (const [i, item] of items.entries()) {

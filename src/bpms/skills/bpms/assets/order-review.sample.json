@@ -1,0 +1,417 @@
+{
+ "title": "订单评审表",
+ "subtitle": [
+  "合同号 SZCPGX202611160002 ｜ SPRING2 10PRO 车载平板 ｜ 客户：中科深矿具身智能机器人（烟台）有限公司",
+  "BPMS 订单需求表：CPS-SY2026DX0966 ｜ 状态：0 暂存 ｜ 评审日期：2026-11-16"
+ ],
+ "sections": [
+  {
+   "name": "一、订单与商务信息",
+   "rows": [
+    [
+     {
+      "label": "销售订单号/合同号",
+      "value": "SZCPGX202611160002",
+      "changed": true,
+      "tag": "待补录"
+     },
+     {
+      "label": "产品名称/型号",
+      "value": "SPRING2 10PRO（SPRING 10 二代 PRO）"
+     }
+    ],
+    [
+     {
+      "label": "客户",
+      "value": "中科深矿具身智能机器人（烟台）有限公司"
+     },
+     {
+      "label": "数量",
+      "value": "1 台"
+     }
+    ],
+    [
+     {
+      "label": "合同金额",
+      "value": "含税 4000 元（不含税 3539.82 + 税额 460.18，13% 增值税专用发票）"
+     },
+     {
+      "label": "业务员",
+      "value": "张辉"
+     }
+    ],
+    [
+     {
+      "label": "合同交期",
+      "value": "2026-11-24 送达甲方指定地点（合同第三条） BPMS 现填 2026-11-23，需改为 11-24",
+      "changed": true
+     },
+     {
+      "label": "付款方式",
+      "value": "款到发货；发票自货到 1 周内送达"
+     }
+    ],
+    [
+     {
+      "label": "质保期",
+      "value": "1 年，自验收合格之日起"
+     },
+     {
+      "label": "验收",
+      "value": "产品送达 7 个工作日内验收，无异议视同合格"
+     }
+    ],
+    [
+     {
+      "label": "合同履行期限",
+      "value": "2026-11-14 起至义务履行完毕"
+     },
+     {
+      "label": "改制需求",
+      "value": "硬件改制"
+     }
+    ]
+   ]
+  },
+  {
+   "name": "二、软件需求",
+   "rows": [
+    [
+     {
+      "label": "操作系统",
+      "value": "Debian"
+     },
+     {
+      "label": "默认语言",
+      "value": "中文"
+     }
+    ],
+    [
+     {
+      "label": "开机LOGO",
+      "value": "中性Debian（中性 Linux 启动图）",
+      "changed": true,
+      "tag": "改"
+     },
+     {
+      "label": "定制图案说明",
+      "value": "无",
+      "changed": true,
+      "tag": "改"
+     }
+    ],
+    [
+     {
+      "label": "OS 版本",
+      "value": "CP_SP2-10PRO_D_V1.16_LCD10_B0_EU_20261010改 CP 最新 Debian 量产版（LCD10 / CN，生产库归档 2026-10-20）",
+      "changed": true,
+      "tag": "改"
+     },
+     {
+      "label": "MCU 版本",
+      "value": "SPRING2PRO_MCU_APP_V1.0.7_260924_190041",
+      "changed": true,
+      "tag": "改"
+     }
+    ],
+    [
+     {
+      "label": "预装软件",
+      "value": "特殊需求改 中性 Linux 开机图 U 盘包（已上传，真机已验证）",
+      "changed": true,
+      "tag": "改"
+     },
+     {
+      "label": "预装软件备注",
+      "value": "—"
+     }
+    ],
+    [
+     {
+      "label": "SN 写入",
+      "value": "是"
+     },
+     {
+      "label": "序列号",
+      "value": "中性（不带 CP 品牌）"
+     }
+    ],
+    [
+     {
+      "label": "序列号范围 PN / SN",
+      "value": "待生产分配"
+     },
+     {
+      "label": "MDM 激活",
+      "value": "新平台不激活"
+     }
+    ],
+    [
+     {
+      "label": "CPComm 跨进程",
+      "value": "不支持"
+     },
+     {
+      "label": "ACC 关闭延迟下电",
+      "value": "2：10ms"
+     }
+    ]
+   ]
+  },
+  {
+   "name": "三、硬件需求",
+   "rows": [
+    [
+     {
+      "label": "CPU 型号",
+      "value": "RK3568"
+     },
+     {
+      "label": "主板类型",
+      "value": "CP023 SPRING2 10PRO 4G"
+     }
+    ],
+    [
+     {
+      "label": "RAM 容量",
+      "value": "8GB改（原 2GB）",
+      "changed": true,
+      "tag": "改"
+     },
+     {
+      "label": "FLASH 容量",
+      "value": "128GB改（原 32GB）",
+      "changed": true,
+      "tag": "改"
+     }
+    ],
+    [
+     {
+      "label": "WIFI",
+      "value": "单频 2.4G（合同：wifi 需要）"
+     },
+     {
+      "label": "蓝牙",
+      "value": "是"
+     }
+    ],
+    [
+     {
+      "label": "4G / 5G",
+      "value": "4G 类型：中国单4G；4G 模块：移远 EC200A 合同写「4G/5G 不需要」，实际按业务要求配 4G",
+      "changed": true,
+      "tag": "待确认"
+     },
+     {
+      "label": "外置天线",
+      "value": "内置 4G FPC 天线"
+     }
+    ],
+    [
+     {
+      "label": "SIM 卡 / 来源",
+      "value": "不安装 / 无"
+     },
+     {
+      "label": "定位模块",
+      "value": "无（精度类型：无精度；高精度模块：无）改 原 高精度 UM982 / 厘米级 / 自采",
+      "changed": true,
+      "tag": "改"
+     }
+    ],
+    [
+     {
+      "label": "电池 / 1PPS",
+      "value": "纽扣电池：无 ｜ 1PPS：无"
+     },
+     {
+      "label": "按键",
+      "value": "3 个按键"
+     }
+    ],
+    [
+     {
+      "label": "电源输入",
+      "value": "9~36V"
+     },
+     {
+      "label": "网口功能",
+      "value": "百兆"
+     }
+    ],
+    [
+     {
+      "label": "MCU CAN",
+      "value": "2 路，2 路都带终端电阻"
+     },
+     {
+      "label": "CANFD",
+      "value": "无，2 路都不带终端电阻"
+     }
+    ],
+    [
+     {
+      "label": "RS485 / RS232",
+      "value": "1 路 / 2 路"
+     },
+     {
+      "label": "INPUT / OUTPUT",
+      "value": "2 路 / 3 路"
+     }
+    ],
+    [
+     {
+      "label": "喇叭 & 音源",
+      "value": "内置喇叭"
+     },
+     {
+      "label": "MIC",
+      "value": "有"
+     }
+    ],
+    [
+     {
+      "label": "摄像头",
+      "value": "8 路（从线束出 2 路 + 从航插出 6 路）"
+     },
+     {
+      "label": "电台 / FM / 蜂鸣器",
+      "value": "无 / 无 / 无"
+     }
+    ],
+    [
+     {
+      "label": "ADC_IN 电压 / 电流检测",
+      "value": "无 / 无"
+     },
+     {
+      "label": "LCM 显示模组",
+      "value": "无要求"
+     }
+    ],
+    [
+     {
+      "label": "背部连接器（方形）",
+      "value": "26PIN ×1"
+     },
+     {
+      "label": "背面天线连接器",
+      "value": "标准 TNC ANT1 / 标准 TNC ANT2 / GX12 航空头 ×4"
+     }
+    ],
+    [
+     {
+      "label": "面壳铭牌 LOGO",
+      "value": "无改（原 CPlogo）",
+      "changed": true,
+      "tag": "改"
+     },
+     {
+      "label": "LOGO 图样",
+      "value": "无改；原 CPlogo.png 已清空",
+      "changed": true,
+      "tag": "改"
+     }
+    ]
+   ]
+  },
+  {
+   "name": "四、外观工艺 / 包装 / 认证",
+   "rows": [
+    [
+     {
+      "label": "面壳 / 颜色",
+      "value": "新面壳（无中框）/ 黑色"
+     },
+     {
+      "label": "底壳",
+      "value": "黑色"
+     }
+    ],
+    [
+     {
+      "label": "背面铭牌丝印",
+      "value": "无LOGO改（原 CP LOGO）",
+      "changed": true,
+      "tag": "改"
+     },
+     {
+      "label": "铭牌要求备注",
+      "value": "无；图样已换去 CPDEVICE 版（图样_去CPDEVICE.png）"
+     }
+    ],
+    [
+     {
+      "label": "彩盒",
+      "value": "中性"
+     },
+     {
+      "label": "彩盒标/图案",
+      "value": "无LOGO改 图案已上传去 CPDEVICE 版",
+      "changed": true,
+      "tag": "改"
+     }
+    ],
+    [
+     {
+      "label": "卡通箱",
+      "value": "独立包装"
+     },
+     {
+      "label": "卡通箱标/图案",
+      "value": "无LOGO改 图案已上传去 CPDEVICE 版",
+      "changed": true,
+      "tag": "改"
+     }
+    ],
+    [
+     {
+      "label": "说明书",
+      "value": "标准无（无）"
+     },
+     {
+      "label": "生产出货配件",
+      "value": "无"
+     }
+    ],
+    [
+     {
+      "label": "认证要求",
+      "value": "合同未约定（空）"
+     },
+     {
+      "label": "特殊需求附件",
+      "value": "—"
+     }
+    ]
+   ]
+  }
+ ],
+ "risk": {
+  "conclusion": "可接单，需下列 6 项在投产前闭环。",
+  "items": [
+   "8G/128G 属硬件改制：标准版为 2G/32G，需确认 128GB eMMC 备料，以及 V1.16 量产镜像的分区表/烧录脚本能否直接用于 128GB 机型（分区容量固定则需改镜像）。",
+   "4G 与合同不一致：合同第一章写「4G/5G：不需要」，订单按业务要求配 4G（中国单 4G + 移远 EC200A + 内置 FPC 天线）。需确认是改合同/补差价还是退回无 4G 配置，否则验收与成本口径会对不上。另：无定位模块，背面 TNC ANT1/ANT2 仅作预留，请确认是否保留。",
+   "去品牌（已执行）：开机LOGO 改中性 Linux(Debian)，U 盘包 CPS-SY2026DX0966_SP2-10PRO_neutral_bootlogo_20261116.zip 已在真机 SP2-10PRO Debian V1.16 验证（logo 分区 md5 2b5488a0…，重启正常）；面壳/铭牌/彩盒/卡通箱/图样均无 CP logo；原 CPlogo.png、7_10_cpdevice.png 两张旧图已清空。",
+   "合同未约定项按标准配置：摄像头 8 路、CAN×2、RS485×1、RS232×2、IO 2/3、内置喇叭、MIC、蓝牙、百兆网口——均未在合同写明，需业务书面确认，避免验收争议。",
+   "交期风险：合同 2026-11-24 到货；BPMS 现填 11-23（需改 11-24）。违约金 0.5%/日、逾期超 7 日甲方可解约，硬件改制+去品牌需预留打样与验证时间，请计划确认能否满足。",
+   "序列号：序列号选「中性」但 SN 写入=「是」，需确认中性序列号的格式与写入方式（不带 CP 前缀）。"
+  ],
+  "foot": "<b>交付物</b>：出厂前需 1 台中性的 Debian 样机验证（启动图无 CP 标识、屏参正确），随货附中性包装。"
+ },
+ "sign": [
+  [
+   "销售",
+   "研发/软件"
+  ],
+  [
+   "硬件",
+   "生产/计划"
+  ],
+  [
+   "品质",
+   "批准"
+  ]
+ ],
+ "footnote": "数据来源：采购合同 SZCPGX202611160002（2026-11-16 签署，4 页）＋ BPMS 订单需求表 CPS-SY2026DX0966（id 2000550683162509726，模板 FORM-ED-001 A13订单需求表 SPRING2 10PRO 4G标准版）。 标注「改」的字段为按合同修正项，已于 2026-11-16 一次性写入 BPMS 并上传中性开机图包（订单状态 0 暂存，写前有备份）。OS/MCU 版本取 CP 量产归档最新 Debian（LCD10/CN）。"
+}

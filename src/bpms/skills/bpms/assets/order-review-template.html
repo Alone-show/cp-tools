@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>{{title}}</title>
+<style>
+  @page { size: A4; margin: 9mm 9mm; }
+  body { font-family: "Noto Sans CJK SC","Microsoft YaHei",sans-serif; font-size: 9pt; color:#111; margin:0; }
+  h1 { font-size: 15pt; text-align:center; margin: 0 0 1.5mm; letter-spacing: 2px; }
+  .sub { text-align:center; font-size: 9pt; color:#333; margin-bottom: 2.5mm; line-height: 1.5; }
+  h2 { font-size: 10pt; margin: 3mm 0 1mm; padding-left: 2mm; border-left: 3px solid #1a4f8b; }
+  table { width:100%; border-collapse: collapse; table-layout: fixed; }
+  th, td { border: 0.6pt solid #666; padding: 0.8mm 1.3mm; vertical-align: top; overflow-wrap: break-word; }
+  td.lb { background:#eef2f7; font-weight:600; width: 21%; }
+  td.v { width: 29%; }
+  code { font-family: "Noto Sans Mono CJK SC", monospace; font-size: 8pt; }
+  .chg { color:#b3261e; font-weight:600; }
+  .tag { display:inline-block; font-size:7.5pt; border:0.6pt solid #b3261e; color:#b3261e; border-radius:2px; padding:0 1mm; margin-left:1mm; }
+  .warnbox { border: 0.6pt solid #666; background:#fffaf0; padding: 1.5mm 2.5mm; text-align: justify; }
+  ol, ul { margin: 1mm 0 0 5mm; padding:0; }
+  li { margin-bottom: 0.8mm; }
+  .sign td { height: 9mm; }
+  .foot { margin-top:3mm; font-size:8pt; color:#555; line-height:1.45; }
+</style>
+</head>
+<body>
+
+<h1>{{title}}</h1>
+<div class="sub">{{subtitle}}</div>
+
+<!--CONTENT-->
+
+<div class="foot">{{footnote}}</div>
+
+</body>
+</html>

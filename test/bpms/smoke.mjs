@@ -26,7 +26,8 @@ const { loadConfig, maskSecrets, configCandidates } = await import('../../src/bp
 const { indexFields, resolveField, diffPaths, onlyInside, buildUpdateBody, summarize } = await import(
   '../../src/bpms/records.js'
 );
-const { TOOL_FACTORIES, compact, rowsOf, planAttachmentValue, fillAttachmentUrls, normalizeAttachmentItem } = await import('../../src/bpms/tools.js');
+const { TOOL_FACTORIES, compact, rowsOf, planAttachmentValue, fillAttachmentUrls, normalizeAttachmentItem, normalizeRecordPatch } =
+  await import('../../src/bpms/tools.js');
 const { configView, applyConfigUpdate, normalizeValues, testLogin } = await import('../../src/bpms/http.js');
 const bpms = await import('../../src/bpms/index.js');
 
@@ -485,6 +486,45 @@ step('附件项归一与 append 去重', () => {
   });
   assert.equal(appended.length, 2, '同 url 不重复追加');
   assert.equal(pending.length, 0);
+});
+
+step('附件字段传 [] 表示清空（replace），append 模式视为不动', () => {
+  const entry = { key: '硬件需求信息/LOGO图样' };
+  const prev = [{ name: 'CPlogo.png', url: 'https://oss/cplogo.png', uid: 1, status: 'success' }];
+  const cleared = planAttachmentValue({ entry, raw: [], prev, mode: 'replace', pending: [] });
+  assert.deepEqual(cleared, [], '清空后应为空数组');
+  const untouched = planAttachmentValue({ entry, raw: [], prev, mode: 'append', pending: [] });
+  assert.equal(untouched.length, 1, 'append 模式下 [] 不应动现有附件');
+  assert.equal(untouched[0].name, 'CPlogo.png');
+});
+
+step('附件项非法时仍然报错，并提示清空用 []', () => {
+  assert.throws(
+    () => planAttachmentValue({ entry: { key: 'x' }, raw: [{ foo: 1 }], prev: [], mode: 'replace', pending: [] }),
+    /清空请传 \[\]/,
+  );
+});
+
+step('record 参数：交期解析为毫秒、名称去空格，白名单外直接拒绝', () => {
+  const ok = normalizeRecordPatch({ expectedDeliveryDate: '2026-11-24', name: ' 订单需求表测试 ' });
+  assert.equal(ok.expectedDeliveryDate, Date.parse('2026-11-24T00:00:00.000Z'));
+  assert.equal(ok.name, '订单需求表测试');
+  assert.throws(() => normalizeRecordPatch({ status: 3 }), /record 只允许改/);
+  assert.throws(() => normalizeRecordPatch({ expectedDeliveryDate: '2026/11/24' }), /只接受 YYYY-MM-DD/);
+});
+
+step('保存体带 record 覆盖：顶层字段改了，parameters 仍是整包字符串', () => {
+  const detail = {
+    id: '1',
+    name: '旧名称',
+    status: 0,
+    expectedDeliveryDate: Date.parse('2026-11-23T00:00:00.000Z'),
+    parameters: JSON.stringify({ requireInfoList: [] }),
+  };
+  const body = buildUpdateBody({ ...detail, ...normalizeRecordPatch({ expectedDeliveryDate: '2026-11-24' }) }, { requireInfoList: [] });
+  assert.equal(new Date(body.expectedDeliveryDate).toISOString().slice(0, 10), '2026-11-24');
+  assert.equal(typeof body.parameters, 'string');
+  assert.equal(body.name, '旧名称', '没传的顶层字段保持原值');
 });
 
 step('fillAttachmentUrls 回填 local: 占位', () => {
