@@ -298,6 +298,7 @@ adb shell 'rm -rf /mnt/usb/sda1; rm -f /data/cp-unattended/probe*'   # T3 Linux 
 | `assets/add-icon-device.sh` / `assets/verify-report.md` / `assets/update-mdm-wifi.sh` | 桌面图标 / 报告模板 / T3 安卓 MDM+WiFi（脚本里的 `APK_LIST`/`FW_LIST` 按单改） |
 | `vendor/` | 现成二进制（按平台取，别整目录搬）：`MDM` = **T3 Buildroot** 的 `/mdm/MDM`；`VanCoreT3-*.apk` = 安卓 MDM；`fw_cyw43438.bin`+`nvram_cyw43438.txt` = T3 WiFi 固件对。md5 与用法见 `vendor/README.md` |
 | `assets/generate-bootlogo.sh` | logo 资源生成驱动（§8.4）：`--image`/`--chip`/`--system`/`--rotate`/`--logo-frames`/`--no-video`/`--assets-only` |
+| `assets/debian-logo-template.sh` | RK Debian「只换开机 LOGO」安装包主脚本模板（双入口 + `flock` + `.done` + 写前备份 + 回读 md5 + `NO_REBOOT=1`）：`PKG_ID` / `LOGO_FILE` 按单改，盘根入口用 `assets/debian-entry-template.sh` |
 | `assets/merge-package.sh` | 往**已有安装包**里增量合资源（保持内部布局与 xml 引用名）：`merge-package.sh <原包.zip> [--out DIR] <文件...>` |
 | `assets/presets/rk-android-neutral/` | 预置「中性」logo/动画包（RK 安卓，**仅在明确要求中性时用**）：`logo.img` + `bootanimation.zip` + `CpService.xml` + `README.md` |
 | `assets/presets/linux-neutral/` | 预置「中性」Linux 开机图（**仅明确要求中性时用**）：只有 `logo.png` 源图 + `README.md`；`logo` / `bootlogo.bmp` / `logo.img` 用 `generate-bootlogo.sh` 现出（不存冗余产物） |

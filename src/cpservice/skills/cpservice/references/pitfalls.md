@@ -15,3 +15,4 @@
 11. **属性/配置回读有陈旧窗口**：`setprop` 后 1–2 s 内 `getprop` 可能仍读到旧值或空值（实测 `persist.hw.modem.nsim` 0→1，立即读仍是 0，2 s 后才变 1）；判定前 `sleep 2`，以 `/data/property/<name>` 终值为准。**别用单次回读判失败**，更别据此推成权限/沙箱问题（本次差点误判成 SELinux 拒绝，白查 9 分钟）。
 12. **无电池 RTC 的设备每次重启时钟归零**（1970/2022 起算）：`mtime`、日志时间跨重启不可比，判断先后一律用 `uptime` 对齐；只比属性值和文件内容，别拿 mtime 推「有服务在覆盖」。
 13. **复制/落盘失败先查挂载**：`cp` 报目标不存在、脚本里 `[ -d ]` 突然判假、目录「看着空了」，先看 `/proc/mounts`——挂到上级目录会遮蔽整棵子树。实测 T3 Linux 包先 `mount /dev/mmcblk0p2 /mnt` 再装应用，Launcher 的盘路径 `/mnt/usb/sda1` 被遮住，日志只剩一句 `app目录不存在`（遮蔽按路径生效，真 U 盘挂同一路径也一样）。挂载点用独立目录（如 `/mnt/bootresource`），写完 `sync` + `umount`。
+14. **别用 `adb shell 'head -c N <块设备>'` 或 `adb exec-out` 拉二进制**：pty 会把 `\n` 改写成 `\r\n`，字节数变化、md5 必错（实测 `head -c 3686966 /dev/block/by-name/logo` 拉回 3,687,846 B，多出 880 B，md5 不符，差点误判成「写分区失败」）。正确做法：设备侧 `dd if=<块设备> of=/userdata/x.bin bs=4096 count=N` 再 `adb pull`，主机侧按镜像长度截断后比 md5；判定仍以**设备端** `head -c N | md5sum` 为准。

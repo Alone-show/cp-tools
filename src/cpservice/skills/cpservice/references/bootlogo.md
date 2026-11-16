@@ -39,6 +39,9 @@ assets/generate-bootlogo.sh --image logo.png --chip T3 --system Linux --name <�
   - 只适用 Linux：T3 Linux 产物平铺进包根；RK Linux / RK Debian 用同一张 `logo.png` 出 `logo.img`。安卓用 `rk-android-neutral`。
   - 不含 `video_demo.yuv`（215 MB）：要换开机动画去掉 `--no-video` 一起出。
   - 用了就在交付说明里点明「中性 Linux logo」。
+- **RK Debian 已验证组合（2026-11-16，SPRING2-PRO / Debian 11 / kernel 5.10.160）**：`--image presets/linux-neutral/logo.png --chip RK --system Linux --rotate --no-video` → `logo.img` **3,686,966 B / md5 `2b5488a0f795333a53125c18746665ee`**；写入 `/dev/block/by-name/logo`（= `/dev/mmcblk0p5`），按镜像长度回读 md5 一致，重启后 `lightdm` 起得来、桌面正常。
+  - 装包脚本用 `assets/debian-logo-template.sh`（双入口 + `flock` + `.done` + 写前备份 `/userdata/verify_bak` + 回读 md5 + `NO_REBOOT=1`），别自己现写一套。
+  - 证据口径：「分区前 N 字节 md5 与包内一致」只能证明**存储内容**正确；屏上效果（开机那一两秒）adb 抓不到，报告里单列「需目视」。
 - 图片只接受 **1024x600 / 1280x800**（ffprobe 判，与上游一致）；脚本末尾自检不通过就不会产出。
 - 生成的安装脚本是**最小版**：RK Linux 按 `/mnt/installUsb` 硬编码（工具窗口方式；要手动入口 `$1` 形式按 SKILL §4 C 改写）；T3 Linux 无日志、无 `NO_REBOOT`，正式包用 `assets/t3linux-setup-template.sh` 补齐。
 - 输出目录 `<out>/<CHIP>_<SYSTEM>_<name>_<YYYYMMDD>`，产物平铺进包根。
