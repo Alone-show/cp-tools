@@ -4,7 +4,7 @@
 
 # tickets
 
-DeepSeek Harness 插件：一个 `/tickets` 入口，覆盖两件事：
+DeepSeek Harness 插件：一个 `/tickets` 命令入口（或模型加载 `tickets` skill），覆盖两件事：
 
 1. **TB 版本任务/子任务**：当前版本和历史版本任务下的子任务，标 **已解决 / 待解决 / 已拒绝 / 暂挂起**，并挂回父版本任务。
 2. **修复判定**：在 alist `/PROD` 的 `commit-logs.txt` 里判断 bug 是否修进客户正式版，比对其它机型/系统/芯片，并附带 TB 子任务证据。

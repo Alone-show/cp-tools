@@ -10,6 +10,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { ENTRY_COMMANDS } from '../src/shared/entry.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const problems = [];
@@ -146,12 +147,14 @@ const DESC_MAX = 1024;
 // 避免再出现「写了 200 个关键词、后 500 字符全是死重」的 skill。
 const CATALOG_DESC_MAX = 500;
 const skills = [
+  ['cp-docs', 'src/docs/skills/cp-docs/SKILL.md'],
   ['firmware', 'src/firmware/skills/firmware/SKILL.md'],
   ['tickets', 'src/tickets/skills/tickets/SKILL.md'],
   ['cpservice', 'src/cpservice/skills/cpservice/SKILL.md'],
   ['flash', 'src/flash/skills/flash/SKILL.md'],
   ['bpms', 'src/bpms/skills/bpms/SKILL.md'],
 ];
+const skillMeta = new Map();
 for (const [name, file] of skills) {
   const abs = path.join(ROOT, file);
   if (!fs.existsSync(abs)) {
@@ -173,6 +176,10 @@ for (const [name, file] of skills) {
     }
     if (!SKILL_KEYS.has(key)) fail(`${name}: frontmatter 键 ${key} 不在规范允许列表内`);
   }
+  skillMeta.set(name, {
+    file,
+    userInvocable: !/^user-invocable:\s*false\s*$/m.test(fm[1]),
+  });
   const nameLine = /^name:\s*(.+)$/m.exec(fm[1]);
   if (!nameLine) fail(`${name}: SKILL.md 缺 name`);
   else if (nameLine[1].trim() !== name) fail(`${name}: SKILL.md frontmatter name 不是 ${name}`);
@@ -279,7 +286,34 @@ for (const file of walk(path.join(ROOT, 'src')).filter((p) => /\.(js|mjs|json|md
   if (HOME_PATH_RE.test(text)) fail(`${rel(file)} 写死了本机绝对路径`);
 }
 
-// 10) 体积报告
+// 10) 入口口径：文档里出现的 /<skill> 必须能落地（真命令 or user-invocable 手势）
+//     之前 README 宣传 /firmware、/tickets、/bpms，但既没注册命令、skill 又标了
+//     user-invocable: false，用户输入会被命令适配器直接拒掉。
+const commandSet = new Set(['cp-docs', ...ENTRY_COMMANDS]);
+const gestureSet = new Set([...skillMeta].filter(([, meta]) => meta.userInvocable).map(([name]) => name));
+const docsDir = path.join(ROOT, 'docs');
+const entryDocs = [
+  path.join(ROOT, 'README.md'),
+  ...(fs.existsSync(docsDir)
+    ? fs
+        .readdirSync(docsDir)
+        .filter((name) => name.endsWith('.md'))
+        .map((name) => path.join(docsDir, name))
+    : []),
+  ...[...skillMeta.values()].map((meta) => path.join(ROOT, meta.file)),
+];
+for (const file of entryDocs) {
+  if (!fs.existsSync(file)) continue;
+  const text = fs.readFileSync(file, 'utf8');
+  for (const match of text.matchAll(/\/([a-z][a-z0-9-]{1,30})/g)) {
+    const token = match[1];
+    if (!skillMeta.has(token)) continue;
+    if (commandSet.has(token) || gestureSet.has(token)) continue;
+    fail(`${rel(file)} 宣传了 /${token}，但它既不是命令、也不是 user-invocable skill`);
+  }
+}
+
+// 11) 体积报告
 const size = walk(ROOT)
   .filter((p) => !rel(p).startsWith('test/') && !rel(p).startsWith('docs/'))
   .reduce((sum, p) => sum + fs.statSync(p).size, 0);

@@ -1,6 +1,6 @@
 # firmware
 
-DeepSeek Harness 子插件：只做**固件查找**。
+DeepSeek Harness 子插件：只做**固件查找**；入口是 `/firmware` 命令（或模型加载 `firmware` skill）。
 
 1. 先给机型目录（规范名 / 别名 / 变体，含每个尺寸的系统、客户、最新版本），机型由模型按证据选，工具不猜；
 2. 选定机型后，在 Teambition 发版看板与 alist `/PROD` 里定位量产固件，给线刷 / OTA 直链。
