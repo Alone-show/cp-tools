@@ -1,14 +1,14 @@
 ---
 name: cp-docs
-description: 查 CP 机型的本地产品资料（参数 / 接口 / 线束 / 编程节点 / 工作点），全程离线读本机 .cpdocs。用户问某机型的屏幕尺寸、RS232/RS485 引脚、GPIO、工作温度、设备节点，或直接发 /cp-docs 时，调用 cp_docs 工具取该机型整包资料再作答；机型按目录归一（与 firmware 共用 model-core），认不出就问用户，不要凭记忆补机型。不负责固件版本与线刷直链（走 firmware）、工单与历史 bug（走 tickets）、U 盘包与刷机（cpservice / flash）。
+description: 查 CP 机型的本地产品资料（参数 / 接口 / 线束 / 编程节点 / 工作点），全程离线读本机 .cpdocs。用户问某机型的屏幕尺寸、RS232/RS485 引脚、GPIO、工作温度、设备节点，或要按机型查资料时，调用 cp_docs 工具取该机型整包资料再作答；机型按目录归一（与 firmware 共用 model-core），认不出就问用户，不要凭记忆补机型。不负责固件版本与线刷直链（走 firmware）、工单与历史 bug（走 tickets）、U 盘包与刷机（cpservice / flash）。
 user-invocable: false
 ---
 
 # 产品资料（cp-docs）
 
-> 本页加载后，`cp_docs` 工具在**下一步**才出现在工具列表里；`/cp-docs` 命令不受影响。
+> 由 `skill` 工具加载本页后，`cp_docs` 工具在**下一步**才出现；`/cp-docs` 命令直读资料，不经过工具。
 
-本 skill 只负责「按机型查本地产品资料」。数据来自本机 `.cpdocs`（由 `scripts/import-docs.mjs` 生成），**不联网**。
+本 skill 只负责「按机型查本地产品资料」。数据来自本机 `.cpdocs`（由包脚本 `npm run import:docs` 生成），**不联网**。
 
 ## 怎么用
 

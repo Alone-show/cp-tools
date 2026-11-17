@@ -251,7 +251,7 @@ function cpDocsToolFor(ctx) {
     description:
       '查 CP 机型的本地产品资料（参数 / 接口 / 线束 / 编程节点 / 工作点），离线读本机 .cpdocs。'
       + '用户问某机型的屏幕尺寸、RS232/RS485 引脚、GPIO、工作温度、设备节点，或发 /cp-docs 时调用。'
-      + 'query 必须包含机型写法；返回 ok 时 packet 是该机型整包资料，据此作答并标注出处，不要补充 packet 之外的信息；'
+      + 'query 必须包含机型写法；返回 ok 时整包资料会作为下一条上下文给出（模型直接可见），据此作答并标注出处；'
       + '返回 needs_confirmation 就把候选列给用户，选定后带精确机型重试；返回 catalog 就列机型让用户挑。'
       + '不负责固件版本与刷机直链（用 firmware_find）、工单与历史 bug（用 ticket_search / ticket_bug_check）。',
     parameters: {
@@ -275,6 +275,7 @@ function cpDocsToolFor(ctx) {
           question: { type: 'string' },
           note: { type: 'string' },
           packet: { type: 'string' },
+          delivered: { type: 'string', enum: ['context', 'inline'] },
           instruction: { type: 'string' },
           count: { type: 'integer' },
           catalog: { type: 'string' },
@@ -296,6 +297,31 @@ function cpDocsToolFor(ctx) {
       const r = await resolveDocsAnswer(ctx, exec?.agent, exec?.signal, query);
 
       if (r.kind === 'packet') {
+        const packet = String(r.packet).slice(0, 40000);
+        // 原生调用把整包作为附加上下文注入（模型可见、客户端折叠）；PTC 子调用/无 deferContext 时内联。
+        const canDefer =
+          exec !== undefined && exec !== null && exec.parent === undefined && typeof exec.deferContext === 'function';
+        if (canDefer) {
+          exec.deferContext(
+            contextMessage(
+              buildPacketMessage({
+                question: r.question,
+                entry: r.entry,
+                packet,
+                ...(r.same
+                  ? {
+                      extraNotes: [
+                        `问题里的机型写法「${r.modelText}」对应多个机型，它们的资料完全相同：${r.entries
+                          .map((x) => x.model)
+                          .join(' / ')}`,
+                      ],
+                    }
+                  : {}),
+              }),
+              `${r.entry.id} ${r.entry.model}${r.materials ? ` · ${r.materials}` : ''}`,
+            ),
+          );
+        }
         return {
           status: 'ok',
           source: 'cp-docs/.cpdocs',
@@ -305,8 +331,11 @@ function cpDocsToolFor(ctx) {
           ...(r.same
             ? { note: `写法对应多个机型且资料相同：${r.entries.map((x) => `${x.id} ${x.model}`).join(' / ')}` }
             : {}),
-          packet: String(r.packet).slice(0, 40000),
-          instruction: '基于 packet 作答并标注来自哪张表/哪一节；packet 里没有的字段直接说没有，不要补机型或猜参数。',
+          delivered: canDefer ? 'context' : 'inline',
+          ...(canDefer ? {} : { packet }),
+          instruction: canDefer
+            ? '整包资料已作为下一条上下文给出：基于它作答并标注来源表/章节，不要补充资料之外的内容。'
+            : '基于 packet 作答并标注来自哪张表/哪一节；packet 里没有的字段直接说没有，不要补机型或猜参数。',
         };
       }
       if (r.kind === 'catalog') {
@@ -335,47 +364,62 @@ function readBundledSkill() {
   return readSkillFile(SKILL_FILE);
 }
 
-/** 工具结果在客户端折叠展示：只给摘要，整包资料留在 JSON 里交给模型。 */
+/**
+ * 工具结果的模型可见内容。
+ *
+ * 关键：`render` 的返回值就是模型看到的内容（规范值只在执行期存在），所以：
+ *   - ok + delivered=context → 一行摘要（整包已由 deferContext 作为下一条上下文给出）；
+ *   - ok + delivered=inline  → 摘要 + 整包（PTC 子调用/无 deferContext 的兜底）；
+ *   - catalog / needs_confirmation / error → 直接给清单、候选、用法，不再只给计数。
+ */
 function renderDocsResult(v) {
   if (!v || typeof v !== 'object') return 'cp-docs：没有返回结果。';
   if (v.status === 'ok') {
-    return [`cp-docs · ${v.model}`, v.materials ? `  ${v.materials}` : '', v.note ? `  ${v.note}` : '']
+    const head = [`cp-docs · ${v.model}`, v.materials ? `  ${v.materials}` : '', v.note ? `  ${v.note}` : '']
       .filter(Boolean)
       .join('\n');
+    if (v.delivered === 'context') return `${head}\n整包资料已作为下一条上下文给出。`;
+    return v.packet ? `${head}\n\n${v.packet}` : head;
   }
-  if (v.status === 'catalog') return `cp-docs · 机型目录（${v.count ?? '?'} 款）`;
+  if (v.status === 'catalog') {
+    return [`cp-docs · 机型目录（${v.count ?? '?'} 款）`, v.catalog ?? ''].filter(Boolean).join('\n');
+  }
   if (v.status === 'needs_confirmation') {
-    const names = (v.candidates ?? []).map((c) => `${c.id} ${c.model}`).slice(0, 6).join(' / ');
-    return ['cp-docs · 需要先确定机型', names ? `  候选：${names}` : ''].filter(Boolean).join('\n');
+    return v.message ? `cp-docs · 需要先确定机型\n${v.message}` : 'cp-docs · 需要先确定机型';
   }
-  return `cp-docs · ${v.status ?? 'error'}${v.message ? `：${String(v.message).slice(0, 200)}` : ''}`;
+  if (v.status === 'unsupported') return `cp-docs · ${v.message ?? '暂不支持'}`;
+  if (v.status === 'error') {
+    const message = String(v.message ?? '');
+    const lines = ['cp-docs · 错误', message];
+    if (v.usage !== undefined && !message.includes('用法：')) lines.push(v.usage);
+    return lines.filter(Boolean).join('\n\n');
+  }
+  return 'cp-docs：没有返回结果。';
 }
 
 export function apply(ctx) {
-  // cp_docs 工具只在模型加载过 cp-docs skill 之后才可见；
+  // 先解析 skill：解析失败就让插件行显式失败，避免留下永远不可见的工具。
+  const skill = readBundledSkill();
+  // cp_docs 工具只在加载过 cp-docs skill 之后才可见；
   // /cp-docs 命令走 handleCommand → resolveDocsAnswer，不经过 ctx.tools，因此不受影响。
-  const when = createSkillGate(ctx, ['cp-docs']).when('cp-docs');
+  const gate = createSkillGate(ctx, ['cp-docs']);
+  const when = gate.when('cp-docs');
   ctx.effect(() => ctx.tools.register(withSkillScope(cpDocsToolFor(ctx), CP_DOCS_SCOPE), { when }));
-  try {
-    const skill = readBundledSkill();
-    ctx.effect(() => ctx.skills.register(skill));
-  } catch (error) {
-    const message = `[cp-docs] 注册运行时 skill 失败：${error?.message || error}`;
-    if (ctx.logger?.warn) ctx.logger.warn(message);
-    else console.warn(message);
-  }
+  ctx.effect(() => ctx.skills.register(skill));
 
   // GUI 快捷入口保留：命令与工具共用 resolveDocsAnswer，行为不变。
-  ctx.commands.register({
-    name: 'cp-docs',
-    description: '按机型返回本地全部产品资料（参数/接口/线束/编程节点/工作点），由模型定位作答',
-    input: { hint: '用自然语言问，如：SPRING2PRO 的屏幕尺寸' },
-    handler: async (inv) => {
-      try {
-        return await handleCommand(ctx, inv);
-      } catch (err) {
-        return { kind: 'error', text: `cp-docs 出错：${err?.stack || err}` };
-      }
-    },
-  });
+  ctx.effect(() =>
+    ctx.commands.register({
+      name: 'cp-docs',
+      description: '按机型返回本地全部产品资料（参数/接口/线束/编程节点/工作点），由模型定位作答',
+      input: { hint: '用自然语言问，如：SPRING2PRO 的屏幕尺寸' },
+      handler: async (inv) => {
+        try {
+          return await handleCommand(ctx, inv);
+        } catch (err) {
+          return { kind: 'error', text: `cp-docs 出错：${err?.stack || err}` };
+        }
+      },
+    }),
+  );
 }
