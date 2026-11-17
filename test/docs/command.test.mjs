@@ -59,7 +59,14 @@ test('注入消息是上下文卡片而非用户气泡', { skip: !has }, async (
   assert.notEqual(msg.source.kind, 'user'); // 但来源不是人类 → 客户端渲染为折叠卡片
   assert.equal(msg.source.kind, 'cp-docs');
   assert.equal(msg.source.form, 'notice');
-  assert.equal(msg.source.summary, '1.23 SPRING 10 PRO 二代 · 6 张表 / 33 项参数 / 10 张图内文字 / 1 页编程节点 / 2 组工作点');
+  // 摘要 = 机型 + 资料计数；不锁具体页数/工作点条数（随资料快照更新而变），只校验结构
+  assert.match(msg.source.summary, /^1\.23 SPRING 10 PRO 二代 · /);
+  assert.match(msg.source.summary, /6 张表/);
+  assert.match(msg.source.summary, /33 项参数/);
+  assert.match(msg.source.summary, /10 张图内文字/);
+  assert.match(msg.source.summary, /\d+ 张图片/);
+  assert.match(msg.source.summary, /\d+ 页编程节点/);
+  assert.match(msg.source.summary, /\d+ 组工作点/);
 });
 
 test('RS232 引脚问题 → 整包里能读到 26PIN 定义', { skip: !has }, async () => {

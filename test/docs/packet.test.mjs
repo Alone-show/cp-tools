@@ -60,5 +60,45 @@ test('报文头带问题与作答约束', { skip: !has }, () => {
 });
 
 test('单机型报文体积可控', { skip: !has }, () => {
-  assert.ok(packet.length < 20000, `packet=${packet.length}`);
+  // 契约是 renderPacket 的软上限 maxChars=40000（超出后降到 lean 版，再超才截断）；
+  // 1.23 目前约 25KB，仍远低于上限，不应过早截断资料。
+  assert.ok(packet.length < 40000, `packet=${packet.length}`);
+  assert.doesNotMatch(packet, /报文超长，已截断/);
+});
+
+test('整包带图片摘要（只列标题，不塞路径）', { skip: !has }, () => {
+  const images = [
+    { caption: '图4.1.1 26P线束外观图', section: '4.1 TANK2线束定义' },
+    { caption: '图4.1.2 26P接线图', section: '4.1 TANK2线束定义' },
+  ];
+  const text = renderPacket({
+    entry,
+    spec: read(entry.spec),
+    programming: read(entry.programming),
+    workpoints: read(entry.workpoints),
+    labels,
+    images,
+  });
+  assert.match(text, /## 图片（2 张，可按需发送）/);
+  assert.match(text, /- 图4\.1\.2 26P接线图（4\.1 TANK2线束定义）/);
+  assert.match(text, /调用 cp_docs_images/);
+  assert.doesNotMatch(text, /\/images\/store\//);
+});
+
+test('图片数量超过上限时折叠成「另有 N 张」', { skip: !has }, () => {
+  const images = Array.from({ length: 10 }, (_, i) => ({ caption: `图${i + 1}.1 示例${i + 1}`, section: '9 附图' }));
+  const text = renderPacket({
+    entry,
+    spec: read(entry.spec),
+    programming: null,
+    workpoints: null,
+    labels,
+    images,
+  });
+  assert.match(text, /## 图片（10 张，可按需发送）/);
+  assert.match(text, /- …另有 4 张/);
+});
+
+test('没有图片索引时不出现图片段', { skip: !has }, () => {
+  assert.doesNotMatch(packet, /## 图片（/);
 });

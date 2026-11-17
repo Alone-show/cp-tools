@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { canonCore } from './models.js';
 import { FIELDS } from './fields.js';
+import { buildImageIndex, renderImageIndexMarkdown } from './image-index.js';
 
 /** 业务侧写法的补充别名（文档规范名之外） */
 const ALIASES = {
@@ -198,18 +199,45 @@ export function importData({ src, out, log = () => {} } = {}) {
     }
   }
 
-  // 6) 汇总
+  // 6) 图片索引：抓取清单（全部图片）+ specs（标题/针脚）按 sha256 合并
+  //    manifest 由 build_manifest.py 写在 ai-readable 根目录（兼容放在上一级 work/cpdoc/）；
+  //    没有就降级为 spec-only。
+  const manifestFile = [path.join(SRC, 'manifest.json'), path.join(path.dirname(SRC), 'manifest.json')]
+    .find((f) => fs.existsSync(f));
+  const manifest = manifestFile ? readJson(manifestFile) : null;
+  const overrideFile = path.join(SRC, 'figure-purpose.json');
+  const overrides = fs.existsSync(overrideFile) ? readJson(overrideFile) : {};
+  // 随包数据（src/docs/data）不记本机绝对路径，避免换机后误导解析
+  const bundled = OUT === path.resolve(import.meta.dirname, '..', 'data');
+  const imageIndex = buildImageIndex({ manifest, specs, srcRoot: SRC, overrides, recordAbsRoot: !bundled });
+  writeJson(path.join(OUT, 'images.json'), imageIndex);
+  fs.writeFileSync(path.join(OUT, 'images.md'), renderImageIndexMarkdown(imageIndex), 'utf8');
+  log(
+    `图片索引：${imageIndex.models} 款机型 / ${imageIndex.total} 条记录 / 缺文件 ${imageIndex.missing}`
+      + (manifest ? '' : '（未找到 manifest.json，线束外观图等可能缺失）'),
+  );
+
+  // 7) 汇总
   const dataset = {
     builtAt: new Date().toISOString(),
     source: path.isAbsolute(SRC) ? path.relative(process.cwd(), SRC) || '.' : SRC,
     note: '由 lib/import.js 从 work/cpdoc/ai-readable 生成；run: node lib/import.js',
     models,
+    images: 'images.json',
+    image_count: imageIndex.total,
+    image_missing: imageIndex.missing,
     programming_pages: progPages.map((p) => ({ slug: p.slug, title: p.title, url: p.url, sections: p.sections })),
     unmapped_cp: Object.keys(CP_CODES).filter((c) => false),
   };
   writeJson(path.join(OUT, 'models.json'), dataset);
   writeJson(path.join(OUT, 'fields.json'), { fields: FIELDS });
-  writeJson(path.join(OUT, 'meta.json'), { builtAt: dataset.builtAt, models: models.length, programming_pages: progPages.length });
+  writeJson(path.join(OUT, 'meta.json'), {
+    builtAt: dataset.builtAt,
+    models: models.length,
+    programming_pages: progPages.length,
+    images: imageIndex.total,
+    image_missing: imageIndex.missing,
+  });
   log(`写入 ${OUT}：${models.length} 机型，${progPages.length} 个编程页`);
   return dataset;
 }

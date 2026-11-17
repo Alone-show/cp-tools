@@ -60,6 +60,25 @@ export function loadModelFiles(dir, entry) {
   return { spec: read(entry.spec), programming: read(entry.programming), workpoints: read(entry.workpoints) };
 }
 
+const imageCache = new Map();
+
+/** 图片索引（.cpdocs/images.json）；缺失返回 null（老数据/未重建） */
+export function loadImages(dir) {
+  const file = path.join(dir, 'images.json');
+  if (!fs.existsSync(file)) return null;
+  const st = fs.statSync(file);
+  const hit = imageCache.get(file);
+  if (hit && hit.mtimeMs === st.mtimeMs) return hit.index;
+  const index = readJson(file);
+  imageCache.set(file, { mtimeMs: st.mtimeMs, index });
+  return index;
+}
+
+/** 单机型的图片清单（无索引或该机型无图返回 null） */
+export function loadModelImages(dir, id) {
+  return loadImages(dir)?.byModel?.[id] || null;
+}
+
 const labelCache = new Map();
 
 /** params_flat 键 → { label, unit }（fields.json）；缺失的键由渲染方回落键名 */

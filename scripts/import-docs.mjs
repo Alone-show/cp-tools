@@ -33,9 +33,20 @@ if (!fs.existsSync(src)) {
 
 if (check) {
   const modelsFile = path.join(out, 'models.json');
+  const imagesFile = path.join(out, 'images.json');
   const sourceCount = fs.readdirSync(src).filter((f) => f.endsWith('.json')).length;
   const current = fs.existsSync(modelsFile) ? (JSON.parse(fs.readFileSync(modelsFile, 'utf8')).models ?? []).length : 0;
   console.log(`源 JSON：${sourceCount} 个；现有 ${modelsFile}：${current} 款机型`);
+  if (fs.existsSync(imagesFile)) {
+    const idx = JSON.parse(fs.readFileSync(imagesFile, 'utf8'));
+    console.log(
+      `图片索引：${idx.models} 款 / ${idx.total} 条记录 / 缺文件 ${idx.missing}`
+        + `${idx.hasManifest ? '' : '（无 manifest，线束外观图等可能缺失）'}`
+        + `；imageRoot=${idx.imageRoot}`,
+    );
+  } else {
+    console.log('图片索引：缺 images.json（去 --check 运行导入即可生成）');
+  }
   console.log(fs.existsSync(modelsFile) ? '数据已存在；如需重建，去掉 --check 再运行。' : '尚无运行期数据，去掉 --check 运行导入。');
   process.exit(0);
 }
@@ -47,5 +58,9 @@ importData({
   log: (msg) => console.log(`· ${msg}`),
 });
 const models = JSON.parse(fs.readFileSync(path.join(out, 'models.json'), 'utf8')).models ?? [];
+const images = fs.existsSync(path.join(out, 'images.json'))
+  ? JSON.parse(fs.readFileSync(path.join(out, 'images.json'), 'utf8'))
+  : null;
 console.log(`✓ 导入完成：${models.length} 款机型 → ${out}（${Date.now() - started}ms）`);
+if (images) console.log(`  图片索引：${images.total} 条记录（缺文件 ${images.missing}）→ images.json / images.md`);
 console.log('  下一步：node scripts/check-package.mjs 校验包内数据。');

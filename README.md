@@ -38,12 +38,28 @@ plugin_manager install_bundle target=/home/my/Documents/deepseek-harness/default
 ```text
 /cp-docs SPRING2PRO 的屏幕尺寸
 /cp-docs SPRING2PRO 的 RS232 引脚在第几脚
+/cp-docs TANK2 的线束图
 /cp-docs 支持哪些机型
 ```
 
 命令 `/cp-docs` 直接读 `.cpdocs`，命中机型后把该机型全部资料作为折叠上下文卡片推给会话；
-另有门控工具 `cp_docs`（加载 `cp-docs` skill 后可见，走同一套判定，供 IM/自然语言路径使用）。
-运行期数据在 `.cpdocs`（首次从包内 `src/docs/data` 复制）。
+另有门控工具（加载 `cp-docs` skill 后可见，供 IM/自然语言路径使用）：
+
+- `cp_docs`：整包资料，走同一套判定；
+- `cp_docs_images`：按机型检索图片，返回**图号 / 作用 / 本地路径 / 建议文件名**，支持 `keyword`（线束 / 接口 / 安装 / 外观 / 参数）。
+
+`packet` 里只放图片标题摘要（≤6 条），完整清单与路径走 `cp_docs_images`，避免上下文膨胀。
+图片索引由 `work/cpdoc/manifest.json`（全部图）+ `models/<id>/spec.json`（标题/针脚）按 `sha256` 合并生成，
+写进 `.cpdocs/images.json`（工具用）与 `.cpdocs/images.md`（人读，可 grep）。线束外观图、正/背面图这类
+未转写的图也在索引里，不会再「找不到」。shell 里可直接查：
+
+```bash
+node scripts/cp-docs-images.mjs TANK2 --grep 线束
+```
+
+作用文案由 `src/docs/lib/image-purpose.js` 按标题模板生成（只转述标题，不引入新参数）；
+需要逐张精修时写 `work/cpdoc/ai-readable/figure-purpose.json`（`sha256 → {purpose, tags}`），重建即生效。
+运行期数据在 `.cpdocs`（首次从包内 `src/docs/data` 复制；`node scripts/import-docs.mjs` 重建）。
 
 ### `/firmware`
 
@@ -148,7 +164,7 @@ node scripts/live-smoke.mjs   # 在线冒烟；无凭据/断网时 SKIP
 
 ## 工具可见性（命令入口 + skill 激活门）
 
-`bpms_*` / `firmware_*` / `ticket_*` / `cp_docs` 这 17 个工具**不再常驻**在 tools 数组里。两条加载路径：
+`bpms_*` / `firmware_*` / `ticket_*` / `cp_docs` / `cp_docs_images` 这 18 个工具**不再常驻**在 tools 数组里。两条加载路径：
 
 1. **命令入口（推荐）**：`/firmware`、`/tickets`、`/bpms` 会把 skill 正文作为一条
    `cp-tools-entry` 上下文注入，并立即激活本组工具——**本步**就能用，不额外多一轮。

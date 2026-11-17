@@ -10,9 +10,10 @@
 import crypto from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { resolveDataDir, loadDataset, loadModelFiles, loadLabels } from './lib/store.js';
+import { resolveDataDir, loadDataset, loadModelFiles, loadLabels, loadImages, loadModelImages } from './lib/store.js';
 import { parseQuery } from './lib/parse.js';
 import { renderPacket, buildPacketMessage } from './lib/packet.js';
+import { resolveImageRoot, locateImage, suggestName, searchImages } from './lib/image-index.js';
 import { renderCandidates, renderCatalog } from './lib/framing.js';
 import { readBundledSkill as readSkillFile } from '../shared/skill.js';
 import { createSkillGate, withSkillScope } from '../shared/skill-gate.js';
@@ -39,6 +40,7 @@ const USAGE = [
   '  /cp-docs APOLLO2 12PRO 的工作温度范围',
   '  /cp-docs CP023 的 INPUT1 接到哪个 GPIO',
   '  /cp-docs APOLLO 7 PRO 的 RS485 设备节点',
+  '  /cp-docs TANK2 的线束图',
   '  /cp-docs 支持哪些机型',
 ].join('\n');
 
@@ -64,7 +66,7 @@ function cleanQuestion(q) {
 }
 
 /** 命令返回文案里的资料计数（可审计，便于确认走的是整包路径） */
-function describeMaterials(spec, programming, workpoints) {
+function describeMaterials(spec, programming, workpoints, imageCount = 0) {
   const bits = [];
   const tables = spec?.tables?.length || 0;
   const params = Object.keys(spec?.params_flat || {}).length;
@@ -74,6 +76,7 @@ function describeMaterials(spec, programming, workpoints) {
   if (params) bits.push(`${params} 项参数`);
   const figures = spec?.figures?.length || 0;
   if (figures) bits.push(`${figures} 张图内文字`);
+  if (imageCount) bits.push(`${imageCount} 张图片`);
   if (pages) bits.push(`${pages} 页编程节点`);
   if (points) bits.push(`${points} 组工作点`);
   return bits.join(' / ');
@@ -82,13 +85,18 @@ function describeMaterials(spec, programming, workpoints) {
 function loadPacket(dir, entry, labels) {
   const files = loadModelFiles(dir, entry);
   if (!files.spec) return null;
+  const imageEntry = loadModelImages(dir, entry.id);
+  const images = imageEntry?.images || [];
   return {
     files,
+    images,
+    imageEntry,
     packet: renderPacket({
       entry,
       spec: files.spec,
       programming: files.programming,
       workpoints: files.workpoints,
+      images,
       labels,
     }),
   };
@@ -155,7 +163,13 @@ async function resolveDocsAnswer(ctx, agent, signal, rawText) {
         same: true,
         packet: first.packet,
         files: first.files,
-        materials: describeMaterials(first.files?.spec, first.files?.programming, first.files?.workpoints),
+        images: first.images,
+        materials: describeMaterials(
+          first.files?.spec,
+          first.files?.programming,
+          first.files?.workpoints,
+          first.images?.length || 0,
+        ),
         text: renderCandidates({ query: parsed.modelText || text, scored }),
       };
     }
@@ -187,7 +201,14 @@ async function resolveDocsAnswer(ctx, agent, signal, rawText) {
     entries: [entry],
     packet: loaded.packet,
     files: loaded.files,
-    materials: describeMaterials(loaded.files.spec, loaded.files.programming, loaded.files.workpoints),
+    images: loaded.images,
+    imageEntry: loaded.imageEntry,
+    materials: describeMaterials(
+      loaded.files.spec,
+      loaded.files.programming,
+      loaded.files.workpoints,
+      loaded.images?.length || 0,
+    ),
   };
 }
 
@@ -242,6 +263,211 @@ async function handleCommand(ctx, inv) {
 }
 
 /* ------------------------------------------------------------------ *
+ * 图片检索：cp_docs_images（与 cp_docs 同一套机型归一 + skill gate）
+ * ------------------------------------------------------------------ */
+function pickImage(entry, image, root) {
+  const loc = locateImage(image, root);
+  return {
+    idx: image.idx,
+    sha8: image.sha8,
+    caption: image.caption || image.captions?.[0] || '',
+    section: image.section || '',
+    kind: image.kind || '',
+    purpose: image.purpose || '',
+    tags: image.tags || [],
+    path: loc.path || '',
+    exists: Boolean(loc.exists),
+    via: loc.via,
+    deliverAs: suggestName(entry.model, image),
+  };
+}
+
+async function resolveImagesAnswer(ctx, agent, signal, { model, keyword = '', limit = 20 } = {}) {
+  const text = String(model || '').trim();
+  if (!text) return { kind: 'help' };
+  let dir;
+  try {
+    dir = await resolveDataDir(ctx, agent, signal);
+  } catch (err) {
+    return { kind: 'error', text: `cp-docs 没有本地资料：${err.message}` };
+  }
+  const dataset = loadDataset(dir);
+  const parsed = parseQuery(text, dataset.models);
+
+  if (parsed.intent === 'catalog') {
+    return { kind: 'catalog', count: dataset.models.length, text: renderCatalog(dataset.models) };
+  }
+  if (parsed.intent === 'help') {
+    return { kind: 'help', text: `${USAGE}\n\n没有从问题里认出机型。` };
+  }
+  if (parsed.intent === 'ambiguous') {
+    return {
+      kind: 'ambiguous',
+      modelText: parsed.modelText,
+      candidates: (parsed.candidates || []).map(([, g]) => ({ id: g.id, model: g.model })),
+      text: renderCandidates({ query: parsed.modelText || text, scored: parsed.candidates || [] }),
+    };
+  }
+
+  const entry = parsed.hit;
+  const index = loadImages(dir);
+  const imageEntry = index?.byModel?.[entry.id];
+  if (!imageEntry) {
+    return {
+      kind: 'noindex',
+      entry,
+      text: `已命中 ${entry.id} ${entry.model}，但本地没有图片索引（`
+        + `${index ? '该机型无图' : '.cpdocs/images.json 缺失'}）。请重建：node scripts/import-docs.mjs`,
+    };
+  }
+  const workspace = ctx?.get?.('workingDirectory')?.defaultDirectory;
+  const root = resolveImageRoot({ dataDir: dir, index, workspace });
+  const hits = searchImages(imageEntry.images, keyword, limit);
+  return {
+    kind: 'ok',
+    entry,
+    keyword: String(keyword || ''),
+    total: imageEntry.images.length,
+    imageRootOk: Boolean(root),
+    images: hits.map((img) => pickImage(entry, img, root)),
+  };
+}
+
+function renderImagesResult(v) {
+  if (!v || typeof v !== 'object') return 'cp-docs 图片：没有返回结果。';
+  if (v.status === 'ok') {
+    const head = [
+      `cp-docs 图片 · ${v.model}（共 ${v.total} 张${v.keyword ? `，关键词「${v.keyword}」` : ''}）`,
+      v.images.length
+        ? `命中 ${v.images.length} 张${v.imageRootOk ? '' : '（⚠ 图片根目录未找到，发送前先重建索引）'}`
+        : '没有匹配的图片；可换关键词（线束 / 接口 / 安装 / 外观 / 参数）。',
+    ];
+    for (const img of v.images) {
+      const label = img.caption || img.sha8;
+      const where = img.exists ? img.path : `⚠ 文件缺失（${img.path || img.sha8}）`;
+      head.push(`- [${label}] 作用：${img.purpose}｜${where}｜建议名：${img.deliverAs}`);
+    }
+    if (v.images.length) head.push('发送用 path（已存在的命名文件）；回复里写明图号与作用，同一张图不要重复发。');
+    return head.join('\n');
+  }
+  if (v.status === 'needs_confirmation') return `cp-docs 图片 · 需要先确定机型\n${v.message}`;
+  if (v.status === 'catalog') return [`cp-docs 图片 · 机型目录（${v.count ?? '?'} 款）`, v.catalog ?? ''].filter(Boolean).join('\n');
+  if (v.status === 'noindex' || v.status === 'error') return `cp-docs 图片 · 取不到资料\n${v.message}`;
+  return 'cp-docs 图片：没有返回结果。';
+}
+
+function cpDocsImagesToolFor(ctx) {
+  return {
+    name: 'cp_docs_images',
+    description:
+      '按机型检索本地产品图片（接口图 / 线束图 / 接线表 / 参数表 / 安装图 / 外观图），'
+      + '返回每张图的图号、作用、本地路径与建议文件名。用户要发某机型的图、找线束图/接口图/安装图时调用；'
+      + 'query（model）必须含机型写法，keyword 可用「线束 / 接口 / 安装 / 外观 / 参数 / 针脚」。'
+      + '发送时用返回的 path 调 dsh_im_return_file，并在回复里写明图号与作用；不查固件版本（用 firmware_find）。',
+    parameters: {
+      type: 'object',
+      properties: {
+        model: {
+          type: 'string',
+          description: '机型写法，如 "TANK2"、"SPRING2-10PRO"、"APOLLO2 12PRO"',
+        },
+        keyword: {
+          type: 'string',
+          description: '可选：按图号/标题/作用/标签过滤，如 "线束"、"接口"、"安装"、"外观"、"针脚"',
+        },
+        limit: { type: 'integer', description: '返回条数上限，默认 20，最大 50' },
+      },
+      required: ['model'],
+    },
+    output: {
+      schema: {
+        type: 'object',
+        properties: {
+          status: { type: 'string', enum: ['ok', 'catalog', 'needs_confirmation', 'noindex', 'error'] },
+          model: { type: 'string' },
+          total: { type: 'integer' },
+          keyword: { type: 'string' },
+          count: { type: 'integer' },
+          imageRootOk: { type: 'boolean' },
+          images: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                idx: { type: 'integer' },
+                sha8: { type: 'string' },
+                caption: { type: 'string' },
+                section: { type: 'string' },
+                kind: { type: 'string' },
+                purpose: { type: 'string' },
+                tags: { type: 'array', items: { type: 'string' } },
+                path: { type: 'string' },
+                exists: { type: 'boolean' },
+                via: { type: 'string' },
+                deliverAs: { type: 'string' },
+              },
+            },
+          },
+          message: { type: 'string' },
+          instruction: { type: 'string' },
+          usage: { type: 'string' },
+          candidates: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: { id: { type: 'string' }, model: { type: 'string' } },
+            },
+          },
+          catalog: { type: 'string' },
+        },
+      },
+      render: (_args, value) => [{ type: 'text', text: renderImagesResult(value) }],
+    },
+    async execute(args, exec) {
+      const model = typeof args?.model === 'string' ? args.model : '';
+      const keyword = typeof args?.keyword === 'string' ? args.keyword : '';
+      const limit = Number(args?.limit);
+      const r = await resolveImagesAnswer(ctx, exec?.agent, exec?.signal, { model, keyword, limit });
+
+      if (r.kind === 'ok') {
+        return {
+          status: 'ok',
+          model: `${r.entry.id} ${r.entry.model}`,
+          total: r.total,
+          keyword: r.keyword,
+          count: r.images.length,
+          imageRootOk: r.imageRootOk,
+          images: r.images,
+          instruction: r.images.length
+            ? '用 path 调 dsh_im_return_file 发送；回复里写清图号与作用（如「图4.1.2 26P接线图：线序/线径/线色，线束制作用」）。'
+            : '没有命中：建议换成 线束 / 接口 / 安装 / 外观 / 参数 等关键词，或去掉 keyword 看全部。',
+        };
+      }
+      if (r.kind === 'catalog') {
+        return { status: 'catalog', count: r.count, catalog: r.text, instruction: '列出机型让用户先选一个。' };
+      }
+      if (r.kind === 'ambiguous') {
+        return {
+          status: 'needs_confirmation',
+          candidates: r.candidates,
+          message: r.text,
+          instruction: '把候选给用户选；不要自己挑一个继续发图。',
+        };
+      }
+      if (r.kind === 'noindex') {
+        return {
+          status: 'noindex',
+          model: `${r.entry.id} ${r.entry.model}`,
+          message: r.text,
+          instruction: '告诉用户需要重建索引：node scripts/import-docs.mjs（不要编造图片路径）。',
+        };
+      }
+      return { status: 'error', message: r.text || '取不到图片资料', usage: USAGE };
+    },
+  };
+}
+
+/* ------------------------------------------------------------------ *
  * 模型工具：cp_docs（与 /cp-docs 命令同一套判定；IM 通道没有命令入口，
  * 靠这个工具取资料，行为与 GUI 的整包路径一致）
  * ------------------------------------------------------------------ */
@@ -253,6 +479,7 @@ function cpDocsToolFor(ctx) {
       + '用户问某机型的屏幕尺寸、RS232/RS485 引脚、GPIO、工作温度、设备节点，或发 /cp-docs 时调用。'
       + 'query 必须包含机型写法；返回 ok 时整包资料会作为下一条上下文给出（模型直接可见），据此作答并标注出处；'
       + '返回 needs_confirmation 就把候选列给用户，选定后带精确机型重试；返回 catalog 就列机型让用户挑。'
+      + '整包里只列图片标题；用户要发图 / 找线束图接口图，再用 cp_docs_images 取路径与作用。'
       + '不负责固件版本与刷机直链（用 firmware_find）、工单与历史 bug（用 ticket_search / ticket_bug_check）。',
     parameters: {
       type: 'object',
@@ -405,6 +632,7 @@ export function apply(ctx) {
   const gate = createSkillGate(ctx, ['cp-docs']);
   const when = gate.when('cp-docs');
   ctx.effect(() => ctx.tools.register(withSkillScope(cpDocsToolFor(ctx), CP_DOCS_SCOPE), { when }));
+  ctx.effect(() => ctx.tools.register(withSkillScope(cpDocsImagesToolFor(ctx), CP_DOCS_SCOPE), { when }));
   ctx.effect(() => ctx.skills.register(skill));
 
   // GUI 快捷入口保留：命令与工具共用 resolveDocsAnswer，行为不变。

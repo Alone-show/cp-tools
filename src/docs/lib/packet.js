@@ -81,6 +81,25 @@ function renderProgramming(pages) {
   return lines;
 }
 
+/** 整包里只放图片摘要（抓取清单全量图，含未转写的线束外观/正背面图） */
+const IMAGE_LIST_MAX = 6;
+
+function renderImages(images) {
+  const list = images || [];
+  if (!list.length) return [];
+  const lines = [`## 图片（${list.length} 张，可按需发送）`];
+  for (const img of list.slice(0, IMAGE_LIST_MAX)) {
+    const title = img.caption || img.captions?.[0] || '（无标题）';
+    const sec = img.section ? `（${img.section}）` : '';
+    lines.push(`- ${title}${sec}`);
+  }
+  const rest = list.length - IMAGE_LIST_MAX;
+  if (rest > 0) lines.push(`- …另有 ${rest} 张`);
+  lines.push('取路径与作用：调用 cp_docs_images（可带 keyword 过滤）；发送图片时写明图号与作用。');
+  lines.push('');
+  return lines;
+}
+
 function renderFigures(figures) {
   const lines = [];
   for (const f of figures || []) {
@@ -134,10 +153,11 @@ function leanWorkpoints(workpoints) {
  * @param {object}   p.spec         models/<id>/spec.json
  * @param {object?}  p.programming  models/<id>/programming.json
  * @param {object?}  p.workpoints   models/<id>/workpoints.json
+ * @param {Array?}   p.images       images.json 里该机型的 images[]（只取标题做摘要）
  * @param {object}   [p.labels]     { params_flat key → 中文名 }
  * @param {number}   [p.maxChars]   软上限，超出后降级编程节点/工作点
  */
-export function renderPacket({ entry, spec, programming, workpoints, labels = {}, maxChars = 40000 }) {
+export function renderPacket({ entry, spec, programming, workpoints, images, labels = {}, maxChars = 40000 }) {
   const build = (lean) => {
     const L = [];
     const head = [`# ${entry.id} ${entry.model}`, entry.family ? `（系列 ${entry.family}）` : ''].join('');
@@ -165,6 +185,9 @@ export function renderPacket({ entry, spec, programming, workpoints, labels = {}
       L.push(...(lean ? leanFigures(spec.figures) : renderFigures(spec.figures)));
       L.push('');
     }
+
+    const imageLines = renderImages(images);
+    if (imageLines.length) L.push(...imageLines);
 
     if (programming?.pages?.length) {
       L.push('## 编程节点');

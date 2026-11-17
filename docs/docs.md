@@ -44,6 +44,22 @@ DSH（DeepSeek Harness）插件：**斜杠命令 `/cp-docs` 直读 + 门控工�
 
 歧义时命令直接列出候选（不触发模型）；只有整包资料完全相同的机型才会合并作答；整包中确实没有的项，回答“资料中未收录”，不推断。
 
+## 图片索引与发图
+
+- `.cpdocs/images.json`：按机型列出页面上的**全部图片**（含未转写的线束外观图、正/背面图），每条带 `caption / purpose（作用） / tags / namedFile / src / missing`。
+- `.cpdocs/images.md`：同一份数据的人读版（表格），可直接 `grep 线束` 或编辑器查看。
+- 生成：`node scripts/import-docs.mjs`；数据源为 `work/cpdoc/manifest.json`（全部图引用）+ `models/<id>/spec.json`（标题、章节、针脚表），按 `sha256` 合并，manifest 缺失时降级为 spec-only 并在索引里标注。
+- 作用文案：`lib/image-purpose.js` 按 `kind` + 标题关键词生成（只转述标题，不引入新参数）；逐张精修写 `work/cpdoc/ai-readable/figure-purpose.json`。
+- 检索与发送：工具 `cp_docs_images`（`model` 必填 + `keyword` 可选，支持 线束/接线/针脚/安装/外观/参数 及同义词），或 shell：
+
+```bash
+node scripts/cp-docs-images.mjs TANK2 --grep 线束
+node scripts/cp-docs-images.mjs TANK2 --json
+```
+
+- 路径解析顺序：`DSH_CPDOCS_IMAGES` → 索引记录的 `imageRoot` → `<.cpdocs>/images` → 包内 `data/images` → `<workspace>/work/cpdoc/ai-readable/images`；都找不到时工具返回 `exists:false` 并提示重建，不静默跳过。
+- `packet` 只含图片标题摘要（最多 6 条），完整清单走工具。
+
 ### 改造前后对比
 
 | | v0.1.0（旧） | v0.2.0 / v0.2.1（当前） |
