@@ -16,8 +16,16 @@ delete process.env.DSH_CPDOCS_DIR;
 function harness() {
   const registered = [];
   const messages = [];
+  const tools = [];
+  const skills = [];
   const ctx = {
     commands: { register: (d) => registered.push(d) },
+    tools: { register: (d) => (tools.push(d), () => {}) },
+    skills: { register: (s) => (skills.push(s), () => {}) },
+    effect: (fn) => {
+      const dispose = fn();
+      return typeof dispose === 'function' ? dispose : () => {};
+    },
     get: (k) => {
       if (k !== 'workingDirectory') return undefined;
       return {
@@ -28,11 +36,15 @@ function harness() {
   };
   apply(ctx);
   const def = registered.find((d) => d.name === 'cp-docs');
+  const tool = tools.find((d) => d.name === 'cp_docs');
   const agent = { followup: (m) => messages.push(m) };
   return {
     def,
+    tool,
+    skills,
     messages,
     run: (rawInput) => def.handler({ commandId: 'c1', agent, rawInput, attachments: [], signal: new AbortController().signal }),
+    runTool: (query) => tool.execute({ query }, { agent, signal: new AbortController().signal }),
   };
 }
 
@@ -56,4 +68,28 @@ test('空输入给用法', () => {
     assert.equal(res.kind, 'error');
     assert.match(res.text, /用法/);
   });
+});
+
+test('工具 cp_docs 与 /cp-docs 命令同一套判定', { skip: !fs.existsSync(dataDir) }, async () => {
+  const h = harness();
+  assert.ok(h.tool, '应注册 cp_docs 工具');
+  const res = await h.runTool('SPRING2PRO 的屏幕尺寸是多少');
+  assert.equal(res.status, 'ok');
+  assert.match(res.model, /SPRING/);
+  assert.match(res.packet, /10\.1 英寸/);
+  assert.match(res.instruction, /packet/);
+  assert.equal(h.messages.length, 0, '工具直接返回资料给模型，不应 followup');
+});
+
+test('工具在认不出机型时不猜', { skip: !fs.existsSync(dataDir) }, async () => {
+  const h = harness();
+  const res = await h.runTool('这台机器怎么接线');
+  assert.ok(['needs_confirmation', 'error'].includes(res.status), `unexpected status ${res.status}`);
+});
+
+test('注册了运行时 skill，与其它子插件同形', () => {
+  const h = harness();
+  assert.equal(h.skills.length, 1);
+  assert.equal(h.skills[0].name, 'cp-docs');
+  assert.ok(h.skills[0].description.length > 20);
 });

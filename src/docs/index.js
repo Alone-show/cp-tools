@@ -7,13 +7,20 @@
  * 由模型自行定位作答。检索全程离线。
  */
 import crypto from 'node:crypto';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { resolveDataDir, loadDataset, loadModelFiles, loadLabels } from './lib/store.js';
 import { parseQuery } from './lib/parse.js';
 import { renderPacket, buildPacketMessage } from './lib/packet.js';
 import { renderCandidates, renderCatalog } from './lib/framing.js';
+import { readBundledSkill as readSkillFile } from '../shared/skill.js';
 
 export const name = 'cp-docs';
-export const inject = ['commands'];
+/** 与 firmware / tickets / bpms 同形：工具 + skill 是主入口，命令保留给 GUI 快捷触发。 */
+export const inject = ['commands', 'tools', 'skills'];
+
+const PLUGIN_DIR = path.dirname(fileURLToPath(import.meta.url));
+const SKILL_FILE = path.join(PLUGIN_DIR, 'skills', 'cp-docs', 'SKILL.md');
 
 /** 注入消息的 source.kind：非 'user' → 客户端渲染为折叠的上下文/触发卡片，不占用户气泡 */
 const SOURCE_KIND = 'cp-docs';
@@ -83,67 +90,78 @@ function loadPacket(dir, entry, labels) {
   };
 }
 
-async function handleCommand(ctx, inv) {
-  const text = String(inv.rawInput || '').trim();
-  if (!text) return { kind: 'error', text: USAGE };
+/**
+ * 命令与工具共用的唯一判定入口：文本 → 机型 → 资料。
+ * 返回 kind：packet（唯一命中/多机型资料相同）/ catalog / ambiguous / sync / help / error。
+ * 命令侧把它翻成 followup，工具侧把它翻成结构化结果，两边不各写一套解析。
+ */
+async function resolveDocsAnswer(ctx, agent, signal, rawText) {
+  const text = String(rawText || '').trim();
+  if (!text) return { kind: 'help', text: USAGE, question: text };
 
   let dir;
   try {
-    dir = await resolveDataDir(ctx, inv.agent, inv.signal);
+    dir = await resolveDataDir(ctx, agent, signal);
   } catch (err) {
-    return { kind: 'error', text: `cp-docs 没有本地资料：${err.message}` };
+    return { kind: 'error', text: `cp-docs 没有本地资料：${err.message}`, question: text };
   }
   const dataset = loadDataset(dir);
   const parsed = parseQuery(text, dataset.models);
 
   if (parsed.intent === 'sync') {
     return {
-      kind: 'success',
+      kind: 'sync',
       text: '资料快照更新需要文档站登录态，这一步尚未启用；日常检索不受影响（全部读本地 .cpdocs）。',
+      question: text,
     };
   }
 
   if (parsed.intent === 'help') {
-    return { kind: 'error', text: `${USAGE}\n\n没有从问题里认出机型。` };
+    return { kind: 'help', text: `${USAGE}\n\n没有从问题里认出机型。`, question: text };
   }
 
   if (parsed.intent === 'catalog') {
-    const framing = [
-      '【cp-docs 检索结果 · 机型清单】',
-      `用户问题：${text}`,
-      renderCatalog(dataset.models),
-      '请基于以上清单回答用户（不要补充清单之外的机型）。',
-    ].join('\n');
-    inv.agent.followup(contextMessage(framing, `机型目录 · ${dataset.models.length} 款机型`));
-    return { kind: 'success', text: `已列出 ${dataset.models.length} 款机型，正在生成回答…` };
+    return {
+      kind: 'catalog',
+      question: text,
+      count: dataset.models.length,
+      text: renderCatalog(dataset.models),
+    };
   }
 
   // 歧义：整包完全相同则合并作答，否则列候选让用户选
   if (parsed.intent === 'ambiguous') {
     const scored = parsed.candidates || [];
-    if (scored.length) {
-      const labels = loadLabels(dir);
-      const built = scored
-        .map(([, g]) => ({ g, ...(loadPacket(dir, g, labels) || { packet: '' }) }))
-        .filter((x) => x.packet);
-      const first = built[0];
-      if (first && built.length > 1 && built.every((x) => x.packet === first.packet)) {
-        const framing = buildPacketMessage({
-          question: cleanQuestion(parsed.question),
-          entry: first.g,
-          packet: first.packet,
-          extraNotes: [
-            `问题里的机型写法「${parsed.modelText}」对应多个机型，它们的资料完全相同：${built.map((x) => x.g.model).join(' / ')}`,
-          ],
-        });
-        inv.agent.followup(
-          contextMessage(framing, `资料相同：${built.map((x) => `${x.g.id} ${x.g.model}`).join(' / ')}`),
-        );
-        return { kind: 'success', text: `命中 ${first.g.id} ${first.g.model} 等机型（资料相同），正在生成回答…` };
-      }
-      return { kind: 'success', text: renderCandidates({ query: parsed.modelText || text, scored }) };
+    if (!scored.length) {
+      return { kind: 'help', text: `${USAGE}\n\n没能唯一确定机型。`, question: text };
     }
-    return { kind: 'error', text: `${USAGE}\n\n没能唯一确定机型。` };
+    const labels = loadLabels(dir);
+    const built = scored
+      .map(([, g]) => ({ g, ...(loadPacket(dir, g, labels) || { packet: '' }) }))
+      .filter((x) => x.packet);
+    const first = built[0];
+    if (first && built.length > 1 && built.every((x) => x.packet === first.packet)) {
+      const entries = built.map((x) => x.g);
+      return {
+        kind: 'packet',
+        question: cleanQuestion(parsed.question),
+        modelText: parsed.modelText,
+        entry: first.g,
+        entries,
+        same: true,
+        packet: first.packet,
+        files: first.files,
+        materials: describeMaterials(first.files?.spec, first.files?.programming, first.files?.workpoints),
+        text: renderCandidates({ query: parsed.modelText || text, scored }),
+      };
+    }
+    return {
+      kind: 'ambiguous',
+      question: text,
+      modelText: parsed.modelText,
+      candidates: scored.map(([, g]) => ({ id: g.id, model: g.model })),
+      text: renderCandidates({ query: parsed.modelText || text, scored }),
+    };
   }
 
   // 唯一命中：整包返回该机型全部资料，定位交给模型
@@ -153,19 +171,194 @@ async function handleCommand(ctx, inv) {
   if (!loaded) {
     return {
       kind: 'error',
+      question: text,
+      entry,
       text: `已命中机型 ${entry.id} ${entry.model}，但本地缺少资料文件（${entry.spec}）。请重建索引：node scripts/import-docs.mjs`,
     };
   }
-  const materials = describeMaterials(loaded.files.spec, loaded.files.programming, loaded.files.workpoints);
-  const framing = buildPacketMessage({ question: cleanQuestion(parsed.question), entry, packet: loaded.packet });
-  inv.agent.followup(contextMessage(framing, `${entry.id} ${entry.model}${materials ? ` · ${materials}` : ''}`));
   return {
-    kind: 'success',
-    text: `已命中 ${entry.id} ${entry.model}：全量资料 ${materials}，正在生成回答…`,
+    kind: 'packet',
+    question: cleanQuestion(parsed.question),
+    entry,
+    entries: [entry],
+    packet: loaded.packet,
+    files: loaded.files,
+    materials: describeMaterials(loaded.files.spec, loaded.files.programming, loaded.files.workpoints),
   };
 }
 
+async function handleCommand(ctx, inv) {
+  const r = await resolveDocsAnswer(ctx, inv.agent, inv.signal, inv.rawInput);
+
+  switch (r.kind) {
+    case 'packet': {
+      const framing = buildPacketMessage({
+        question: r.question,
+        entry: r.entry,
+        packet: r.packet,
+        ...(r.same
+          ? {
+              extraNotes: [
+                `问题里的机型写法「${r.modelText}」对应多个机型，它们的资料完全相同：${r.entries
+                  .map((x) => x.model)
+                  .join(' / ')}`,
+              ],
+            }
+          : {}),
+      });
+      inv.agent.followup(
+        contextMessage(framing, `${r.entry.id} ${r.entry.model}${r.materials ? ` · ${r.materials}` : ''}`),
+      );
+      return {
+        kind: 'success',
+        text: r.same
+          ? `命中 ${r.entry.id} ${r.entry.model} 等机型（资料相同），正在生成回答…`
+          : `已命中 ${r.entry.id} ${r.entry.model}：全量资料 ${r.materials}，正在生成回答…`,
+      };
+    }
+    case 'catalog': {
+      const framing = [
+        '【cp-docs 检索结果 · 机型清单】',
+        `用户问题：${r.question}`,
+        r.text,
+        '请基于以上清单回答用户（不要补充清单之外的机型）。',
+      ].join('\n');
+      inv.agent.followup(contextMessage(framing, `机型目录 · ${r.count} 款机型`));
+      return { kind: 'success', text: `已列出 ${r.count} 款机型，正在生成回答…` };
+    }
+    case 'ambiguous':
+      return { kind: 'success', text: r.text };
+    case 'sync':
+      return { kind: 'success', text: r.text };
+    case 'help':
+      return { kind: 'error', text: r.text };
+    default:
+      return { kind: 'error', text: r.text };
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * 模型工具：cp_docs（与 /cp-docs 命令同一套判定；IM 通道没有命令入口，
+ * 靠这个工具取资料，行为与 GUI 的整包路径一致）
+ * ------------------------------------------------------------------ */
+function cpDocsToolFor(ctx) {
+  return {
+    name: 'cp_docs',
+    description:
+      '查 CP 机型的本地产品资料（参数 / 接口 / 线束 / 编程节点 / 工作点），离线读本机 .cpdocs。'
+      + '用户问某机型的屏幕尺寸、RS232/RS485 引脚、GPIO、工作温度、设备节点，或发 /cp-docs 时调用。'
+      + 'query 必须包含机型写法；返回 ok 时 packet 是该机型整包资料，据此作答并标注出处，不要补充 packet 之外的信息；'
+      + '返回 needs_confirmation 就把候选列给用户，选定后带精确机型重试；返回 catalog 就列机型让用户挑。'
+      + '不负责固件版本与刷机直链（用 firmware_find）、工单与历史 bug（用 ticket_search / ticket_bug_check）。',
+    parameters: {
+      type: 'object',
+      properties: {
+        query: {
+          type: 'string',
+          description: '自然语言问题，需包含机型写法，如 "SPRING2PRO 的屏幕尺寸"、"APOLLO2 12PRO 的工作温度范围"',
+        },
+      },
+      required: ['query'],
+    },
+    output: {
+      schema: {
+        type: 'object',
+        properties: {
+          status: { type: 'string', enum: ['ok', 'catalog', 'needs_confirmation', 'unsupported', 'error'] },
+          source: { type: 'string' },
+          model: { type: 'string' },
+          materials: { type: 'string' },
+          question: { type: 'string' },
+          note: { type: 'string' },
+          packet: { type: 'string' },
+          instruction: { type: 'string' },
+          count: { type: 'integer' },
+          catalog: { type: 'string' },
+          candidates: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: { id: { type: 'string' }, model: { type: 'string' } },
+            },
+          },
+          message: { type: 'string' },
+          usage: { type: 'string' },
+        },
+      },
+      render: (_args, value) => [{ type: 'text', text: renderDocsResult(value) }],
+    },
+    async execute(args, exec) {
+      const query = typeof args?.query === 'string' ? args.query : '';
+      const r = await resolveDocsAnswer(ctx, exec?.agent, exec?.signal, query);
+
+      if (r.kind === 'packet') {
+        return {
+          status: 'ok',
+          source: 'cp-docs/.cpdocs',
+          model: `${r.entry.id} ${r.entry.model}`,
+          materials: r.materials,
+          question: r.question,
+          ...(r.same
+            ? { note: `写法对应多个机型且资料相同：${r.entries.map((x) => `${x.id} ${x.model}`).join(' / ')}` }
+            : {}),
+          packet: String(r.packet).slice(0, 40000),
+          instruction: '基于 packet 作答并标注来自哪张表/哪一节；packet 里没有的字段直接说没有，不要补机型或猜参数。',
+        };
+      }
+      if (r.kind === 'catalog') {
+        return {
+          status: 'catalog',
+          count: r.count,
+          catalog: r.text,
+          instruction: '列出机型让用户先选一个，再用精确机型调用 cp_docs。',
+        };
+      }
+      if (r.kind === 'ambiguous') {
+        return {
+          status: 'needs_confirmation',
+          candidates: r.candidates,
+          message: r.text,
+          instruction: '把候选给用户选；不要自己挑一个继续答。',
+        };
+      }
+      if (r.kind === 'sync') return { status: 'unsupported', message: r.text };
+      return { status: 'error', message: r.text, usage: USAGE };
+    },
+  };
+}
+
+function readBundledSkill() {
+  return readSkillFile(SKILL_FILE);
+}
+
+/** 工具结果在客户端折叠展示：只给摘要，整包资料留在 JSON 里交给模型。 */
+function renderDocsResult(v) {
+  if (!v || typeof v !== 'object') return 'cp-docs：没有返回结果。';
+  if (v.status === 'ok') {
+    return [`cp-docs · ${v.model}`, v.materials ? `  ${v.materials}` : '', v.note ? `  ${v.note}` : '']
+      .filter(Boolean)
+      .join('\n');
+  }
+  if (v.status === 'catalog') return `cp-docs · 机型目录（${v.count ?? '?'} 款）`;
+  if (v.status === 'needs_confirmation') {
+    const names = (v.candidates ?? []).map((c) => `${c.id} ${c.model}`).slice(0, 6).join(' / ');
+    return ['cp-docs · 需要先确定机型', names ? `  候选：${names}` : ''].filter(Boolean).join('\n');
+  }
+  return `cp-docs · ${v.status ?? 'error'}${v.message ? `：${String(v.message).slice(0, 200)}` : ''}`;
+}
+
 export function apply(ctx) {
+  ctx.effect(() => ctx.tools.register(cpDocsToolFor(ctx)));
+  try {
+    const skill = readBundledSkill();
+    ctx.effect(() => ctx.skills.register(skill));
+  } catch (error) {
+    const message = `[cp-docs] 注册运行时 skill 失败：${error?.message || error}`;
+    if (ctx.logger?.warn) ctx.logger.warn(message);
+    else console.warn(message);
+  }
+
+  // GUI 快捷入口保留：命令与工具共用 resolveDocsAnswer，行为不变。
   ctx.commands.register({
     name: 'cp-docs',
     description: '按机型返回本地全部产品资料（参数/接口/线束/编程节点/工作点），由模型定位作答',

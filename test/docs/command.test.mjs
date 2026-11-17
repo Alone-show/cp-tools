@@ -12,12 +12,24 @@ if (has) process.env.DSH_CPDOCS_DIR = dataDir;
 function harness() {
   const registered = [];
   const messages = [];
-  const ctx = { commands: { register: (d) => registered.push(d) }, get: () => undefined };
+  const tools = [];
+  const skills = [];
+  const ctx = {
+    commands: { register: (d) => registered.push(d) },
+    tools: { register: (d) => (tools.push(d), () => {}) },
+    skills: { register: (s) => (skills.push(s), () => {}) },
+    effect: (fn) => {
+      const dispose = fn();
+      return typeof dispose === 'function' ? dispose : () => {};
+    },
+    get: () => undefined,
+  };
   apply(ctx);
   const def = registered.find((d) => d.name === 'cp-docs');
+  const tool = tools.find((d) => d.name === 'cp_docs');
   const agent = { followup: (m) => messages.push(m) };
   const run = (rawInput) => def.handler({ commandId: 'c1', agent, rawInput, attachments: [], signal: new AbortController().signal });
-  return { def, run, messages };
+  return { def, tool, skills, run, messages };
 }
 
 test('命令已注册且带说明', () => {

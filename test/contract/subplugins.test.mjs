@@ -25,7 +25,9 @@ test('插件名唯一，且沿用旧 id', () => {
 });
 
 test('依赖服务声明符合子插件职责', () => {
-  assert.deepEqual(docs.inject, ['commands']);
+  // docs 与其它子插件同形（tools + skills，模型在任意通道都能查资料），
+  // 额外保留 commands 只为 GUI 的 /cp-docs 快捷入口不失效。
+  assert.deepEqual(docs.inject, ['commands', 'tools', 'skills']);
   assert.deepEqual(firmware.inject, ['tools', 'skills']);
   assert.deepEqual(tickets.inject, ['tools', 'skills']);
   assert.deepEqual(cpservice.inject, ['skills']);
