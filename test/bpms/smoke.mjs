@@ -348,14 +348,24 @@ step('浏览器 bundle 能加载并注册插件页', () => {
 
 step('apply 能把工具和 skill 注册进 ctx', () => {
   const registered = { tools: [], skills: [] };
+  const opts = [];
   const ctx = {
     effect(fn) {
       fn();
     },
-    tools: { register: (tool) => registered.tools.push(tool.name) },
+    on: () => () => {},
+    tools: {
+      register: (tool, options) => {
+        registered.tools.push(tool.name);
+        opts.push(options?.when);
+      },
+    },
     skills: { register: (skill) => registered.skills.push(skill.name) },
   };
   bpms.apply(ctx);
+  assert.equal(opts.length, 5, '5 个工具都要传注册选项');
+  for (const when of opts) assert.equal(typeof when, 'function', 'bpms 工具缺 skill 激活门');
+  assert.equal(opts[0]({ agent: { session: undefined } }), false, '未加载 bpms skill 时不可见');
   assert.deepEqual(registered.tools.sort(), ['bpms_fields', 'bpms_get', 'bpms_login', 'bpms_update', 'bpms_upload']);
   assert.deepEqual(registered.skills, ['bpms']);
 });

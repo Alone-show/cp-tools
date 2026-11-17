@@ -4,12 +4,12 @@
 
 | 子插件 | 入口 | 能力 |
 |---|---|---|
-| 产品资料 | `/cp-docs` | 按机型返回本地全部资料（参数 / 接口与线束表 / 图内文字 / 编程节点 / 工作点），由模型定位作答 |
-| 固件查找 | `/firmware` | 机型目录（规范名/别名/变体 + 系统/客户/尺寸）→ 选定后给量产固件与线刷/OTA 直链（alist 优先 + minio 备用）；只做固件查找 |
-| 工单与历史问题 | `/tickets` | 按现象查 TB 工单/任务号与子任务状态；历史 bug 是否修进客户正式版、跨机型/系统/芯片比对 |
+| 产品资料 | `/cp-docs` · 模型加载 | 按机型返回本地全部资料（参数 / 接口与线束表 / 图内文字 / 编程节点 / 工作点），由模型定位作答 |
+| 固件查找 | 模型加载 | 机型目录（规范名/别名/变体 + 系统/客户/尺寸）→ 选定后给量产固件与线刷/OTA 直链（alist 优先 + minio 备用）；只做固件查找 |
+| 工单与历史问题 | 模型加载 | 按现象查 TB 工单/任务号与子任务状态；历史 bug 是否修进客户正式版、跨机型/系统/芯片比对 |
 | U 盘升级 | `/cpservice` | RK 安卓 / T3 安卓 / RK Debian / T3 Linux 升级包生成与真机验证 |
 | 整机线刷 | `/flash` | 整机镜像覆盖烧写（RK / T3，安卓 / Debian / Buildroot），刷完只比版本号验收；**仅用户显式 `/flash` 触发** |
-| BPMS 订单需求 | `/bpms` | BPMS（CPSales）登录、按「分区/字段名」读写订单需求表、备份与回滚 |
+| BPMS 订单需求 | 模型加载 | BPMS（CPSales）登录、按「分区/字段名」读写订单需求表、备份与回滚 |
 
 六个子插件共用一次安装/升级，但在插件管理器里可以按 id 单独停用：
 `cp-docs`、`firmware-finder`、`cp-tickets`、`e9631service`、`cp-flash`、`cp-bpms`。
@@ -143,6 +143,22 @@ npm run sync -- --all    # 资料 + TB + commit 索引
 npm run resolve -- SPRING2PRO --catalog docs
 node scripts/live-smoke.mjs   # 在线冒烟；无凭据/断网时 SKIP
 ```
+
+## 工具可见性（skill 激活门）
+
+`bpms_*` / `firmware_*` / `ticket_*` / `cp_docs` 这 17 个工具**不再常驻**在 tools 数组里：
+只有模型调用 `skill` 工具成功加载对应 skill 之后，它们才从**下一步**起可见；未加载时既不进声明、
+也不可调度（强行调用得到 `UNKNOWN_TOOL`）。做法照抄官方 `@deepseek-ai/dsh-action-cards`：
+`tools.register(definition, { when })` + `tools/result` 观察 `skill` 调用 + 按 agent 记账。
+
+由此带来的口径变化：
+
+- `bpms` / `firmware` / `tickets` / `cp-docs` 四个 skill 都标了 `user-invocable: false`：
+  斜杠命令只给正文、不给工具，留着会变成「有说明没工具」的半残路径，所以改由模型按描述自助加载。
+  `/cp-docs`、`/flash`、`/cpservice` 命令不受影响（前者走 `handleCommand` 直读 `.cpdocs`，后两者本来就不注册工具）。
+- 每个工具的 description 前置一句 `【<skill> 技能】…` 的作用边界，写明只读/只写、前置条件与禁止项。
+- resume / fork 后首次求值会扫一遍会话日志补水，已加载的 skill 不会重新变回不可见。
+- 急停开关：`CP_TOOLS_SKILL_GATE=off` 让所有工具恢复常驻（等同于改造前的行为）。
 
 ## 数据目录与环境变量
 

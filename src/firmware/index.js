@@ -5,6 +5,7 @@ import { createAlist, parseVersionDir, osNameByLetter } from './alist.js';
 import { mcuToolFor } from './mcu.js';
 import { nz, canonModel, equivCore, queryCores, scoreCore, splitVendor } from '../shared/model-core.js';
 import { readBundledSkill as readSkillFile } from '../shared/skill.js';
+import { createSkillGate, withSkillScope } from '../shared/skill-gate.js';
 import { candidateDirs, tokenDir, readCookie } from '../tb/auth.js';
 import { readBoardFromDirs } from '../tb/board.js';
 import { createTbClient, normalizeTask } from '../tb/live.js';
@@ -44,6 +45,8 @@ let fetchImpl = (...args) => globalThis.fetch(...args);
 
 const PLUGIN_DIR = path.dirname(fileURLToPath(import.meta.url));
 const SKILL_FILE = path.join(PLUGIN_DIR, 'skills', 'firmware', 'SKILL.md');
+/** 工具描述前置的作用边界（模型可见）。 */
+const FIRMWARE_SCOPE = '【firmware 技能】只查量产版本与直链：不刷机、不改订单、不写库。';
 
 function ageHoursOf(iso) {
   const ts = Date.parse(iso ?? '');
@@ -1635,9 +1638,11 @@ export const name = 'firmware-finder';
 export const inject = ['tools', 'skills'];
 
 export function apply(ctx) {
-  ctx.effect(() => ctx.tools.register(findToolFor(ctx)));
-  ctx.effect(() => ctx.tools.register(modelsToolFor(ctx)));
-  ctx.effect(() => ctx.tools.register(mcuToolFor(ctx)));
+  // 工具只在模型加载过 firmware skill 之后才可见（见 shared/skill-gate.js）。
+  const when = createSkillGate(ctx, ['firmware']).when('firmware');
+  ctx.effect(() => ctx.tools.register(withSkillScope(findToolFor(ctx), FIRMWARE_SCOPE), { when }));
+  ctx.effect(() => ctx.tools.register(withSkillScope(modelsToolFor(ctx), FIRMWARE_SCOPE), { when }));
+  ctx.effect(() => ctx.tools.register(withSkillScope(mcuToolFor(ctx), FIRMWARE_SCOPE), { when }));
   try {
     const skill = readBundledSkill();
     ctx.effect(() => ctx.skills.register(skill));

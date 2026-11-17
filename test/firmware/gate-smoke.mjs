@@ -8,7 +8,8 @@ const { readBundledSkill, SKILL_FILE } = __internals;
 const skill = readBundledSkill();
 assert.equal(skill.name, 'firmware');
 assert.equal(skill.invocation.modelInvocable, true, '模型目录里应能看到 firmware skill');
-assert.equal(skill.invocation.userInvocable, true, '`/` 菜单里应能看到 firmware');
+// 工具有 skill 激活门：/firmware 不再走手势（手势只注入正文、不给工具），改为模型自助加载。
+assert.equal(skill.invocation.userInvocable, false, '带激活门的 skill 不出现在 / 菜单');
 assert.equal(skill.source, 'runtime');
 assert.equal(skill.path, SKILL_FILE);
 assert.equal(skill.resourceBase.path, path.dirname(SKILL_FILE));
@@ -34,13 +35,14 @@ const ctx = {
     fn();
     return () => {};
   },
-  on: () => {
-    preExecute += 1;
+  on: (name) => {
+    // 只有 tools/pre-execute 才算"闸门"；skill 激活门监听的是 tools/result 与 agent/disposed。
+    if (name === 'tools/pre-execute') preExecute += 1;
     return () => {};
   },
   tools: {
-    register(definition) {
-      tools.push(definition);
+    register(definition, options) {
+      tools.push({ ...definition, __when: options?.when });
       return () => {};
     },
   },
@@ -57,6 +59,16 @@ assert.ok(findTool.description.includes('不要说成「alist 未收录」'), '�
 
 assert.equal(preExecute, 0, '不应再注册 tools/pre-execute 闸门');
 console.log('ok  没有 tools/pre-execute 闸门');
+
+for (const tool of tools) assert.equal(typeof tool.__when, 'function', `${tool.name} 缺 skill 激活门`);
+assert.equal(tools[0].__when({ agent: { session: undefined } }), false, '未加载 skill 时不可见');
+process.env.CP_TOOLS_SKILL_GATE = 'off';
+try {
+  assert.equal(tools[0].__when({ agent: { session: undefined } }), true, '急停开关应恒可见');
+} finally {
+  delete process.env.CP_TOOLS_SKILL_GATE;
+}
+console.log('ok  3 个固件工具都带 skill 激活门（可用 CP_TOOLS_SKILL_GATE=off 急停）');
 
 for (const tool of tools) {
   assert.ok(!tool.description.includes('仅当用户输入'), `${tool.name} 描述仍在限制 /firmware`);

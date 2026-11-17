@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readBundledSkill as readSkillFile } from '../shared/skill.js';
+import { createSkillGate, withSkillScope } from '../shared/skill-gate.js';
 import { TOOL_FACTORIES } from './tools.js';
 import { createConfigRoute, createTestRoute } from './http.js';
 
@@ -13,6 +14,8 @@ import { createConfigRoute, createTestRoute } from './http.js';
 
 const PLUGIN_DIR = path.dirname(fileURLToPath(import.meta.url));
 const SKILL_FILE = path.join(PLUGIN_DIR, 'skills', 'bpms', 'SKILL.md');
+/** 工具描述前置的作用边界（模型可见）。 */
+const BPMS_SCOPE = '【bpms 技能】只操作 CPSales 订单需求表：改字段前先用 bpms_fields 确认字段名，默认 dry-run；不负责刷机与出包。';
 
 export function readBundledSkill() {
   return readSkillFile(SKILL_FILE);
@@ -22,8 +25,10 @@ export const name = 'cp-bpms';
 export const inject = ['tools', 'skills'];
 
 export function apply(ctx) {
+  // 工具只在模型加载过 bpms skill 之后才可见（见 shared/skill-gate.js）。
+  const when = createSkillGate(ctx, ['bpms']).when('bpms');
   for (const factory of TOOL_FACTORIES) {
-    ctx.effect(() => ctx.tools.register(factory()));
+    ctx.effect(() => ctx.tools.register(withSkillScope(factory(), BPMS_SCOPE), { when }));
   }
   // 插件页「BPMS 配置」的读写接口：只在 Web 组合（Connection）下注册。
   if (typeof ctx.inject === 'function') {

@@ -1,7 +1,8 @@
 /**
- * @local/cp-tools/docs —— /cp-docs + 自然语言的产品资料检索。
+ * @local/cp-tools/docs —— /cp-docs 命令 + cp_docs 模型工具（产品资料检索）。
  *
- * 只注册一个斜杠命令（不注册模型工具）：用户输入 /cp-docs SPRING2PRO 的屏幕尺寸，
+ * 斜杠命令 /cp-docs 直接返回资料（不经 ctx.tools）；模型侧另有 cp_docs 工具，
+ * 但带 skill 激活门——只有加载过 cp-docs skill 才可见。用户输入 /cp-docs SPRING2PRO 的屏幕尺寸，
  * 插件做机型归一（与 firmware-finder 共用 shared/model-core）；**唯一命中机型后把该机型全部本地资料整包**
  * 作为一条「上下文」followup 给会话（source.kind 非 user，客户端渲染为折叠卡片），
  * 由模型自行定位作答。检索全程离线。
@@ -14,6 +15,7 @@ import { parseQuery } from './lib/parse.js';
 import { renderPacket, buildPacketMessage } from './lib/packet.js';
 import { renderCandidates, renderCatalog } from './lib/framing.js';
 import { readBundledSkill as readSkillFile } from '../shared/skill.js';
+import { createSkillGate, withSkillScope } from '../shared/skill-gate.js';
 
 export const name = 'cp-docs';
 /** 与 firmware / tickets / bpms 同形：工具 + skill 是主入口，命令保留给 GUI 快捷触发。 */
@@ -21,6 +23,8 @@ export const inject = ['commands', 'tools', 'skills'];
 
 const PLUGIN_DIR = path.dirname(fileURLToPath(import.meta.url));
 const SKILL_FILE = path.join(PLUGIN_DIR, 'skills', 'cp-docs', 'SKILL.md');
+/** 工具描述前置的作用边界（模型可见）。 */
+const CP_DOCS_SCOPE = '【cp-docs 技能】只读本机 .cpdocs：不联网、不补充资料之外的内容。';
 
 /** 注入消息的 source.kind：非 'user' → 客户端渲染为折叠的上下文/触发卡片，不占用户气泡 */
 const SOURCE_KIND = 'cp-docs';
@@ -348,7 +352,10 @@ function renderDocsResult(v) {
 }
 
 export function apply(ctx) {
-  ctx.effect(() => ctx.tools.register(cpDocsToolFor(ctx)));
+  // cp_docs 工具只在模型加载过 cp-docs skill 之后才可见；
+  // /cp-docs 命令走 handleCommand → resolveDocsAnswer，不经过 ctx.tools，因此不受影响。
+  const when = createSkillGate(ctx, ['cp-docs']).when('cp-docs');
+  ctx.effect(() => ctx.tools.register(withSkillScope(cpDocsToolFor(ctx), CP_DOCS_SCOPE), { when }));
   try {
     const skill = readBundledSkill();
     ctx.effect(() => ctx.skills.register(skill));

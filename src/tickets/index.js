@@ -20,9 +20,12 @@ import { matchScore, taskMatches, expandSymptom } from './lib/symptoms.js';
 import { buildIssueRows, renderIssues, isVersionTask, searchBoardTasks } from './lib/issues.js';
 import { fixToolDefinitions } from './lib/bug/tools.js';
 import { readBundledSkill as readSkillFile } from '../shared/skill.js';
+import { createSkillGate, withSkillScope } from '../shared/skill-gate.js';
 
 const PLUGIN_DIR = path.dirname(fileURLToPath(import.meta.url));
 const SKILL_FILE = path.join(PLUGIN_DIR, 'skills', 'tickets', 'SKILL.md');
+/** 工具描述前置的作用边界（模型可见）。 */
+const TICKETS_SCOPE = '【tickets 技能】只读查证：不写库、不反查客户代码与机型别名、不给固件直链。';
 
 /** 可替换的 fetch（离线测试用；运行时就是全局 fetch）。 */
 let fetchImpl = (...args) => globalThis.fetch(...args);
@@ -680,11 +683,13 @@ export const name = 'cp-tickets';
 export const inject = ['tools', 'skills'];
 
 export function apply(ctx) {
-  ctx.effect(() => ctx.tools.register(ticketSearchToolFor(ctx)));
-  ctx.effect(() => ctx.tools.register(ticketSyncToolFor(ctx)));
-  ctx.effect(() => ctx.tools.register(ticketLoginToolFor(ctx)));
+  // 工具只在模型加载过 tickets skill 之后才可见（见 shared/skill-gate.js）。
+  const when = createSkillGate(ctx, ['tickets']).when('tickets');
+  ctx.effect(() => ctx.tools.register(withSkillScope(ticketSearchToolFor(ctx), TICKETS_SCOPE), { when }));
+  ctx.effect(() => ctx.tools.register(withSkillScope(ticketSyncToolFor(ctx), TICKETS_SCOPE), { when }));
+  ctx.effect(() => ctx.tools.register(withSkillScope(ticketLoginToolFor(ctx), TICKETS_SCOPE), { when }));
   for (const definition of fixToolDefinitions(ctx, { tbEvidence: (input) => buildTbEvidence(ctx, input) })) {
-    ctx.effect(() => ctx.tools.register(definition));
+    ctx.effect(() => ctx.tools.register(withSkillScope(definition, TICKETS_SCOPE), { when }));
   }
   try {
     const skill = readBundledSkill();

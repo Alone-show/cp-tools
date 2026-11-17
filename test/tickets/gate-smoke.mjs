@@ -8,7 +8,8 @@ const { readBundledSkill, SKILL_FILE } = __internals;
 const skill = readBundledSkill();
 assert.equal(skill.name, 'tickets');
 assert.equal(skill.invocation.modelInvocable, true);
-assert.equal(skill.invocation.userInvocable, true);
+// 工具有 skill 激活门：/tickets 不再走手势（手势只注入正文、不给工具），改为模型自助加载。
+assert.equal(skill.invocation.userInvocable, false);
 assert.equal(skill.source, 'runtime');
 assert.equal(skill.path, SKILL_FILE);
 assert.equal(skill.resourceBase.path, path.dirname(SKILL_FILE));
@@ -26,14 +27,24 @@ const ctx = {
   },
   on: () => () => {},
   tools: {
-    register(definition) {
-      tools.push(definition);
+    register(definition, options) {
+      tools.push({ ...definition, __when: options?.when });
       return () => {};
     },
   },
   skills: { register: () => () => {} },
 };
 apply(ctx);
+
+for (const tool of tools) assert.equal(typeof tool.__when, 'function', `${tool.name} 缺 skill 激活门`);
+assert.equal(tools[0].__when({ agent: { session: undefined } }), false, '未加载 tickets skill 时不可见');
+process.env.CP_TOOLS_SKILL_GATE = 'off';
+try {
+  assert.equal(tools[0].__when({ agent: { session: undefined } }), true, '急停开关应恒可见');
+} finally {
+  delete process.env.CP_TOOLS_SKILL_GATE;
+}
+console.log(`ok  ${tools.length} 个工单工具都带 skill 激活门`);
 
 assert.deepEqual(tools.map((t) => t.name).sort(), [
   'ticket_bug_check',
