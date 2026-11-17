@@ -346,28 +346,65 @@ step('浏览器 bundle 能加载并注册插件页', () => {
   assert.equal(registered.slots[0].name, 'plugins.bundle.config');
 });
 
-step('apply 能把工具和 skill 注册进 ctx', () => {
-  const registered = { tools: [], skills: [] };
+await stepAsync('apply 能把工具、skill、命令与写类 guard 注册进 ctx', async () => {
+  const registered = { tools: [], skills: [], commands: [], guards: [] };
   const opts = [];
   const ctx = {
+    logger: { warn() {} },
+    get: () => undefined,
     effect(fn) {
       fn();
     },
     on: () => () => {},
+    inject: (_deps, callback) =>
+      callback({
+        commands: { register: (definition) => (registered.commands.push(definition), () => {}) },
+        effect: (fn) => {
+          fn();
+          return () => {};
+        },
+      }),
     tools: {
       register: (tool, options) => {
         registered.tools.push(tool.name);
         opts.push(options?.when);
       },
+      guard: (guard) => (registered.guards.push(guard), () => {}),
     },
     skills: { register: (skill) => registered.skills.push(skill.name) },
   };
   bpms.apply(ctx);
   assert.equal(opts.length, 5, '5 个工具都要传注册选项');
   for (const when of opts) assert.equal(typeof when, 'function', 'bpms 工具缺 skill 激活门');
-  assert.equal(opts[0]({ agent: { session: undefined } }), false, '未加载 bpms skill 时不可见');
+  assert.equal(await opts[0]({ agent: { session: undefined } }), false, '未加载 bpms skill 时不可见');
   assert.deepEqual(registered.tools.sort(), ['bpms_fields', 'bpms_get', 'bpms_login', 'bpms_update', 'bpms_upload']);
   assert.deepEqual(registered.skills, ['bpms']);
+  assert.deepEqual(registered.commands.map((command) => command.name), ['bpms']);
+  assert.equal(registered.guards.length, 1, '应注册一个写类 guard');
+
+  const session = {};
+  const agent = { session, followup: () => {} };
+  assert.ok(
+    registered.guards[0]({ name: 'bpms_update', arguments: { apply: true }, agent }),
+    '未经 /bpms 进入时 apply:true 应被拒绝',
+  );
+  assert.equal(
+    registered.guards[0]({ name: 'bpms_update', arguments: { apply: false }, agent }),
+    undefined,
+    'dry-run 不受影响',
+  );
+  assert.ok(registered.guards[0]({ name: 'bpms_upload', arguments: {}, agent }), '未经 /bpms 进入时上传应被拒绝');
+
+  await registered.commands[0].handler({ agent, rawInput: '看下 CPS-SY2026DX0949', signal: new AbortController().signal });
+  assert.equal(
+    registered.guards[0]({ name: 'bpms_update', arguments: { apply: true }, agent }),
+    undefined,
+    '经 /bpms 进入后写操作应放行',
+  );
+  assert.ok(
+    registered.guards[0]({ name: 'bpms_update', arguments: { apply: true }, agent: { session: {}, followup: () => {} } }),
+    '放行只限本次会话',
+  );
 });
 
 

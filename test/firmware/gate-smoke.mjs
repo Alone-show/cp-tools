@@ -8,8 +8,8 @@ const { readBundledSkill, SKILL_FILE } = __internals;
 const skill = readBundledSkill();
 assert.equal(skill.name, 'firmware');
 assert.equal(skill.invocation.modelInvocable, true, '模型目录里应能看到 firmware skill');
-// 工具有 skill 激活门：/firmware 不再走手势（手势只注入正文、不给工具），改为模型自助加载。
-assert.equal(skill.invocation.userInvocable, false, '带激活门的 skill 不出现在 / 菜单');
+// /firmware 现在有真命令；skill 本身不再需要用户可调用（避免命令+手势双入口）。
+assert.equal(skill.invocation.userInvocable, false, '命令入口的 skill 不出现在 / 手势菜单');
 assert.equal(skill.source, 'runtime');
 assert.equal(skill.path, SKILL_FILE);
 assert.equal(skill.resourceBase.path, path.dirname(SKILL_FILE));
@@ -28,8 +28,10 @@ assert.ok(
 console.log('ok  skill 只覆盖固件查找');
 
 const tools = [];
+const commands = [];
 let preExecute = 0;
 const ctx = {
+  logger: { warn() {} },
   get: () => undefined,
   effect: (fn) => {
     fn();
@@ -40,11 +42,20 @@ const ctx = {
     if (name === 'tools/pre-execute') preExecute += 1;
     return () => {};
   },
+  inject: (deps, callback) =>
+    callback({
+      commands: { register: (definition) => (commands.push(definition), () => {}) },
+      effect: (fn) => {
+        fn();
+        return () => {};
+      },
+    }),
   tools: {
     register(definition, options) {
       tools.push({ ...definition, __when: options?.when });
       return () => {};
     },
+    guard: () => () => {},
   },
   skills: { register: () => () => {} },
 };
@@ -52,6 +63,9 @@ apply(ctx);
 
 assert.deepEqual(tools.map((t) => t.name).sort(), ['firmware_find', 'firmware_mcu', 'firmware_models']);
 console.log('ok  只注册 3 个固件工具（find / models / mcu）');
+
+assert.deepEqual(commands.map((c) => c.name), ['firmware']);
+console.log('ok  注册 /firmware 命令入口');
 
 const findTool = tools.find((t) => t.name === 'firmware_find');
 assert.ok(findTool.description.includes('同一份存储'), '工具描述也要写清 next 与 alist 内容同步');
@@ -61,14 +75,26 @@ assert.equal(preExecute, 0, '不应再注册 tools/pre-execute 闸门');
 console.log('ok  没有 tools/pre-execute 闸门');
 
 for (const tool of tools) assert.equal(typeof tool.__when, 'function', `${tool.name} 缺 skill 激活门`);
-assert.equal(tools[0].__when({ agent: { session: undefined } }), false, '未加载 skill 时不可见');
+assert.equal(await tools[0].__when({ agent: { session: undefined } }), false, '未加载 skill 时不可见');
 process.env.CP_TOOLS_SKILL_GATE = 'off';
 try {
-  assert.equal(tools[0].__when({ agent: { session: undefined } }), true, '急停开关应恒可见');
+  assert.equal(await tools[0].__when({ agent: { session: undefined } }), true, '急停开关应恒可见');
 } finally {
   delete process.env.CP_TOOLS_SKILL_GATE;
 }
 console.log('ok  3 个固件工具都带 skill 激活门（可用 CP_TOOLS_SKILL_GATE=off 急停）');
+
+// 命令 handler：注入 skill 正文 + 用户请求，并激活本步可见。
+const messages = [];
+const agent = { session: undefined, followup: (message) => messages.push(message) };
+const result = await commands[0].handler({ agent, rawInput: 'models', signal: new AbortController().signal });
+assert.equal(result.kind, 'success');
+assert.equal(messages.length, 1);
+assert.equal(messages[0].source.kind, 'cp-tools-entry');
+assert.ok(messages[0].content[0].text.includes('# 固件查找'), '命令应把 skill 正文注入');
+assert.ok(messages[0].content[0].text.includes('用户请求：models'));
+assert.equal(await tools[0].__when({ agent }), true, '命令进入后本步即可见');
+console.log('ok  /firmware 注入正文并在本步点亮工具');
 
 for (const tool of tools) {
   assert.ok(!tool.description.includes('仅当用户输入'), `${tool.name} 描述仍在限制 /firmware`);

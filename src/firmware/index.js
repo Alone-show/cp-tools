@@ -6,6 +6,7 @@ import { mcuToolFor } from './mcu.js';
 import { nz, canonModel, equivCore, queryCores, scoreCore, splitVendor } from '../shared/model-core.js';
 import { readBundledSkill as readSkillFile } from '../shared/skill.js';
 import { createSkillGate, withSkillScope } from '../shared/skill-gate.js';
+import { registerEntryCommand } from '../shared/entry.js';
 import { candidateDirs, tokenDir, readCookie } from '../tb/auth.js';
 import { readBoardFromDirs } from '../tb/board.js';
 import { createTbClient, normalizeTask } from '../tb/live.js';
@@ -1638,19 +1639,26 @@ export const name = 'firmware-finder';
 export const inject = ['tools', 'skills'];
 
 export function apply(ctx) {
-  // 工具只在模型加载过 firmware skill 之后才可见（见 shared/skill-gate.js）。
-  const when = createSkillGate(ctx, ['firmware']).when('firmware');
+  // 先解析 skill：解析失败就让插件行显式失败，避免留下永远不可见的工具。
+  const skill = readBundledSkill();
+  // 工具只在加载过 firmware skill 之后才可见（见 shared/skill-gate.js）。
+  const gate = createSkillGate(ctx, ['firmware']);
+  const when = gate.when('firmware');
   ctx.effect(() => ctx.tools.register(withSkillScope(findToolFor(ctx), FIRMWARE_SCOPE), { when }));
   ctx.effect(() => ctx.tools.register(withSkillScope(modelsToolFor(ctx), FIRMWARE_SCOPE), { when }));
   ctx.effect(() => ctx.tools.register(withSkillScope(mcuToolFor(ctx), FIRMWARE_SCOPE), { when }));
-  try {
-    const skill = readBundledSkill();
-    ctx.effect(() => ctx.skills.register(skill));
-  } catch (error) {
-    const message = `[firmware-finder] 注册运行时 skill 失败：${error?.message || error}`;
-    if (ctx.logger?.warn) ctx.logger.warn(message);
-    else console.warn(message);
-  }
+  ctx.effect(() => ctx.skills.register(skill));
+
+  // /firmware 命令：正文注入 + 本步点亮工具。
+  registerEntryCommand(ctx, {
+    name: 'firmware',
+    skill: 'firmware',
+    definition: skill,
+    description: '查 CP 量产固件：先给机型目录，选定机型后给版本、构建日期与线刷/OTA 直链',
+    hint: '机型 / 系统 / 客户，或 models',
+    defaultQuery: '先给我机型目录（规范名 / 别名 / 变体 + 系统 / 客户 / 尺寸 / 最新版本），再按我后面的描述选型。',
+    gate,
+  });
 }
 
 /** 供离线冒烟测试使用的内部函数（不参与运行时契约）。 */

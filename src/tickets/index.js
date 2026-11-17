@@ -21,6 +21,8 @@ import { buildIssueRows, renderIssues, isVersionTask, searchBoardTasks } from '.
 import { fixToolDefinitions } from './lib/bug/tools.js';
 import { readBundledSkill as readSkillFile } from '../shared/skill.js';
 import { createSkillGate, withSkillScope } from '../shared/skill-gate.js';
+import { registerEntryCommand } from '../shared/entry.js';
+import { createWriteGuard, registerToolGuard } from '../shared/write-guard.js';
 
 const PLUGIN_DIR = path.dirname(fileURLToPath(import.meta.url));
 const SKILL_FILE = path.join(PLUGIN_DIR, 'skills', 'tickets', 'SKILL.md');
@@ -683,22 +685,38 @@ export const name = 'cp-tickets';
 export const inject = ['tools', 'skills'];
 
 export function apply(ctx) {
-  // 工具只在模型加载过 tickets skill 之后才可见（见 shared/skill-gate.js）。
-  const when = createSkillGate(ctx, ['tickets']).when('tickets');
+  // 先解析 skill：解析失败就让插件行显式失败，避免留下永远不可见的工具。
+  const skill = readBundledSkill();
+  // 工具只在加载过 tickets skill 之后才可见（见 shared/skill-gate.js）。
+  const gate = createSkillGate(ctx, ['tickets']);
+  const when = gate.when('tickets');
   ctx.effect(() => ctx.tools.register(withSkillScope(ticketSearchToolFor(ctx), TICKETS_SCOPE), { when }));
   ctx.effect(() => ctx.tools.register(withSkillScope(ticketSyncToolFor(ctx), TICKETS_SCOPE), { when }));
   ctx.effect(() => ctx.tools.register(withSkillScope(ticketLoginToolFor(ctx), TICKETS_SCOPE), { when }));
   for (const definition of fixToolDefinitions(ctx, { tbEvidence: (input) => buildTbEvidence(ctx, input) })) {
     ctx.effect(() => ctx.tools.register(withSkillScope(definition, TICKETS_SCOPE), { when }));
   }
-  try {
-    const skill = readBundledSkill();
-    ctx.effect(() => ctx.skills.register(skill));
-  } catch (error) {
-    const message = `[cp-tickets] 注册运行时 skill 失败：${error?.message || error}`;
-    if (ctx.logger?.warn) ctx.logger.warn(message);
-    else console.warn(message);
-  }
+  // 写 TB 索引的工具要求本会话经 /tickets 进入；读类保持模型自助加载。
+  ctx.effect(() =>
+    registerToolGuard(
+      ctx,
+      createWriteGuard(gate, [
+        { tool: 'ticket_sync', skill: 'tickets', command: 'tickets' },
+        { tool: 'ticket_bug_sync', skill: 'tickets', command: 'tickets' },
+      ]),
+    ),
+  );
+  ctx.effect(() => ctx.skills.register(skill));
+
+  registerEntryCommand(ctx, {
+    name: 'tickets',
+    skill: 'tickets',
+    definition: skill,
+    description: '查 TB 工单与历史 bug：现象 → 任务号/状态，bug 是否修进客户正式版',
+    hint: '问题现象 + 机型；或 sync / login',
+    defaultQuery: '按我后面的描述查工单或历史 bug；没有给现象就先问我，不要编造任务号。',
+    gate,
+  });
 }
 
 export const __internals = {

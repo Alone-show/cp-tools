@@ -8,7 +8,7 @@ user-invocable: false
 
 > 本页加载后，`ticket_*` 工具在**下一步**才出现在工具列表里；不要用记忆里的参数直接调用。
 
-可用 `/tickets` 显式触发，也可直接用自然语言问。两条能力线，数据都在 Teambition「【研发部】CI/CD 发版流程」看板与 alist `/PROD` 的 commit 日志里：
+`/tickets` 命令是主入口（正文注入 + 工具本步可见），也可直接用自然语言问。两条能力线，数据都在 Teambition「【研发部】CI/CD 发版流程」看板与 alist `/PROD` 的 commit 日志里：
 
 1. **工单现象**：`ticket_search` —— 按现象找工单/任务号、看谁跟的、解决没有、属于哪个版本。
 2. **历史 bug**：`ticket_bug_check` / `ticket_bug_models` / `ticket_bug_log` / `ticket_bug_matrix` —— 判断 bug 是否已修复、是否进入客户正式版、其它机型/系统/芯片有没有同步。
