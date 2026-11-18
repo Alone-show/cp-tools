@@ -38,19 +38,19 @@ description: 生成并验证 CP 的 U 盘升级包（静默安装 / 换 bootlogo
 
 ```bash
 adb devices -l
-adb shell 'head -3 /etc/os-release; uname -m'                                   # Debian 11 → RK Debian；Buildroot → T3 Linux
+adb shell 'head -3 /etc/os-release; uname -m'                                   # Debian 11/12 → 核查 RK Debian；Buildroot → T3 Linux
 adb shell 'ls -l /unattended_installation.sh /customization.tar /usr/bin/silentInstaller 2>/dev/null'
 adb shell 'ls -l /Launcher; cat /Configs/system_info/system_info.ini 2>/dev/null'  # Buildroot 桌面 + 固件版本
 # 仅确认是 Android 后才跑（Debian/T3 Linux 上 getprop 是 shim 或不存在，不能当判据）
 adb shell 'getprop ro.board.platform; getprop ro.hardware; getprop ro.build.version.sdk; pm path com.cpdevice.cpservice; pm path com.android.guard'
 ```
 
-**直判（先 OS，再工具）**：`/etc/os-release` 是 Debian 11 + `unattendedinstallationtools` ⇒ RK Debian；是 Buildroot + `/Launcher` ⇒ T3 Linux；盘根 `CpService.xml` ⇒ RK 安卓；`E9631Service.xml` ⇒ T3 安卓；`auto_unattended_installation/` ⇒ Debian 自动。
+**直判（先 OS，再工具）**：`/etc/os-release` 是 Debian 11/12 + `unattendedinstallationtools` ⇒ RK Debian（两版本共用流程，实际工具和触发链仍须核查）；是 Buildroot + `/Launcher` ⇒ T3 Linux；盘根 `CpService.xml` ⇒ RK 安卓；`E9631Service.xml` ⇒ T3 安卓；`auto_unattended_installation/` ⇒ Debian 自动。
 盘根 `unattended_installation.sh` **不能单独判**：RK Debian 手动方式和 T3 Linux 同名，必须结合 OS/工具。
 
 | 判据 | RK 安卓 | T3 安卓 | RK Debian | **T3 Linux（Buildroot）** |
 |---|---|---|---|---|
-| 系统 | Android 11+（SDK 30+） | Android 6.0.1（SDK 23） | Debian 11（bullseye） | **Buildroot 2016.11 / kernel 3.10.65 armv7l** |
+| 系统 | Android 11+（SDK 30+） | Android 6.0.1（SDK 23） | Debian 11（bullseye）/ Debian 12（bookworm） | **Buildroot 2016.11 / kernel 3.10.65 armv7l** |
 | 工具 | `com.cpdevice.cpservice` → `CpService.xml`（21 动作） | `com.android.guard` → `E9631Service.xml`（9 动作） | udev `auto_unattended_installation@`+`silentInstaller`；手动 `Unattended_Installation_Tools`+`unattended_installation` | **桌面 `/Launcher`（UDiskSetting）** |
 | 触发/盘根 | 卷枚举（真盘 / SD / `sm` 虚拟盘） | 广播（真盘或假挂载） | `/media/usb_disk`（udev）｜`/mnt/installUsb`（工具） | **GUI：设置→U盘查看→右上开关；`/mnt/usb/sda1/unattended_installation.sh`** |
 

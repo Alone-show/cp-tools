@@ -1,7 +1,7 @@
 # 验证报告：<机型/客户> · <包名>
 
 - **平台**：`RK 安卓（CpService.xml）` / `T3 安卓（E9631Service.xml）` / `RK Debian（unattended_installation.sh）` / `T3 Linux（Buildroot；桌面包 / 服务模式包）`；判据 `<pm path … / /etc/os-release + dpkg -l unattendedinstallationtools / os-release=Buildroot + /Launcher>`
-- **包**：`<文件名>` md5 `<…>`；**设备**：`<model / hostname>` / `<Android 版本 / Debian 11 / Buildroot 2016.11 + kernel>`；**触发**：`<真盘 / sm 虚拟盘 / 假挂载广播 / 模拟挂载点 / GUI 切换开关>`
+- **包**：`<文件名>` md5 `<…>`；**设备**：`<model / hostname>` / `<Android 版本 / Debian 11 或 12 / Buildroot 2016.11 + kernel>`；**触发**：`<真盘 / sm 虚拟盘 / 假挂载广播 / 模拟挂载点 / GUI 切换开关>`
 - **形态**：`<平铺 / 套目录>`；T3 Linux 入口 `<盘根 / 子目录>`，zip 内模式 `<0755 / 0664>`；**服务模式**：`<是 / 否>`（是则写清约定进程）
 - **时间**：`<安装窗口>` → `<重启后 uptime 归零时刻>`（安装 `<n>` s / 重启 `<n>` s）
 

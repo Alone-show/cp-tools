@@ -90,7 +90,7 @@ else
 fi
 
 if [ "$PLATFORM" = debian ]; then
-  line; echo "1) 系统 / 工具（期望 Debian 11 + unattendedinstallationtools 1.0.4）"
+  line; echo "1) 系统 / 工具（Debian 11/12；核查 unattendedinstallationtools 及实际版本）"
   adb shell 'grep -E "^(PRETTY_NAME|VERSION_ID)" /etc/os-release; uname -m; dpkg -l unattendedinstallationtools 2>/dev/null | tail -1' 2>&1 || true
   adb shell 'ls -l /usr/bin/silentInstaller /usr/bin/auto_unattended_installation.sh /etc/udev/rules.d/10-auto_unattended_installation.rules 2>/dev/null' 2>&1 || true
   adb shell 'echo -n "otg_mode="; cat /sys/devices/platform/fe8a0000.usb2-phy/otg_mode 2>/dev/null; echo' 2>&1 || true

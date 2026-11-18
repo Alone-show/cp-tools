@@ -61,6 +61,9 @@ assert.ok(skill.content.includes('pm path com.android.guard'), 'SKILL.md 缺 T3 
 assert.ok(skill.content.includes('CpService.xml') && skill.content.includes('E9631Service.xml'), 'SKILL.md 缺两个 xml 名');
 assert.ok(!/mmcblk0p7/.test(skill.content), '调度器里不应出现 T3 专用分区路径（留在 t3 参考）');
 assert.ok(skill.content.includes('/etc/os-release') && skill.content.includes('unattendedinstallationtools'), 'SKILL.md 缺 Debian 判定依据');
+assert.ok(skill.content.includes('Debian 11/12') && skill.content.includes('Debian 12（bookworm）'), 'SKILL.md 应支持 Debian 11 和 12');
+const debianRef = read('references/rk-debian.md');
+assert.ok(debianRef.includes('Debian 11') && debianRef.includes('Debian 12') && debianRef.includes('MEGA1'), 'RK Debian 参考应覆盖 Debian 11/12 和 MEGA1');
 assert.ok(skill.content.includes('/Launcher') && skill.content.includes('Buildroot'), 'SKILL.md 缺 T3 Linux 判定依据');
 assert.ok(skill.content.includes('auto_unattended_installation/auto_unattended_installation.sh'), 'SKILL.md 缺 Debian udev 入口');
 assert.ok(skill.content.includes('unattended_installation.sh') && skill.content.includes(':uisum'), 'SKILL.md 缺 Debian 手动入口/:uisum');
@@ -83,6 +86,8 @@ const verifier = read('assets/verify.sh');
 assert.ok(verifier.includes('--rk') && verifier.includes('--t3') && verifier.includes('--debian') && verifier.includes('--t3linux') && verifier.includes('auto'), 'verify.sh 应支持 --rk/--t3/--debian/--t3linux/auto');
 assert.ok(verifier.includes('ro.board.platform'), 'verify.sh 应能按平台自动判断');
 assert.ok(verifier.includes('/etc/os-release'), 'verify.sh 应能识别 Debian');
+assert.ok(verifier.includes('Debian 11/12'), 'verify.sh 不应将 Debian 12 排除在期望之外');
+assert.ok(read('assets/verify-report.md').includes('Debian 11 或 12'), '报告模板应覆盖 Debian 11/12');
 assert.ok(verifier.includes('buildroot') || verifier.includes('Buildroot'), 'verify.sh 应能识别 T3 Linux（Buildroot）');
 
 // 7) 平台差异表唯一（SKILL §5.2）

@@ -1,8 +1,8 @@
 # RK Debian：U 盘静默安装（自动 udev / 手动 GUI）
 
-> **适用**：Rockchip RK356x / RK3588 的 Debian 11（bullseye，`/etc/os-release` 可查）。
-> **实测机**：`SPRING2-PRO` / `CPdevice Spring2 Mix Board` / Debian 11 / kernel `5.10.160` aarch64 / adb root。
-> **工具**：`unattendedinstallationtools` 1.0.4（`dpkg -l` 可查）；同一个包里装了两套安装方式，启动脚本名不同，见 §1。
+> **适用**：RK Debian 11（bullseye）及 Debian 12（bookworm）；用户确认 Debian 12 与 Debian 11 使用相同的包结构、触发方式和 LOGO 写入流程，仍需核查设备实际工具与对应触发链。
+> **设备记录**：`SPRING2-PRO` / `CPdevice Spring2 Mix Board` / Debian 11 / kernel `5.10.160` aarch64 / adb root；`MEGA1` / `CPdevice Mega1 Board` / Debian 12 / kernel `6.1.99` aarch64 / adb root，已发现 `/usr/bin/silentInstaller` 和 `/dev/block/by-name/logo`（本机对应 `/dev/mmcblk0p8`，不要写死分区号）。MEGA1 的工具包版本及两条 U 盘触发链未验证。
+> **工具**：`unattendedinstallationtools`（版本用 `dpkg -l` 核查；SPRING2-PRO 实测为 1.0.4）；该版本同一个包里装了两套安装方式，启动脚本名不同，见 §1。
 > **依据**：设备上 `dpkg -L unattendedinstallationtools`、两个 Qt 工具的反查（`silentInstaller`、`Unattended_Installation_Tools`）、雷沃现网包（手动方式）与 `debian_auto_openssh_drop.zip`（自动方式）。
 > **先读** `../SKILL.md`（判定、共享硬约束、验证主线）；RK 安卓用 `rk-android.md`，T3 安卓用 `t3-android.md`，T3 Linux（Buildroot）用 `t3-linux.md`（同名 `unattended_installation.sh`，判定看 OS/工具）。
 
@@ -63,7 +63,7 @@ adb shell 'rm -rf /customization /customization.tar /usr/local/share/verify-demo
 同一块 RK 板子既可能跑安卓（见 `rk-android.md`）也可能跑 Debian，**先看 OS 再看工具**：
 
 ```bash
-adb shell 'cat /etc/os-release | head -3; uname -m; uname -r'          # Debian 11 / aarch64
+adb shell 'cat /etc/os-release | head -3; uname -m; uname -r'          # Debian 11/12 / aarch64
 adb shell 'dpkg -l unattendedinstallationtools 2>/dev/null | tail -1'  # 1.0.4
 adb shell 'ls -l /usr/bin/silentInstaller /etc/udev/rules.d/10-auto_unattended_installation.rules'
 adb shell 'getprop ro.board.platform; pm path com.cpdevice.cpservice'  # Debian 上是 shim/无输出，不能当安卓证据
