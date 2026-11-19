@@ -43,6 +43,7 @@
 #   --force-platform-mismatch  兼容旧用法：跳过跨系统提示（芯片一致本来就默认允许；芯片不一致仍拒）
 #   --rk-index N          多台 rockusb 时先 rk_upgrade_tool SD N
 #   -v                    打印工具完整输出（默认也落日志）
+#   --progress-json       stderr 输出 FLASH_PROGRESS JSON 阶段事件（不影响 stdout）
 #   --quiet               只留里程碑（下载/进下载模式/刷写结论/验证），不刷进度条；日志仍全量
 #   --dry-run             只预检：解析（含下载）镜像、判平台、比芯片与版本，打印将执行的命令后退出，不进下载模式
 #
@@ -71,6 +72,13 @@ BOOT_TIMEOUT=600
 SHA256_EXPECT=""
 VERBOSE=0
 QUIET=0
+PROGRESS_JSON=0
+PROGRESS_STAGE=""
+PROGRESS_STATE=""
+PROGRESS_MESSAGE=""
+PROGRESS_PID=""
+PROGRESS_START=$SECONDS
+MAIN_BASHPID=$BASHPID
 DRY_RUN=0
 FORCE_MISMATCH=0
 RK_INDEX=""
@@ -116,8 +124,110 @@ RES_NAMES=()
 RES_STATES=()
 RES_EVID=()
 
-cleanup() { [ -n "$TMPDIR_RUN" ] && rm -rf "$TMPDIR_RUN" 2>/dev/null || true; }
+# JSON 只使用固定中文消息；仍完整转义控制字符，保证单行协议。
+json_string() {
+    local text="$1" ch out="" i
+    for ((i=0; i<${#text}; i++)); do
+        ch="${text:i:1}"
+        case "$ch" in
+            '"') out+='\"' ;; '\') out+='\\' ;;
+            $'\n') out+='\n' ;; $'\r') out+='\r' ;; $'\t') out+='\t' ;;
+            [[:cntrl:]]) printf -v ch '\\u%04x' "'$ch"; out+="$ch" ;;
+            *) out+="$ch" ;;
+        esac
+    done
+    printf '"%s"' "$out"
+}
+
+progress() { # stage state message [percent] [currentBytes] [totalBytes]
+    [ "$PROGRESS_JSON" = 1 ] || return 0
+    local event extra=""
+    [[ "${4:-}" =~ ^[0-9]+([.][0-9]+)?$ ]] && extra+=",\"percent\":$4"
+    [[ "${5:-}" =~ ^[0-9]+$ ]] && extra+=",\"currentBytes\":$5"
+    [[ "${6:-}" =~ ^[0-9]+$ ]] && extra+=",\"totalBytes\":$6"
+    printf -v event 'FLASH_PROGRESS {"stage":"%s","state":"%s","elapsedSeconds":%s,"message":%s%s}' \
+        "$1" "$2" "$((SECONDS - PROGRESS_START))" "$(json_string "$3")" "$extra"
+    printf '%s\n' "$event" >&2
+    if [ -n "$LOG" ] && [ -w "$LOG" ]; then printf '%s\n' "$event" >>"$LOG"; fi
+    return 0
+}
+
+progress_tick() {
+    local dest="" total="" cur="" percent=""
+    if [ "$PROGRESS_STAGE" = download ] && [ -f "$TMPDIR_RUN/download-path" ]; then
+        IFS= read -r dest <"$TMPDIR_RUN/download-path" || true
+        if [ -f "$TMPDIR_RUN/download-size" ]; then IFS= read -r total <"$TMPDIR_RUN/download-size" || true; fi
+        cur=$(stat -c %s -- "$dest" 2>/dev/null || printf 0)
+        if [[ "$total" =~ ^[1-9][0-9]*$ ]]; then
+            if [ "$cur" -le "$total" ]; then percent=$((cur * 100 / total)); fi
+        else
+            total=""
+        fi
+    fi
+    progress "$PROGRESS_STAGE" running "$PROGRESS_MESSAGE" "$percent" "$cur" "$total"
+}
+
+progress_stop() {
+    if [ -n "$PROGRESS_PID" ]; then
+        kill "$PROGRESS_PID" 2>/dev/null || true
+        wait "$PROGRESS_PID" 2>/dev/null || true
+        PROGRESS_PID=""
+    fi
+}
+
+progress_stage() {
+    progress_stop
+    if [ "$PROGRESS_STATE" = running ]; then progress "$PROGRESS_STAGE" completed "阶段完成"; fi
+    PROGRESS_STAGE="$1"; PROGRESS_STATE=running; PROGRESS_MESSAGE="$2"; PROGRESS_START=$SECONDS
+    progress "$1" running "$2"
+    [ "$PROGRESS_JSON" = 1 ] || return 0
+    ( local sleeper=""
+      trap '[ -z "$sleeper" ] || kill "$sleeper" 2>/dev/null || true; exit 0' TERM INT
+      while :; do sleep 10 & sleeper=$!; wait "$sleeper" || exit 0; progress_tick; done
+    ) &
+    PROGRESS_PID=$!
+}
+
+# 仅终止本脚本的子进程树（包括 timeout、管线、curl），不触碰设备或其它会话。
+stop_children() {
+    local parent="$1" child has_children=0
+    while read -r child; do
+        [ -n "$child" ] || continue
+        has_children=1
+        stop_children "$child"
+    done < <(ps -o pid= --ppid "$parent" 2>/dev/null)
+    # 先终止叶子，让 timeout/管线父进程自行 wait 回收；一并杀父进程会遗留僵尸。
+    if [ "$has_children" = 0 ] && [ "$parent" != "$MAIN_BASHPID" ]; then
+        kill -TERM "$parent" 2>/dev/null || true
+    fi
+}
+
+cleanup() {
+    local rc=$?
+    [ "$BASHPID" = "$MAIN_BASHPID" ] || return "$rc"
+    progress_stop
+    if [ "$PROGRESS_STATE" = running ]; then
+        if [ "$rc" = 0 ]; then
+            progress "$PROGRESS_STAGE" completed "阶段完成"
+            progress complete completed "任务完成"
+        else
+            progress "$PROGRESS_STAGE" failed "任务失败或已取消（退出码 $rc）"
+        fi
+    fi
+    # mktemp 产生的绝对私有目录才允许清理。
+    if [[ "$TMPDIR_RUN" = /*/tmp.* ]] && [ -d "$TMPDIR_RUN" ]; then rm -rf -- "$TMPDIR_RUN" 2>/dev/null || true; fi
+    return "$rc"
+}
+cancel() {
+    trap '' INT TERM
+    progress_stop
+    stop_children "$MAIN_BASHPID"
+    wait 2>/dev/null || true
+    exit "$1"
+}
 trap cleanup EXIT
+trap 'cancel 130' INT
+trap 'cancel 143' TERM
 
 # ---------------------------------------------------------------- 基础输出
 
@@ -127,10 +237,10 @@ say() {
     if [ -n "${LOG:-}" ] && [ -w "$LOG" ]; then printf '%s\n' "$*" >>"$LOG"; fi
 }
 # 给人看的过程消息一律走 stderr：download_firmware 等函数的 stdout 会被 $(...) 捕获成路径。
-say_err() { printf '%s\n' "$*" >&2; }
-warn() { printf 'WARN: %s\n' "$*" >&2; }
+say_err() { printf '%s\n' "$*" >&2; if [ -n "$LOG" ] && [ -w "$LOG" ]; then printf '%s\n' "$*" >>"$LOG"; fi; }
+warn() { say_err "WARN: $*"; }
 hr() { printf '%s\n' '----------------------------------------------------------------'; }
-die() { local code="$1"; shift; printf 'ERROR: %s\n' "$*" >&2; exit "$code"; }
+die() { local code="$1"; shift; say_err "ERROR: $*"; exit "$code"; }
 
 usage() { sed -n '2,/^$/p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
 
@@ -196,12 +306,8 @@ pick_serial() {
 }
 
 wait_adb() { # timeout
-    local deadline=$((SECONDS + $1)) devs=() cands=() d last_hint=$SECONDS start=$SECONDS next=$((SECONDS + 15))
+    local deadline=$((SECONDS + $1)) devs=() cands=() d start=$SECONDS next=$((SECONDS + 15))
     while [ "$SECONDS" -lt "$deadline" ]; do
-        if [ $((SECONDS - last_hint)) -ge 120 ]; then
-            say "…仍在等 adb；若设备停在 OTG Host（安卓刷完/重启默认），请在设备上切到 DEVICE（见 SKILL §7.3）"
-            last_hint=$SECONDS
-        fi
         if [ "$SECONDS" -ge "$next" ]; then
             next=$((SECONDS + 15))
             say "  …等 adb 回线 $((SECONDS - start))s（USB: $(usb_ids)）"
@@ -509,6 +615,9 @@ download_firmware() { # url [purge_on_fail]
     # 注意：本函数 stdout 只允许输出最终路径（会被 resolve_firmware 的 $(...) 捕获），
     # 过程消息一律 say_err（曾经写成 say，导致 FW 变成「提示行 + 路径」两行 → sha256sum 报错 + 静默退出）。
     size=$(http_size "$url")
+    printf '%s\n' "$dest" >"$TMPDIR_RUN/download-path"
+    printf '%s\n' "${size:-0}" >"$TMPDIR_RUN/download-size"
+    progress_tick
     if [ -s "$dest" ]; then
         cur=$(stat -c %s "$dest" 2>/dev/null || echo 0)
         if [ "${size:-0}" -gt 0 ] && [ "$cur" = "$size" ]; then
@@ -535,6 +644,7 @@ download_firmware() { # url [purge_on_fail]
         if [ "$purge" = 1 ]; then rm -f "$dest"; fi
         return 3
     fi
+    progress_tick
     say_err "下载完成：$dest（$(stat -c %s "$dest") B）"
     printf '%s' "$dest"
 }
@@ -572,6 +682,7 @@ resolve_firmware() {
         FW_SOURCE_KIND="local"
     else
         [ "${#urls[@]}" -gt 0 ] || return 0
+        progress_stage download "检查缓存并下载镜像"
         order_candidates "${urls[@]}"
         # 1) 下载目录里已有同 size 的同一份文件就直接用（不重复下载）
         for cand in "${CANDIDATES[@]}"; do
@@ -600,7 +711,11 @@ resolve_firmware() {
                 cand="${CANDIDATES[$i]}"
                 purge=0
                 if [ "$((i + 1))" -lt "${#CANDIDATES[@]}" ]; then purge=1; fi
-                if FW=$(download_firmware "$cand" "$purge"); then
+                # 后台等待可及时响应 INT/TERM；stdout 路径仍单独捕获。
+                download_firmware "$cand" "$purge" >"$TMPDIR_RUN/download-result" &
+                local download_pid=$!
+                if wait "$download_pid"; then
+                    FW=$(<"$TMPDIR_RUN/download-result")
                     FW_SOURCE="$cand"
                     FW_SOURCE_KIND=$(source_kind "$cand")
                     if [ "$i" -gt 0 ]; then FW_SOURCE_FELL_BACK=1; fi
@@ -610,6 +725,7 @@ resolve_firmware() {
                 failed+=("$(source_kind "$cand")=$cand")
                 if [ "$((i + 1))" -lt "${#CANDIDATES[@]}" ]; then
                     say "下载源 $(source_kind "$cand") 不可用，换下一个候选"
+                    progress download running "下载源不可用，切换下一候选"
                 fi
             done
             [ -n "$FW" ] || die 3 "所有下载源都失败：${failed[*]:-（无候选）}"
@@ -626,7 +742,11 @@ resolve_firmware() {
     fi
 
     FW_SIZE=$(stat -c %s "$FW" 2>/dev/null || echo 0)
-    FW_SHA=$(sha256sum "$FW" | awk '{print $1}')
+    progress_stage checksum "校验镜像摘要"
+    sha256sum "$FW" >"$TMPDIR_RUN/checksum" &
+    local checksum_pid=$!
+    wait "$checksum_pid"
+    read -r FW_SHA _ <"$TMPDIR_RUN/checksum"
     if [ -n "$SHA256_EXPECT" ] && [ "$FW_SHA" != "${SHA256_EXPECT,,}" ]; then
         die 3 "sha256 不匹配：期望 $SHA256_EXPECT，实际 $FW_SHA"
     fi
@@ -684,34 +804,56 @@ check_image_platform() { # platform
 
 # ---------------------------------------------------------------- 刷写
 
+# 同时处理 CR 进度条和 LF 日志；只转发工具实际给出的百分比，不推算刷写进度。
+flash_line() {
+    local line="$1" pct=""
+    if [[ "$line" =~ ([0-9]+([.][0-9]+)?)% ]]; then
+        pct="${BASH_REMATCH[1]}"
+        if awk "BEGIN { exit !($pct >= 0 && $pct <= 100) }"; then
+            pct=$(awk "BEGIN { printf \"%.6g\", $pct }")
+            progress flash running "工具报告刷写进度" "$pct"
+        fi
+    fi
+    if [ "$QUIET" = 0 ] || { [ -n "$line" ] && [[ ! "$line" =~ [0-9]+% ]] && [[ "$line" != *'Download Image...'* ]]; }; then
+        printf '%s\n' "$line"
+    fi
+}
+flash_stream() {
+    local ch line=""
+    while IFS= read -r -N 1 ch; do
+        case "$ch" in
+            $'\r'|$'\n') [ -z "$line" ] || flash_line "$line"; line="" ;;
+            *) line+="$ch" ;;
+        esac
+    done
+    [ -z "$line" ] || flash_line "$line"
+    return 0
+}
+
 flash_device() { # family
     local family="$1" section="$TMPDIR_RUN/flash.out" start=0 rc=0 t0=$SECONDS
     [ -f "$LOG" ] && start=$(wc -l <"$LOG")
     : >"$section"
 
-    set +e
+    local command=() args=(-V true -m full_erase -a reboot)
     if [ "$family" = rk ]; then
-        if [ "$QUIET" = 1 ]; then
-            # 日志仍写原始输出；终端只留结论行（工具进度条会刷上百行）
-            timeout "$FLASH_TIMEOUT" "$RK_TOOL" UF "$FW" 2>&1 | tee -a "$LOG" |
-                tr '\r' '\n' | grep -v -E 'Download Image\.\.\.|^\s*$' | tail -n 20
-        else
-            timeout "$FLASH_TIMEOUT" "$RK_TOOL" UF "$FW" 2>&1 | tee -a "$LOG"
-        fi
-        rc=${PIPESTATUS[0]}
+        command=("$RK_TOOL" UF "$FW")
     else
-        local args=(-V true -m full_erase -a reboot)
         [ -n "$T3_BUS" ] && args+=(-b "$T3_BUS")
         [ -n "$T3_PORT" ] && args+=(-P "$T3_PORT")
-        if [ "$QUIET" = 1 ]; then
-            timeout "$FLASH_TIMEOUT" "$OPENIXCLI" flash "$FW" "${args[@]}" 2>&1 | tee -a "$LOG" |
-                tr '\r' '\n' | grep -v -E '^\s*$|[0-9]+%' | tail -n 20
-        else
-            timeout "$FLASH_TIMEOUT" "$OPENIXCLI" flash "$FW" "${args[@]}" 2>&1 | tee -a "$LOG"
-        fi
-        rc=${PIPESTATUS[0]}
+        command=("$OPENIXCLI" flash "$FW" "${args[@]}")
     fi
-    set -e
+    # 用条件管线保留 timeout 的退出码；quiet 不再 tail 等 EOF 才输出。
+    (
+        if timeout "$FLASH_TIMEOUT" "${command[@]}" 2>&1 | tee -a "$LOG" | flash_stream; then
+            printf '0\n' >"$TMPDIR_RUN/flash-rc"
+        else
+            printf '%s\n' "${PIPESTATUS[0]}" >"$TMPDIR_RUN/flash-rc"
+        fi
+    ) &
+    local flash_pid=$!
+    wait "$flash_pid" || true
+    read -r rc <"$TMPDIR_RUN/flash-rc"
 
     FLASH_SECONDS=$((SECONDS - t0))
     tail -n +"$((start + 1))" "$LOG" >"$section" 2>/dev/null || true
@@ -967,6 +1109,7 @@ parse_args() {
             --proc) PROCS+=("${2:?}"); shift 2 ;;
             --proc=*) PROCS+=("${1#*=}"); shift ;;
             -v|--verbose) VERBOSE=1; shift ;;
+            --progress-json) PROGRESS_JSON=1; shift ;;
             --quiet|-q) QUIET=1; shift ;;
             --dry-run) DRY_RUN=1; shift ;;
             --) shift; POSITIONAL+=("$@"); break ;;
@@ -1141,11 +1284,14 @@ dry_run_report() { # family
 cmd_flash() {
     local family="" pl="" usb_fam="" rc=0 nf
     parse_args "$@"
+    progress_stage prepare "准备镜像与日志"
     [ "${#POSITIONAL[@]}" -ge 1 ] || die 2 "用法：flash.sh flash <img|url> [<url2> …] [验证参数]"
 
+    setup_paths "$(version_from_name "${POSITIONAL[0]}")"
     resolve_firmware 1 "${POSITIONAL[@]}"
     [ -n "$FW" ] || die 2 "镜像解析失败"
-    setup_paths "$(version_from_name "$FW")"
+    STEM="$(version_from_name "$FW")"
+    progress_stage preflight "检查设备与刷写条件"
 
     hr
     say "FLASH"
@@ -1176,6 +1322,7 @@ cmd_flash() {
         vlog "工具：$([ "$family" = rk ] && echo "$RK_TOOL" || echo "$OPENIXCLI")"
         if [ "$DRY_RUN" = 1 ]; then dry_run_report "$family"; return 0; fi
         preflight_usb "$family"
+        progress_stage loader "等待设备进入下载模式"
         enter_download_mode "$pl"
     else
         usb_fam=$(usb_family)
@@ -1203,12 +1350,14 @@ cmd_flash() {
         fi
     fi
 
+    if [ "$PROGRESS_STAGE" != loader ]; then progress_stage loader "等待下载模式设备"; fi
     if ! wait_download_mode "$family" 90; then
         die 3 "90s 内没等到 $family 下载模式（USB 线/口、OTG 角色、驱动；见 references/flash.md）"
     fi
 
     hr
     say "开始刷写（$family）…"
+    progress_stage flash "开始刷写镜像"
     flash_device "$family" || rc=$?
     case "$rc" in
         0) say "刷写成功（${FLASH_SECONDS}s）" ;;
@@ -1216,6 +1365,7 @@ cmd_flash() {
         *) write_report "不通过（刷写失败）"; die 4 "刷写失败（rc=$rc）；日志：$LOG" ;;
     esac
 
+    progress_stage reconnect "等待设备回线与系统就绪"
     say "等设备回线（最多 ${BOOT_TIMEOUT}s）…"
     if ! wait_adb "$BOOT_TIMEOUT"; then
         write_report "不通过（回线超时）"
@@ -1227,6 +1377,7 @@ cmd_flash() {
     say "回线：$SERIAL  平台：$POST_PLATFORM"
     wait_boot "$POST_PLATFORM" "$BOOT_TIMEOUT" || warn "系统在 ${BOOT_TIMEOUT}s 内没有明确就绪，继续取证"
 
+    progress_stage verify "验证设备版本"
     POST_VERSION=$(current_version "$POST_PLATFORM")
     POST_BOOT_ID=$(device_boot_id)
 
@@ -1257,6 +1408,7 @@ cmd_flash() {
 cmd_verify() {
     local pl nf
     parse_args "$@"
+    progress_stage verify "验证设备版本"
     [ "${#POSITIONAL[@]}" -eq 0 ] || die 2 "verify 不接受位置参数"
     setup_paths "verify"
     # verify 只是「看看现在是什么版本」：这里若保留 STEM=verify，期望版本会被推导成字面量

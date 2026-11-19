@@ -52,6 +52,24 @@ openixcli inspect <img>            # 看 IMAGEWTY 头，不连设备
 
 ## 4. `flash.sh` 用法
 
+### 4.1 GUI 默认入口：`flash_run`
+
+模型在 flash skill 激活后调用 `flash_run`，不要用通用 bash 后台任务代替。工具仅接受结构化参数，不接收任意 shell 命令：
+
+```json
+{"action":"plan","sources":["<alist-url>","<minio-url>"],"serial":"<序列号>"}
+{"action":"flash","sources":["<alist-url>","<minio-url>"],"serial":"<序列号>","expect_version":"V1.xx"}
+{"action":"verify","serial":"<当前序列号>","expect_version":"V1.xx"}
+```
+
+- `action` 为 `plan` / `flash` / `verify`；其余可选参数：`dry_run`、`timeout_flash`、`timeout_boot`、`sha256`、`exact`、`rk_index`。`sources` 是单个本地路径或多条 URL，不能混用；verify 不需要镜像。
+- flash 立即返回 `job_id` 和 `log`；plan/verify 前台返回结果。任务由当前会话持有，沿用宿主 `job_output` / `job_kill` 控制和托管进程清理；工具要求 full-access，不绕过会话权限。
+- 任务行直接显示准备镜像、下载/缓存、校验、预检、loader/FEL、刷写、回线、验收；没有真实总量/百分比就只展示阶段及耗时。
+- **取消会中断烧写，可能需要救砖**。失败或取消不自动重刷；刷写工具成功但回线超时与真正刷写失败分开呈现，只有版本验收通过才算完成。
+- 插件更新后需重新加载后端插件，使新工具可用；本次复用宿主已有任务进度行，不需要更换服务器或修改/重建前端。
+
+### 4.2 手工脚本与进度协议
+
 ```bash
 assets/flash.sh doctor                          # 环境自检：adb/工具/udev/空间/设备/下载模式
 assets/flash.sh plan   <img|url> [<url2> …]     # 只读预检：平台、刷前版本、期望版本、候选顺序、将执行的命令
@@ -82,7 +100,8 @@ assets/flash.sh verify --expect-version V1.16   # 只验证（设备已起系统
   - 逐个试：同一个源内保留 `-C -` 续传与 3 次重试；失败且后面还有候选时**删半包**（不同源的字节不拼接），再换下一个；全部失败才 `exit 3`，错误里列出每条候选。
   - **落地校验**：大小必须等于 `Content-Length`；开头不是 `RKFW`/`RKAF`/`IMAGEWTY` 时，小于 1 MiB 直接判失败（alist 失效常见「200 + JSON 错误体」），体积正常则打 WARN 继续。
   - 实际使用的源写进 `FW_SOURCE_KIND`，回落时 `FW_SOURCE_FELL_BACK=1`，plan/FLASH/dry-run/报告都会打「来源：alist（优先）」或「minio（alist 不可用，已回落）」。
-- 进度可观测：`wait_download_mode` / `wait_adb` 每 10–20s 打一行 `…等 loader Ns（USB: 2207:350a）`、`…等 adb 回线 Ns`；里程碑同时写进 `$LOG`，`tail -f` 即可跟进度。
+- 进度可观测：`--progress-json` 在 stderr 输出 `FLASH_PROGRESS {"stage":"flash","state":"running","elapsedSeconds":12,"message":"刷写中","percent":35}` 形式的独立行；阶段为 `prepare/download/checksum/preflight/loader/flash/reconnect/verify/complete`。可选 `currentBytes/totalBytes` 记录下载实测字节，长阶段约每 10s 心跳；未知进度省略百分比，不用时间推算。适配器分离协议与普通输出，通过宿主 `updateProgress` 更新任务行；stderr 协议不得混入下载函数返回路径的 stdout。
+- 日志在下载之前初始化，下载错误也可追踪；原始刷写输出完整写日志，quiet 模式不再用末尾 `tail` 阻塞所有阶段输出。`wait_download_mode` / `wait_adb` 的普通文本提示仍保留。
 - `download_firmware` 的 stdout 只输出最终路径（过程消息走 stderr）——20261109 修：曾因 `say` 写 stdout 被 `$(...)` 捕获，`set -Eeuo pipefail` 下 sha256sum 报错后**静默 exit 1**，表现为「下载完就退」。
 
 退出码：`0` 通过 / `2` 用法 / `3` 前置（无设备、无工具、镜像不符、进不了下载模式）/ `4` 刷写失败 / `5` 验证不通过 / `6` 超时。

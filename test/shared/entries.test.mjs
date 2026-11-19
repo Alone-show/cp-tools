@@ -35,7 +35,7 @@ test('cp-docs 也是真命令（不是手势）', () => {
   assert.match(frontmatter(path.join(ROOT, 'src/docs/skills/cp-docs/SKILL.md')), /^user-invocable:\s*false\s*$/m);
 });
 
-test('flash / cpservice 保持手势入口（没有工具，不需要命令点亮）', () => {
+test('flash / cpservice 保持 skill 手势入口（flash_run 按 skill 激活可见）', () => {
   for (const name of ['flash', 'cpservice']) {
     const [, file] = SKILLS.find(([skillName]) => skillName === name);
     assert.doesNotMatch(frontmatter(path.join(ROOT, file)), /^user-invocable:\s*false\s*$/m);

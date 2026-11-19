@@ -31,7 +31,7 @@ test('依赖服务声明符合子插件职责', () => {
   assert.deepEqual(firmware.inject, ['tools', 'skills']);
   assert.deepEqual(tickets.inject, ['tools', 'skills']);
   assert.deepEqual(cpservice.inject, ['skills']);
-  assert.deepEqual(flash.inject, ['skills']);
+  assert.deepEqual(flash.inject, ['skills', 'tools', 'subprocess', 'jobs', 'sandboxPolicy']);
   assert.deepEqual(bpms.inject, ['tools', 'skills']);
   assert.deepEqual(root.inject, []);
 });

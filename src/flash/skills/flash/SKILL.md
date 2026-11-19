@@ -1,6 +1,6 @@
 ---
 name: flash
-description: 整机线刷（全量覆盖）：把 CP 量产整机镜像 .img 刷进 RK（rk_upgrade_tool UF）或 T3（openixcli flash），用于换版本、救砖、跨系统重装；会清 userdata。流程：目标版本取订单「软件需求信息/OS版本」或 firmware_find 的 alist + minio 两条线刷直链 → flash.sh plan 预检 → flash.sh flash --quiet → 等回线（loader/FEL）→ 只比版本号，版本一致即通过；默认只刷量产版。订单链路里由模型触发，刷前一行说明。
+description: 整机线刷（全量覆盖）：把 CP 量产整机镜像 .img 刷进 RK（rk_upgrade_tool UF）或 T3（openixcli flash），用于换版本、救砖、跨系统重装；会清 userdata。流程：目标版本取订单「软件需求信息/OS版本」或 firmware_find 的 alist + minio 两条线刷直链 → flash_run plan 预检 → flash_run flash 受管任务（实时阶段进度）→ 等回线（loader/FEL）→ 只比版本号，版本一致即通过；默认只刷量产版。订单链路里由模型触发，刷前一行说明。
 ---
 
 # 整机线刷：从查版本到验收（一条主线，少走弯路）
@@ -50,7 +50,11 @@ adb -s <序列号> shell 'cat /Configs/system_info/system_info.ini'        # T3 
 
 > 刷完只把「版本前 → 后 + 是否回线」交回 `/bpms`；**不要在这里出 U 盘包**（出包/合并/验证是 `/cpservice`，上传是 `/bpms`）。
 
-## 2. 标准流程（S1–S6，命令可直接复制；全程不等确认）
+## 2. 标准流程（S1–S6，全程不等确认）
+
+**模型默认必须用 `flash_run`，不要把刷机藏在通用 bash 后台任务里**：先 `action:"plan"`，核对后 `action:"flash"`；传两条 `sources`（alist 在前）、`serial`、`expect_version`。返回 `job_id` 后用 `job_output` 收结果，界面任务行自动显示真实阶段：准备镜像 → 下载/复用缓存 → 校验 → 设备预检 → loader/FEL → 刷写 → 回线 → 验收。未知总量不猜百分比；刷写工具成功不代表整体验收通过。取消任务会中断刷写，可能需救砖，不自动重刷。
+
+以下脚本命令仅供手工 CLI 排查；工具不可用时先说明插件需重载，不能静默退回无进度的通用任务。
 
 ```bash
 # S1 取最新量产版本 + 两条线刷直链
@@ -125,7 +129,7 @@ adb -s <当前序列号> shell 'getprop ro.build.cp.version'               # 安
 
 1. **只读本 skill**：别为线刷加载 `/cpservice`（那是 U 盘包的完整流程）。
 2. **先 plan 后 flash**：`plan` 是只读的，一次就能拿到平台/当前版本/期望版本；不要手工 `getprop`/`uname`/到处找 version 文件（RK Debian 就一个 `system_info.ini`）。
-3. **`--quiet` + 后台 job**：进度条有上百行，别灌进对话。等待用后台 job + `job_output(wait)`；中途看进度用 `job_output` 每 10–20s 取增量（里程碑已写进日志，`tail -f <log>` 亦可）。**不要 `sleep` 盲等**，也不要用 `adb devices`/`lsusb`/`tail` 反复「看一眼」。
+3. **`flash_run` 受管任务**：任务行实时展示阶段、耗时及可得的真实进度，不依赖模型轮询。用 `job_output(wait)` 收最终结果，别把原始进度条灌进对话。**不要 `sleep` 盲等**，也不要用 `adb devices`/`lsusb`/`tail` 反复「看一眼」。
 4. **不做事后补验**：版本对上就结束；不截图、不抓屏、不翻 failed unit（需要时 `systemctl --failed` 一条即可）。
 5. 失败即停：保留日志，不自动重试。
 6. **只留一份、不再套目录**：镜像和日志都直接落 `~/Downloads` 顶层，不建 `fw-cache/` 之类的子目录；日志也不往工作区留副本。
@@ -156,6 +160,7 @@ adb -s <当前序列号> shell 'getprop ro.build.cp.version'               # 安
 | `--expect-version V` | 期望版本；缺省从镜像文件名推导 |
 | `--exact` | 版本必须完全相等 |
 | `--quiet` / `-q` | 只留里程碑；日志仍全量 |
+| `--progress-json` | stderr 输出 `FLASH_PROGRESS ` 前缀的 JSON 事件，供受管任务实时更新阶段 |
 | `--dry-run` | 只预检（含下载），不进下载模式 |
 | `--sha256 H` | 镜像校验，不一致退出 3 |
 | `--cache-dir D` | 下载缓存目录 |

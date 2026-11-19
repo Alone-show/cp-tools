@@ -28,6 +28,8 @@ const steps = [
   { name: 'docs', cmd: ['node', '--test', 'test/docs/*.test.mjs'] },
   { name: 'cpservice smoke', cmd: ['node', 'test/cpservice/smoke.mjs'] },
   { name: 'flash smoke', cmd: ['node', 'test/flash/smoke.mjs'] },
+  { name: 'flash progress', cmd: ['node', 'test/flash/progress.mjs'] },
+  { name: 'flash managed task', cmd: ['node', 'test/flash/task.mjs'] },
   { name: 'bpms smoke', cmd: ['node', 'test/bpms/smoke.mjs'] },
 ];
 

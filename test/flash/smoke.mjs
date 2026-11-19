@@ -2,7 +2,7 @@
 //   node test/flash/smoke.mjs
 //
 // 守护四件事：
-//   1) 插件与 skill 契约（cp-flash / flash，注册一个 skill）；
+//   1) 插件、skill 与 flash_run 受管工具契约；
 //   2) 资产：flash.sh 可执行 + help 参数齐全 + 随插件二进制版本正确；
 //   3) 本次修复的回归：URL 直刷的 stdout 捕获 bug、--quiet/--dry-run、验收只比版本号；
 //   4) 文档口径：SOP 明确「只比版本号、不截图」，不再要求 UI 抓屏。
@@ -21,7 +21,7 @@ const read = (rel) => fs.readFileSync(path.join(SKILL_DIR, rel), 'utf8');
 
 // 1) 插件契约
 assert.equal(name, 'cp-flash', 'cordis 插件名');
-assert.deepEqual(inject, ['skills'], 'inject 需要 skills 服务');
+assert.deepEqual(inject, ['skills', 'tools', 'subprocess', 'jobs', 'sandboxPolicy'], 'inject 需要 skill、工具及受管任务与权限服务');
 
 // 2) frontmatter 与注册
 const skill = readBundledSkill();
@@ -35,12 +35,22 @@ assert.ok(skill.content.includes('进入条件') && skill.content.includes('gate
 assert.ok(skill.content.includes('会清 userdata') || skill.content.includes('会清数据'), '正文应说明刷机会清数据');
 assert.ok(skill.content.includes('软件需求信息/OS版本'), '正文应说明订单 OS版本 是唯一版本来源');
 assert.ok(!skill.content.startsWith('---'), '正文不含 frontmatter');
-for (const kw of ['整机线刷', '线刷', 'loader', 'FEL', 'rk_upgrade_tool', 'openixcli', 'flash.sh', '版本一致']) {
+for (const kw of ['整机线刷', '线刷', 'loader', 'FEL', 'rk_upgrade_tool', 'openixcli', 'flash_run', '版本一致']) {
   assert.ok(skill.description.includes(kw), `description 缺关键词 ${kw}`);
 }
 
 const registered = [];
-apply({ skills: { register: (s) => { registered.push(s); return () => {}; } } });
+const registeredTools = [];
+apply({
+  skills: { register: (s) => { registered.push(s); return () => {}; } },
+  tools: { register: (t) => { registeredTools.push(t); return () => {}; } },
+  on: () => () => {},
+});
+assert.equal(registeredTools.length, 1, '注册了一个受管刷机工具');
+assert.equal(registeredTools[0].name, 'flash_run');
+assert.ok(skill.content.includes('模型默认必须用 `flash_run`'), 'SOP 应要求受管任务入口');
+assert.ok(skill.content.includes('任务行自动显示真实阶段'), 'SOP 应说明任务行进度');
+assert.ok(skill.content.includes('--progress-json'), 'SOP 应记录可选进度协议');
 assert.equal(registered.length, 1, '注册了一个 skill');
 assert.equal(registered[0].name, 'flash');
 
