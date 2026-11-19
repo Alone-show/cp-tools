@@ -34,6 +34,13 @@ description: 生成并验证 CP 的 U 盘升级包（静默安装 / 换 bootlogo
 - 服务模式包（如 T3 Linux 用 `/data/app.sh` 替换 Launcher）按包内约定进程判可用性，**不把 Launcher/MDM 缺失一律判失败**；报告写清是桌面包还是服务模式包。
 - 只能目视/拍照的 UI（T3 Linux `eglfs/mali`）不要用 `/dev/fb0` 抓屏下结论；没目视就写「未验证（需目视）」。
 
+**0.4 最终交付包默认不备份（四平台通用，优先于 reference 的旧备份要求）**
+
+- 除非用户明确要求备份/回滚，最终包的 XML、脚本及嵌套载荷都不得包含「覆盖前备份原文件/原分区」动作；直接按需求覆盖，不生成 `.bak`、`.orig`、时间戳副本或备份目录，也不夹带旧文件副本。
+- 不得以安全、幂等、可回滚为由自行加备份；校验、日志、锁和防重启标记不属于备份，按原约定保留。
+- 真机验证前为测试回滚单独做的备份只属于验证环境，不能搬进交付包；reference 中的「先备份」按此边界理解。
+- 合并已有包也要检查备份动作；若来源包已有备份，列出并移除这些动作/副本，其余动作、顺序和参数不变。这是默认出包规则，不需再次征求同意；用户明确要求保留备份时例外。
+
 ## 1. 判定平台（先 OS，再工具；1 次调用）
 
 ```bash
@@ -165,6 +172,7 @@ find . -name '*~' -o -name '*.swp' -o -name '*.bak*' -o -name '#*#'   # 编辑�
 
 - **动作先在真机逐条试跑**：新增/合入的 `setprop`、命令、脚本先单条执行，记 `rc` + 回读；回读留 ≥2 s（属性区有陈旧窗口，见 §7.8-11），验证记录落盘后才打包、才推假挂载。
 - **保持来源形态**：合入外部包（xml 动作清单、脚本、配置）时原样搬——动作/顺序/参数不改写、不搬进另一层（如把 `cmd` 改写成脚本）、不自造回读/重试/汇总；确需增删动作，单列差异 + 理由并先征得同意。
+- **无备份交付**：未明确要求备份时，检查 XML、所有脚本和嵌套 tar/zip，确认没有覆盖前备份动作、备份目录或旧文件副本；不能只检查 `.bak` 文件名（见 §0.4）。
 - **路径引号**：带空格/括号的路径（`(id=XXXX)`、`Program Files`）整条加引号，见 §5.1-4。
 - **只跑一轮整包**：形态（动作清单/脚本/平铺或套目录）定下来之前不打包；整包一轮为主，返工要能说清为什么。
 
@@ -193,7 +201,7 @@ adb shell 'cat /etc/inittab; cat /etc/fstab; grep -n -E "autorun|mount -t ext4 /
 adb shell 'grep -E "mmcblk0p1| /data " /proc/mounts; ls -l /data/app.sh 2>/dev/null; ls /sys/class/net'  # /data 与 can0
 ```
 
-Debian 装之前先备份（回滚靠它）：`cp /etc/lightdm/lightdm.conf /etc/rsyslog.conf /userdata/verify_bak/`、`dpkg --get-selections > /userdata/verify_bak/dpkg.selections`、`dd if=/dev/block/by-name/logo of=/userdata/verify_bak/logo.part bs=1M`。Android 的 logo/动画备份见 `rk-android.md` §7。 T3 Linux 换 LOGO/bootlogo 前把 `/logo`、`/Configs/bootlogo.bmp` 和 boot-resource 里的 `bootlogo.bmp` 备份到 `/data/cp-unattended/`。
+以下仅为开发/真机验证阶段的包外回滚准备，不得搬进最终交付包（§0.4）：Debian 装之前先备份（回滚靠它）：`cp /etc/lightdm/lightdm.conf /etc/rsyslog.conf /userdata/verify_bak/`、`dpkg --get-selections > /userdata/verify_bak/dpkg.selections`、`dd if=/dev/block/by-name/logo of=/userdata/verify_bak/logo.part bs=1M`。Android 的 logo/动画备份见 `rk-android.md` §7。 T3 Linux 换 LOGO/bootlogo 前把 `/logo`、`/Configs/bootlogo.bmp` 和 boot-resource 里的 `bootlogo.bmp` 备份到 `/data/cp-unattended/`。
 
 ### 7.2 一轮整包（只跑一轮）
 
@@ -298,7 +306,7 @@ adb shell 'rm -rf /mnt/usb/sda1; rm -f /data/cp-unattended/probe*'   # T3 Linux 
 | `assets/add-icon-device.sh` / `assets/verify-report.md` / `assets/update-mdm-wifi.sh` | 桌面图标 / 报告模板 / T3 安卓 MDM+WiFi（脚本里的 `APK_LIST`/`FW_LIST` 按单改） |
 | `vendor/` | 现成二进制（按平台取，别整目录搬）：`MDM` = **T3 Buildroot** 的 `/mdm/MDM`；`VanCoreT3-*.apk` = 安卓 MDM；`fw_cyw43438.bin`+`nvram_cyw43438.txt` = T3 WiFi 固件对。md5 与用法见 `vendor/README.md` |
 | `assets/generate-bootlogo.sh` | logo 资源生成驱动（§8.4）：`--image`/`--chip`/`--system`/`--rotate`/`--logo-frames`/`--no-video`/`--assets-only` |
-| `assets/debian-logo-template.sh` | RK Debian「只换开机 LOGO」安装包主脚本模板（双入口 + `flock` + `.done` + 写前备份 + 回读 md5 + `NO_REBOOT=1`）：`PKG_ID` / `LOGO_FILE` 按单改，盘根入口用 `assets/debian-entry-template.sh` |
+| `assets/debian-logo-template.sh` | RK Debian「只换开机 LOGO」安装包主脚本模板（双入口 + `flock` + `.done` + 回读 md5，默认不备份 + `NO_REBOOT=1`）：`PKG_ID` / `LOGO_FILE` 按单改，盘根入口用 `assets/debian-entry-template.sh` |
 | `assets/merge-package.sh` | 往**已有安装包**里增量合资源（保持内部布局与 xml 引用名）：`merge-package.sh <原包.zip> [--out DIR] <文件...>` |
 | `assets/presets/rk-android-neutral/` | 预置「中性」logo/动画包（RK 安卓，**仅在明确要求中性时用**）：`logo.img` + `bootanimation.zip` + `CpService.xml` + `README.md` |
 | `assets/presets/linux-neutral/` | 预置「中性」Linux 开机图（**仅明确要求中性时用**）：只有 `logo.png` 源图 + `README.md`；`logo` / `bootlogo.bmp` / `logo.img` 用 `generate-bootlogo.sh` 现出（不存冗余产物） |

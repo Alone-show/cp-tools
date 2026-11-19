@@ -128,7 +128,7 @@ replace_logo() { # $1=logo 文件名  → /logo
 }
 
 replace_bootlogo() { # $1=bootlogo 文件名 → /Configs + boot-resource
-    local f="$1" bak=/data/cp-unattended/bootlogo.bmp.bak
+    local f="$1"
     need "$f"
     mkdir -p /Configs
     cp -f "$USB/$f" /Configs/bootlogo.bmp
@@ -142,9 +142,6 @@ replace_bootlogo() { # $1=bootlogo 文件名 → /Configs + boot-resource
     if ! mount -t vfat -o rw /dev/mmcblk0p2 "$BOOT_MNT"; then
         say "挂载 /dev/mmcblk0p2 失败，boot-resource 未替换"
         return 1
-    fi
-    if [ -f "$BOOT_MNT/bootlogo.bmp" ]; then
-        cp -f "$BOOT_MNT/bootlogo.bmp" "$bak" 2>/dev/null || true
     fi
     cp -f "$USB/$f" "$BOOT_MNT/bootlogo.bmp"
     chmod 644 "$BOOT_MNT/bootlogo.bmp" 2>/dev/null || true

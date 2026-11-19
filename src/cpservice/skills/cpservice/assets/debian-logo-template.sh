@@ -15,7 +15,7 @@
 #   手动（GUI）：Unattended_Installation_Tools 点 Open 切 host 插盘 → /mnt/installUsb
 #                → sh <盘根>/unattended_installation.sh <盘根>
 #
-# 行为：flock 防双触发 → 与分区现有内容比 md5（相同即跳写）→ 备份原分区到 /userdata/verify_bak
+# 行为：flock 防双触发 → 与分区现有内容比 md5（相同即跳写）；默认不备份原分区
 #       → dd 写 logo.img → 按镜像长度回读 md5 → 写 .done 标记 → 默认 reboot（NO_REBOOT=1 可免）
 #
 # 脱机/真机验证：NO_REBOOT=1 sh <盘根>/unattended_installation.sh <盘根>
@@ -38,7 +38,6 @@ LOG_DIR=/var/log/cp-unattended
 LOG="$LOG_DIR/$PKG_ID.log"
 MARKER="/var/lib/cp-unattended/$PKG_ID.done"
 LOCK=/run/cp-unattended.lock
-BAK_DIR=/userdata/verify_bak
 
 mkdir -p "$LOG_DIR" 2>/dev/null || true
 
@@ -114,12 +113,6 @@ if [ "$CUR_MD5" = "$SRC_MD5" ]; then
     fi
     exit 0
 fi
-
-mkdir -p "$BAK_DIR" 2>/dev/null || true
-BAK="$BAK_DIR/logo.part.$(date +%Y%m%d-%H%M%S).bak"
-ui "备份原 logo 分区 → $BAK"
-dd if="$LOGO_PART" of="$BAK" bs=1M 2>>"$LOG"
-say "backup md5: $(md5sum "$BAK" | cut -d' ' -f1)"
 
 ui "写入 logo 分区（$SIZE 字节）"
 dd if="$SRC" of="$LOGO_PART" bs=4096 conv=fsync 2>>"$LOG"
