@@ -47,8 +47,8 @@ openixcli inspect <img>            # 看 IMAGEWTY 头，不连设备
 
 - 系统：`/etc/os-release` 含 Debian → RK Debian；含 Buildroot → T3 Linux；否则安卓，`ro.board.platform` 以 `rk` 开头或 `pm path com.cpdevice.cpservice` 有值 → RK 安卓，否则 T3 安卓。
 - 刷后**重新判平台**：镜像可能换系统（安卓 ↔ Debian），刷前平台不能复用。
-- **镜像字母**（文件名第 3 段）：`A`=安卓、`D`=Debian、`R`=BuildRoot、`L`=Linux；只是系统标记，**同芯片内可跨系统刷**；`flash.sh` 默认放行并打一行提示。
-- **芯片必须一致**：按镜像头判（RK `RKFW`/`RKAF`、T3 `IMAGEWTY`），不符直接拒；`--force-platform-mismatch` 不跳过这条。
+- **镜像字母**（文件名第 3 段）：`A`=安卓、`D`=Debian、`R`=BuildRoot、`L`=Linux；只是系统标记，不是芯片型号。`flash.sh` 不因系统不同拒绝，默认打一行跨系统提示。
+- **脚本仅检查格式家族**：设备在 adb 时，已识别的镜像头（RK `RKFW`/`RKAF`、T3 `IMAGEWTY`）若与设备家族不符则拒绝；`--force-platform-mismatch` 不跳过这条。镜像头或 USB 下载模式只表明家族，不能代替 `/flash` 技能对具体 SoC 型号的核对。
 
 ## 4. `flash.sh` 用法
 
@@ -146,7 +146,7 @@ assets/flash.sh verify --expect-version V1.16   # 只验证（设备已起系统
 
 ## 7. 纪律
 
-1. 刷前核对：**设备序列号、机型/客户、芯片**（跨系统不用确认，芯片必须一致）；错一个就停（数据会没）。核对是自己做，**不向用户要确认**。
+1. `/flash` 技能刷前核对设备、目标镜像和双方的具体 SoC 型号。目标不唯一、芯片不同或无法核实型号时不刷；确认同芯片后，设备当前机型、屏参、系统或客户不一致不拦截。只提示目标版本和会清 userdata，不等待确认。
 2. 默认只刷**量产版**（不带 `DEV-` 标识）；只有用户点名 DEV 才用 `dev:true` 的固件结果。
 3. 一次只刷一台；进下载模式后不碰 USB，不切 OTG。
 4. 失败即停：保留日志和工具输出，不自动重试；重试要重新进 loader。
